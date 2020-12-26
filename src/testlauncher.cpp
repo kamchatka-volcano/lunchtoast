@@ -10,14 +10,16 @@
 #include <fstream>
 
 namespace {
-    std::string truncateString(std::string str, unsigned maxWidth);
+    std::string truncateString(std::string str, int maxWidth);
 }
 
 TestLauncher::TestLauncher(const fs::path& testPath,
                            const std::string& testFileExt,
-                           const fs::path& reportFilePath)
+                           const fs::path& reportFilePath,
+                           const int reportWidth)
     : testPath_(testPath)
     , testFileExt_(testFileExt)
+    , reportWidth_(reportWidth)
 {
     initReporter(reportFilePath);
     collectTests(testPath);
@@ -27,7 +29,7 @@ bool TestLauncher::process()
 {
     auto ok = processSuite("", defaultSuite_);
     for (auto& suitePair : suites_)
-        if (!processSuite(truncateString(suitePair.first, 24), suitePair.second))
+        if (!processSuite(truncateString(suitePair.first, reportWidth_ / 2), suitePair.second))
             ok = false;
     reportSummary();
     return ok;
@@ -127,7 +129,7 @@ void TestLauncher::reportResult(const Test& test, const TestResult& result,
     if (suite.empty())
         header = header.substr(1);
 
-    print(result.type(), "{:#^48}", header);
+    print(result.type(), "{:#^" + std::to_string(reportWidth_) + "}", header);
     print("Name: {}", test.name());
     if (result.type() != TestResultType::Success){
         if (!test.description().empty())
@@ -139,7 +141,7 @@ void TestLauncher::reportResult(const Test& test, const TestResult& result,
         if (!result.errorInfo().empty())
             print(result.errorInfo());
     auto resultStr = fmt::format("Result: {:>10}", testResultStr(result.type()));
-    print(result.type(), "{:>48}", resultStr);
+    print(result.type(), "{:>"+ std::to_string(reportWidth_) + "}", resultStr);
 }
 
 void TestLauncher::reportBrokenTest(const fs::path& brokenTestConfig, const std::string& errorInfo,
@@ -149,20 +151,19 @@ void TestLauncher::reportBrokenTest(const fs::path& brokenTestConfig, const std:
     if (suite.empty())
         header = header.substr(1);
 
-    print(TestResultType::Failure, "{:#^48}", header);
+    print(TestResultType::Failure, "{:#^" + std::to_string(reportWidth_) + "}", header);
     print("Test can't be started. Config file {} error:\n{}\n", brokenTestConfig.string(), errorInfo);
 }
 
-namespace  {
-void reportSuiteResult(std::string suiteName, int passedNumber, int totalNumber)
+void TestLauncher::reportSuiteResult(std::string suiteName, int passedNumber, int totalNumber)
 {
-    suiteName = truncateString(suiteName, 27) + ":";
+    auto width = reportWidth_ / 2 + 4;
+    suiteName = truncateString(suiteName, width - 1) + ":";
     auto resultType = passedNumber == totalNumber ?
         TestResultType::Success : TestResultType::Failure;
     auto resultStr = fmt::format("{} out of {} passed, {} failed",
                                  passedNumber, totalNumber, totalNumber - passedNumber);
-    print(resultType, "{:28} {}", suiteName, resultStr);
-}
+    print(resultType, "{:" + std::to_string(width) + "} {}", suiteName, resultStr);
 }
 
 void TestLauncher::reportSummary()
@@ -171,7 +172,7 @@ void TestLauncher::reportSummary()
     auto totalPassed = 0;
 
     printNewLine();
-    print("{:#^48}", "  SUMMARY  ");
+    print("{:#^" + std::to_string(reportWidth_) + "}", "  SUMMARY  ");
     if (!defaultSuite_.tests.empty()){
         totalTests += defaultSuite_.tests.size();
         totalPassed += defaultSuite_.passedTestsCounter;
@@ -215,12 +216,12 @@ void TestLauncher::initReporter(const boost::filesystem::path& reportFilePath)
 }
 
 namespace{
-std::string truncateString(std::string str, unsigned maxWidth)
+std::string truncateString(std::string str, int maxWidth)
 {
-    if (str.size() < 4)
+    if (str.size() < static_cast<std::size_t>(4))
         return str;
-    if (str.size() > maxWidth){
-        str.resize(maxWidth - 3);
+    if (str.size() > static_cast<std::size_t>(maxWidth)){
+        str.resize(static_cast<std::size_t>(maxWidth - 3));
         str += "...";
     }
     return str;

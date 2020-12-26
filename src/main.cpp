@@ -7,17 +7,19 @@
 void printUsageInfo()
 {
     std::cout << "Usage: lunchtoast [options] [dir|file]path\n"
-                 "Options:\n"
-                 " --report <file path>    save test report to file\n"
+                 "Options:\n"                 
                  " --ext <file extension>  the extension of searched test files,\n"
                  "                         required when specified test path is a directory\n"
-                 "                         (default value: .toast)\n";
+                 "                         (default value: .toast)\n"
+                 " --report <file path>    save test report to file\n"
+                 " --reportwidth <number>  set test report's width in number of characters\n";
 }
 
 struct Cfg{
     fs::path testPath;
     fs::path reportFilePath;
     std::string testFileExtension = ".toast";
+    int reportWidth = 48;
 };
 bool parseCommandLine(Cfg& cfg, int argc, char**argv);
 
@@ -31,7 +33,7 @@ int main(int argc, char **argv)
 
     auto allTestsPassed = false;
     try{
-        auto testLauncher = TestLauncher{cfg.testPath, cfg.testFileExtension, cfg.reportFilePath};
+        auto testLauncher = TestLauncher{cfg.testPath, cfg.testFileExtension, cfg.reportFilePath, cfg.reportWidth};
         allTestsPassed = testLauncher.process();
     } catch(const std::exception& e){
         std::cout << "Unknown error occured during test processing: " << e.what() << std::endl;
@@ -51,6 +53,7 @@ bool parseCommandLine(Cfg& cfg, int argc, char**argv)
         ("help", "")
         ("input",  opts::value(&cfg.testPath))
         ("report", opts::value(&cfg.reportFilePath))
+        ("reportwidth", opts::value(&cfg.reportWidth))
         ("ext",    opts::value(&cfg.testFileExtension))
     ;
     auto args = opts::positional_options_description{};
