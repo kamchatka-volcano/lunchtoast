@@ -104,7 +104,7 @@ TEST(SectionsReader, NamelessSection)
         readSections(stream);
     },
     [](const std::runtime_error& e){
-        ASSERT_EQ(std::string{e.what()}, "line#1: Section must have a name");
+        ASSERT_EQ(std::string{e.what()}, "line#2: Section must have a name");
     });
 }
 
@@ -116,7 +116,7 @@ TEST(SectionsReader, SectionWithoutDelimiter)
         readSections(stream);
     },
     [](const std::runtime_error& e){
-        ASSERT_EQ(std::string{e.what()}, "line#1: Section's first line must contain a name delimiter ':'");
+        ASSERT_EQ(std::string{e.what()}, "line#2: Section's first line must contain a name delimiter ':'");
     });
 }
 

@@ -4,14 +4,16 @@
 #include "writefile.h"
 #include "comparefiles.h"
 #include "comparefilecontent.h"
-#include "filenamesreader.h"
 #include "utils.h"
 #include <boost/algorithm/string.hpp>
+#include <sstream>
+#include <iomanip>
 
 namespace{
 bool readParam(std::string& param, const std::string& paramName, const Section& section);
 bool readParam(fs::path& param, const std::string& paramName, const Section& section);
 bool readParam(bool& param, const std::string& paramName, const Section& section);
+std::vector<std::string> readFileNames(const std::string& input);
 }
 
 Test::Test(const fs::path& configPath)
@@ -220,5 +222,16 @@ bool readParam(bool& param, const std::string& paramName, const Section& section
     param = (paramStr == "true");
     return true;
 }
+
+std::vector<std::string> readFileNames(const std::string& input)
+{
+    auto fileNames = std::vector<std::string>{};
+    auto fileName = std::string{};
+    auto stream = std::istringstream{input};
+    while (stream >> std::quoted(fileName))
+        fileNames.push_back(fileName);
+    return fileNames;
+}
+
 
 }
