@@ -193,8 +193,7 @@ void Test::restoreDirectoryState()
     auto end = fs::directory_iterator{};
     for (auto it = fs::directory_iterator{directory_}; it != end; ++it)
         if (!directoryState_.count(it->path()))
-            fs::remove_all(it->path());
-            //std::cout << "REMOVE PATH:" << it->path().string() << std::endl;
+            fs::remove_all(it->path());            
 }
 
 const std::string& Test::suite() const
