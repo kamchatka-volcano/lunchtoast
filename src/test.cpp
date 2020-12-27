@@ -18,7 +18,7 @@ std::vector<std::string> readFileNames(const std::string& input);
 }
 
 Test::Test(const fs::path& configPath)
-    : name_(fs::path{configPath}.stem().string())
+    : name_(configPath.stem().string())
     , directory_(configPath.parent_path())
     , shellCommand_("sh -c -e")
     , isEnabled_(true)

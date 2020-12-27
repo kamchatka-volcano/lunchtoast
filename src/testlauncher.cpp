@@ -75,7 +75,7 @@ void TestLauncher::collectTests(const fs::path &testPath)
                 addTest(it->path());
     }
     else
-        addTest(testPath);
+        addTest(fs::absolute(testPath));
 }
 
 void TestLauncher::addTest(const fs::path &testFile)
