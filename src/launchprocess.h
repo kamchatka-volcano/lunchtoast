@@ -6,7 +6,10 @@
 class LaunchProcess
 {
 public:
-    LaunchProcess(const std::string& command, const fs::path& workingDir, const std::string& shellCommand);
+    LaunchProcess(const std::string& command,
+                  const fs::path& workingDir,
+                  const std::string& shellCommand,
+                  bool uncheckedResult);
     TestActionResult process() const;
 
 private:
@@ -17,5 +20,6 @@ private:
     std::string command_;
     fs::path workingDir_;
     std::string shellCommand_;
+    bool uncheckedResult_;
 };
 

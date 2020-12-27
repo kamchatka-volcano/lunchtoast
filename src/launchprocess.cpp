@@ -5,10 +5,14 @@
 
 namespace proc = boost::process;
 
-LaunchProcess::LaunchProcess(const std::string& command, const fs::path& workingDir, const std::string& shellCommand)
+LaunchProcess::LaunchProcess(const std::string& command,
+                             const fs::path& workingDir,
+                             const std::string& shellCommand,
+                             bool uncheckedResult)
     : command_(command)
     , workingDir_(workingDir)
     , shellCommand_(shellCommand)
+    , uncheckedResult_(uncheckedResult)
 {
 }
 
@@ -29,6 +33,9 @@ TestActionResult LaunchProcess::process() const
     else{
         result = proc::system(proc::cmd(command_), env, proc::start_dir = workingDir_);
     }
+
+    if (uncheckedResult_)
+        return TestActionResult::Success();
 
     if (result != 0)
         return TestActionResult::Failure("Launched process '" + command_+ "' returned non-zero exit code");

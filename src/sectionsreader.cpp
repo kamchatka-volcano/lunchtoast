@@ -75,7 +75,7 @@ std::string readSectionValue(std::istream& input, const std::string& sectionName
                 continue;
             }
         }
-        if (boost::istarts_with(line, "-" + sectionName)){
+        if (boost::starts_with(line, "-" + sectionName)){
             sectionIsFound = true;
             result += str::after(line, ":");
             if (std::all_of(result.begin(), result.end(), isspace))

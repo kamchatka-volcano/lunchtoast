@@ -5,6 +5,7 @@
 #include "comparefiles.h"
 #include "comparefilecontent.h"
 #include "utils.h"
+#include "string_utils.h"
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 #include <iomanip>
@@ -19,7 +20,7 @@ std::vector<std::string> readFileNames(const std::string& input);
 Test::Test(const fs::path& configPath)
     : name_(fs::path{configPath}.stem().string())
     , directory_(configPath.parent_path())
-    , shellCommand_("sh -c")
+    , shellCommand_("sh -c -e")
     , isEnabled_(true)
     , requiresCleanup_(false)
 {
@@ -77,20 +78,20 @@ bool Test::readParamFromSection(const Section& section)
 
 bool Test::readActionFromSection(const Section &section)
 {
-    if (boost::istarts_with(section.name, "Launch")){
+    if (boost::starts_with(section.name, "Launch")){
         createLaunchAction(section);
         return true;
     }
-    if (boost::istarts_with(section.name, "Write")){
+    if (boost::starts_with(section.name, "Write")){
         createWriteAction(section);
         return true;
     }
-    if (boost::istarts_with(section.name, "Assert")){
-        auto actionType = boost::trim_copy(boost::ireplace_first_copy(section.name, "Assert", ""));
+    if (boost::starts_with(section.name, "Assert")){
+        auto actionType = boost::trim_copy(str::after(section.name, "Assert"));
         return createComparisonAction(TestActionType::Assertion, actionType, section.value);
     }
-    if (boost::istarts_with(section.name, "Expect")){
-        auto actionType = boost::trim_copy(boost::ireplace_first_copy(section.name, "Expect", ""));
+    if (boost::starts_with(section.name, "Expect")){
+        auto actionType = boost::trim_copy(str::after(section.name, "Expect"));
         return createComparisonAction(TestActionType::Expectation, actionType, section.value);
     }
     return false;
@@ -127,7 +128,7 @@ bool Test::createComparisonAction(TestActionType type, const std::string& encode
         createCompareFilesAction(type, value);
         return true;
     }
-    if (boost::istarts_with(encodedActionType, "content of ")){
+    if (boost::starts_with(encodedActionType, "content of ")){
         createCompareFileContentAction(type, encodedActionType, value);
         return true;
     }
@@ -136,14 +137,28 @@ bool Test::createComparisonAction(TestActionType type, const std::string& encode
 
 void Test::createLaunchAction(const Section& section)
 {
-    const auto isShellCommand = boost::trim_copy(boost::ireplace_first_copy(section.name, "Launch", "")) == "command";
+    const auto parts = str::splitted(section.name);
+    auto uncheckedResult = false;
+    auto isShellCommand = false;
+    if (parts.size() == 2){
+        if (parts.at(1) == "unchecked")
+            uncheckedResult = true;
+        else if (parts.at(1) == "command")
+            isShellCommand = true;
+    }
+    else if (parts.size() == 3){
+        if (parts.at(1) == "unchecked")
+            uncheckedResult = true;
+        if (parts.at(2) == "command")
+            isShellCommand = true;
+    }
     const auto command = boost::trim_copy(section.value);
-    actions_.push_back(LaunchProcess{command, directory_, (isShellCommand ? shellCommand_ : "")});
+    actions_.push_back(LaunchProcess{command, directory_, (isShellCommand ? shellCommand_ : ""), uncheckedResult});
 }
 
 void Test::createWriteAction(const Section& section)
 {
-    const auto fileName = boost::trim_copy(boost::ireplace_first_copy(section.name, "Write", ""));
+    const auto fileName = boost::trim_copy(str::after(section.name, "Write"));
     const auto path = fs::absolute(fileName, directory_);
     actions_.push_back(WriteFile{path.string(), section.value});
 }
