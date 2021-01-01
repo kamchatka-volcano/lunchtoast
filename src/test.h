@@ -29,6 +29,7 @@ private:
     bool createComparisonAction(TestActionType type, const std::string& encodedActionType, const std::string& value);
     void saveDirectoryState();
     void restoreDirectoryState();
+    std::vector<fs::path> readFileNames(const std::string& input);
 
 private:
     std::vector<TestAction> actions_;

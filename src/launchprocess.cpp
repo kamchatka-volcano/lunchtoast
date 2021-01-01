@@ -8,11 +8,13 @@ namespace proc = boost::process;
 LaunchProcess::LaunchProcess(const std::string& command,
                              const fs::path& workingDir,
                              const std::string& shellCommand,
-                             bool uncheckedResult)
+                             bool uncheckedResult,
+                             bool silently)
     : command_(command)
     , workingDir_(workingDir)
     , shellCommand_(shellCommand)
     , uncheckedResult_(uncheckedResult)
+    , silently_(silently)
 {
 }
 
@@ -28,10 +30,16 @@ TestActionResult LaunchProcess::process() const
         cmdParts.erase(cmdParts.begin());
         cmdParts.push_back(command_);
         auto shell = proc::search_path(shellCmd);
-        result = proc::system(shell, proc::args(cmdParts), env, proc::start_dir = workingDir_);
+        if (silently_)
+            result = proc::system(shell, proc::args(cmdParts), env, proc::start_dir = workingDir_, proc::std_out > proc::null, proc::std_err > proc::null);
+        else
+            result = proc::system(shell, proc::args(cmdParts), env, proc::start_dir = workingDir_);
     }
     else{
-        result = proc::system(proc::cmd(command_), env, proc::start_dir = workingDir_);
+        if (silently_)
+            result = proc::system(proc::cmd(command_), env, proc::start_dir = workingDir_, proc::std_out > proc::null, proc::std_err > proc::null);
+        else
+            result = proc::system(proc::cmd(command_), env, proc::start_dir = workingDir_);
     }
 
     if (uncheckedResult_)

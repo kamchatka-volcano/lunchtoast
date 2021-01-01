@@ -57,18 +57,18 @@ TestActionResult CompareFiles::process() const
                 rhs_.string() + " : " + filenameListStr(rhsPaths) + "\n");
     }
     auto result = true;
-    auto errorInfo = std::string{};
+    auto errorInfo = std::vector<std::string>{};
     for (auto i = 0u; i < lhsPaths.size(); ++i){
         auto failedComparisonInfo = std::string{};
         if(!compareFiles(lhsPaths[i], rhsPaths[i], failedComparisonInfo)){
-            errorInfo += failedComparisonInfo + "\n";
+            errorInfo.push_back(failedComparisonInfo);
             result = false;
         }
     }
     if (result)
         return TestActionResult::Success();
     else
-        return TestActionResult::Failure(errorInfo);
+        return TestActionResult::Failure(boost::join(errorInfo, "\n"));
 }
 
 namespace{

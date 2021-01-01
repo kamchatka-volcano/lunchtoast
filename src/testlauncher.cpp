@@ -17,8 +17,7 @@ TestLauncher::TestLauncher(const fs::path& testPath,
                            const std::string& testFileExt,
                            const fs::path& reportFilePath,
                            const int reportWidth)
-    : testPath_(testPath)
-    , testFileExt_(testFileExt)
+    : testFileExt_(testFileExt)
     , reportWidth_(reportWidth)
 {
     initReporter(reportFilePath);
@@ -72,10 +71,10 @@ void TestLauncher::collectTests(const fs::path &testPath)
             if (fs::is_directory(it->status()))
                 collectTests(it->path());
             else if(it->path().extension().string() == testFileExt_)
-                addTest(it->path());
+                addTest(fs::canonical(it->path()));
     }
     else
-        addTest(fs::absolute(testPath));
+        addTest(fs::canonical(testPath));
 }
 
 void TestLauncher::addTest(const fs::path &testFile)
@@ -128,12 +127,11 @@ void TestLauncher::reportResult(const Test& test, const TestResult& result,
     auto header = fmt::format(" {} [ {} / {} ] ", suite, suiteTestNumber, suiteNumOfTests);
     if (suite.empty())
         header = header.substr(1);
-
     print(result.type(), "{:#^" + std::to_string(reportWidth_) + "}", header);
     print("Name: {}", test.name());
     if (result.type() != TestResultType::Success){
         if (!test.description().empty())
-            print("Description: {}", test.description());
+            print("Description:\n{}", test.description());
         if (!result.failedActionsMessages().empty())
             print(boost::join(result.failedActionsMessages(), "\n"));
     }

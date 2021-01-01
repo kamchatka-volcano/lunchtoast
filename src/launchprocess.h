@@ -9,7 +9,8 @@ public:
     LaunchProcess(const std::string& command,
                   const fs::path& workingDir,
                   const std::string& shellCommand,
-                  bool uncheckedResult);
+                  bool uncheckedResult,
+                  bool silently);
     TestActionResult process() const;
 
 private:
@@ -21,5 +22,6 @@ private:
     fs::path workingDir_;
     std::string shellCommand_;
     bool uncheckedResult_;
+    bool silently_;
 };
 

@@ -35,7 +35,6 @@ private:
 
 
 private:
-    fs::path testPath_;
     std::string testFileExt_;
     std::map<std::string, TestSuite> suites_;
     TestSuite defaultSuite_;

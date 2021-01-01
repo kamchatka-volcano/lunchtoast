@@ -14,7 +14,6 @@ namespace{
 bool readParam(std::string& param, const std::string& paramName, const Section& section);
 bool readParam(fs::path& param, const std::string& paramName, const Section& section);
 bool readParam(bool& param, const std::string& paramName, const Section& section);
-std::vector<std::string> readFileNames(const std::string& input);
 }
 
 Test::Test(const fs::path& configPath)
@@ -38,6 +37,9 @@ TestResult Test::process()
         saveDirectoryState();
 
     auto failedActionsMessages = std::vector<std::string>{};
+    if (actions_.empty())
+        return TestResult::RuntimeError("Test has nothing to check", failedActionsMessages);
+
     auto ok = true;
     for (const auto& action : actions_){
         try{
@@ -55,7 +57,7 @@ TestResult Test::process()
             break;
     }
 
-    if (requiresCleanup_)
+    if (ok && requiresCleanup_)
         restoreDirectoryState();
 
     if (ok)
@@ -106,6 +108,8 @@ void Test::readConfig(const boost::filesystem::path& path)
     auto sections = std::vector<Section>{};
     try{
         sections = readSections(fileStream, {"Write"});
+        if (sections.empty())
+            throw TestConfigError{"Test config file " + path.string() +  "is empty or invalid"};
         for (const auto& section : sections){
             if (readParamFromSection(section))
                 continue;
@@ -138,22 +142,11 @@ bool Test::createComparisonAction(TestActionType type, const std::string& encode
 void Test::createLaunchAction(const Section& section)
 {
     const auto parts = str::splitted(section.name);
-    auto uncheckedResult = false;
-    auto isShellCommand = false;
-    if (parts.size() == 2){
-        if (parts.at(1) == "unchecked")
-            uncheckedResult = true;
-        else if (parts.at(1) == "command")
-            isShellCommand = true;
-    }
-    else if (parts.size() == 3){
-        if (parts.at(1) == "unchecked")
-            uncheckedResult = true;
-        if (parts.at(2) == "command")
-            isShellCommand = true;
-    }
+    auto uncheckedResult = std::find(parts.begin(), parts.end(), "unchecked") != parts.end();
+    auto isShellCommand = std::find(parts.begin(), parts.end(), "command") != parts.end();
+    auto silently = std::find(parts.begin(), parts.end(), "silently") != parts.end();
     const auto command = boost::trim_copy(section.value);
-    actions_.push_back(LaunchProcess{command, directory_, (isShellCommand ? shellCommand_ : ""), uncheckedResult});
+    actions_.push_back(LaunchProcess{command, directory_, (isShellCommand ? shellCommand_ : ""), uncheckedResult, silently});
 }
 
 void Test::createWriteAction(const Section& section)
@@ -165,12 +158,9 @@ void Test::createWriteAction(const Section& section)
 
 void Test::createCompareFilesAction(TestActionType type, const std::string& filenamesStr)
 {
-    const auto fileNames = readFileNames(filenamesStr);
-    if (fileNames.size() != 2)
-        throw TestConfigError{"Comparison of files require exactly two filenames or filename matching regular expressions to be specified"};
-    auto paths = std::vector<fs::path>{};
-    for (const auto& fileName : fileNames)
-        paths.push_back(fs::absolute(fileName, directory_));
+    const auto paths = readFileNames(filenamesStr);
+    if (paths.size() != 2)
+        throw TestConfigError{"Comparison of files require exactly two filenames or filename matching regular expressions to be specified"};    
     actions_.push_back(TestAction{CompareFiles{paths[0], paths[1]}, type});
 }
 
@@ -211,6 +201,16 @@ const std::string& Test::description() const
     return description_;
 }
 
+std::vector<fs::path> Test::readFileNames(const std::string& input)
+{
+    auto result = std::vector<fs::path>{};
+    auto fileName = std::string{};
+    auto stream = std::istringstream{input};
+    while (stream >> std::quoted(fileName))
+        result.push_back(fs::absolute(fileName, directory_));
+    return result;
+}
+
 namespace{
 bool readParam(std::string& param, const std::string& paramName, const Section& section)
 {
@@ -236,16 +236,5 @@ bool readParam(bool& param, const std::string& paramName, const Section& section
     param = (paramStr == "true");
     return true;
 }
-
-std::vector<std::string> readFileNames(const std::string& input)
-{
-    auto fileNames = std::vector<std::string>{};
-    auto fileName = std::string{};
-    auto stream = std::istringstream{input};
-    while (stream >> std::quoted(fileName))
-        fileNames.push_back(fileName);
-    return fileNames;
-}
-
 
 }

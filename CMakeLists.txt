@@ -28,7 +28,6 @@ set(SRC
     src/test.cpp
     src/testlauncher.cpp
     src/testresult.cpp
-    src/testresultreporter.cpp
     src/utils.cpp
     src/writefile.cpp
     )
