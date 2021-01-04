@@ -2,6 +2,7 @@
 #include "test.h"
 #include "sectionsreader.h"
 #include "utils.h"
+#include "string_utils.h"
 #include <spdlog/spdlog.h>
 #include <spdlog/logger.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -130,10 +131,19 @@ void TestLauncher::reportResult(const Test& test, const TestResult& result,
     print(result.type(), "{:#^" + std::to_string(reportWidth_) + "}", header);
     print("Name: {}", test.name());
     if (result.type() != TestResultType::Success){
-        if (!test.description().empty())
-            print("Description:\n{}", test.description());
-        if (!result.failedActionsMessages().empty())
-            print(boost::join(result.failedActionsMessages(), "\n"));
+        if (!test.description().empty()){
+            auto descriptionHasMultipleLines = !str::after(test.description(), "\n").empty();
+            if (descriptionHasMultipleLines)
+                print("Description:\n{}", test.description());
+            else
+                print("Description: {}", test.description());
+        }
+        if (!result.failedActionsMessages().empty()){
+            if (result.failedActionsMessages().size() > 1)
+                print("Failure:\n{}", boost::join(result.failedActionsMessages(), "\n"));
+            else
+                print("Failure: {}", boost::join(result.failedActionsMessages(), "\n"));
+        }
     }
     if (result.type() == TestResultType::RuntimeError)
         if (!result.errorInfo().empty())

@@ -30,6 +30,9 @@ private:
     void saveDirectoryState();
     void restoreDirectoryState();
     std::vector<fs::path> readFileNames(const std::string& input);
+    bool readParam(std::string& param, const std::string& paramName, const Section& section);
+    bool readParam(fs::path& param, const std::string& paramName, const Section& section);
+    bool readParam(bool& param, const std::string& paramName, const Section& section);
 
 private:
     std::vector<TestAction> actions_;

@@ -10,12 +10,6 @@
 #include <sstream>
 #include <iomanip>
 
-namespace{
-bool readParam(std::string& param, const std::string& paramName, const Section& section);
-bool readParam(fs::path& param, const std::string& paramName, const Section& section);
-bool readParam(bool& param, const std::string& paramName, const Section& section);
-}
-
 Test::Test(const fs::path& configPath)
     : name_(configPath.stem().string())
     , directory_(configPath.parent_path())
@@ -211,8 +205,7 @@ std::vector<fs::path> Test::readFileNames(const std::string& input)
     return result;
 }
 
-namespace{
-bool readParam(std::string& param, const std::string& paramName, const Section& section)
+bool Test::readParam(std::string& param, const std::string& paramName, const Section& section)
 {
     if (section.name != paramName)
         return false;
@@ -220,15 +213,16 @@ bool readParam(std::string& param, const std::string& paramName, const Section& 
     return true;
 }
 
-bool readParam(fs::path& param, const std::string& paramName, const Section& section)
+bool Test::readParam(fs::path& param, const std::string& paramName, const Section& section)
 {
+    auto dir = directory_;
     if (section.name != paramName)
         return false;
-    param = boost::trim_copy(section.value);
+    param = fs::canonical(boost::trim_copy(section.value), dir);
     return true;
 }
 
-bool readParam(bool& param, const std::string& paramName, const Section& section)
+bool Test::readParam(bool& param, const std::string& paramName, const Section& section)
 {
     if (section.name != paramName)
         return false;
@@ -237,4 +231,3 @@ bool readParam(bool& param, const std::string& paramName, const Section& section
     return true;
 }
 
-}

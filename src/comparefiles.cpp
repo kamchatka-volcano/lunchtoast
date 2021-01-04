@@ -11,7 +11,6 @@
 namespace{
 std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::regex& pathFilter);
 std::string filenameListStr(const std::vector<fs::path>& pathList);
-bool compareFiles(const fs::path& lhs, const fs::path& rhs, std::string& failedComparisonInfo);
 }
 
 ComparedFiles::ComparedFiles(const fs::path& filePath)
@@ -71,6 +70,29 @@ TestActionResult CompareFiles::process() const
         return TestActionResult::Failure(boost::join(errorInfo, "\n"));
 }
 
+bool CompareFiles::compareFiles(const fs::path& lhs, const fs::path& rhs, std::string& failedComparisonInfo) const
+{
+    auto lhsExists = fs::exists(lhs);
+    auto rhsExists = fs::exists(rhs);
+    auto bothFilesExist = lhsExists && rhsExists;
+    if (!bothFilesExist)
+        failedComparisonInfo += "Files " + lhs_.string() + " and " + rhs_.string() + " equality check has failed, ";
+    if (!lhsExists)
+        failedComparisonInfo += "file " + lhs.filename().string() + " doesn't exist; ";
+    if (!rhsExists)
+        failedComparisonInfo += "file " + rhs.filename().string() + " doesn't exist; ";
+    if (!bothFilesExist)
+        return false;
+
+    if (calcMd5(lhs) != calcMd5(rhs)){
+        failedComparisonInfo += "Files " + lhs_.string() + " and " + rhs_.string() + " equality check has failed, files "
+                  + lhs.filename().string() + " and "
+                  + rhs.filename().string() + " are different";
+        return false;
+    }
+    return true;
+}
+
 namespace{
 std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::regex& pathFilter)
 {
@@ -93,29 +115,6 @@ std::string filenameListStr(const std::vector<fs::path>& pathList)
     std::transform(pathList.begin(), pathList.end(), std::back_inserter(filenameList),
                    [](const fs::path& path){return path.filename().string();});
     return boost::join(filenameList, ",");
-}
-
-bool compareFiles(const fs::path& lhs, const fs::path& rhs, std::string& failedComparisonInfo)
-{
-    auto lhsExists = fs::exists(lhs);
-    auto rhsExists = fs::exists(rhs);
-    auto bothFilesExist = lhsExists && rhsExists;
-    if (!bothFilesExist)
-        failedComparisonInfo += "Files equality check has failed, ";
-    if (!lhsExists)
-        failedComparisonInfo += "file " + lhs.filename().string() + " doesn't exist; ";
-    if (!rhsExists)
-        failedComparisonInfo += "file " + rhs.filename().string() + " doesn't exist; ";
-    if (!bothFilesExist)
-        return false;
-
-    if (calcMd5(lhs) != calcMd5(rhs)){
-        failedComparisonInfo += "Files equality check has failed, files "
-                  + lhs.filename().string() + " and "
-                  + rhs.filename().string() + " are different";
-        return false;
-    }
-    return true;
 }
 
 }

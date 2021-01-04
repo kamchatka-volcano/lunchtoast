@@ -24,6 +24,9 @@ public:
     TestActionResult process() const;
 
 private:
+    bool compareFiles(const fs::path& lhs, const fs::path& rhs, std::string& failedComparisonInfo) const;
+
+private:
     ComparedFiles lhs_;
     ComparedFiles rhs_;    
 };
