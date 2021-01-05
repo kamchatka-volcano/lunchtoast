@@ -81,12 +81,25 @@ void TestLauncher::collectTests(const fs::path &testPath)
 void TestLauncher::addTest(const fs::path &testFile)
 {
     auto stream = std::ifstream{testFile.string()};
+    auto enabledStr = boost::to_lower_copy(boost::trim_copy(readSectionValue(stream, "Enabled")));
+    auto isEnabled = (enabledStr.empty() || enabledStr == "true");
+    stream.clear();
+    stream.seekg(0, std::ios::beg);
     auto suiteName = boost::trim_copy(readSectionValue(stream, "Suite"));
     processVariablesSubstitution(suiteName, testFile.stem().string(), testFile.parent_path().stem().string());
-    if (suiteName.empty())
-        defaultSuite_.tests.push_back(testFile);
-    else
-        suites_[suiteName].tests.push_back(testFile);
+
+    if (suiteName.empty()){
+        if (isEnabled)
+            defaultSuite_.tests.push_back(testFile);
+        else
+            defaultSuite_.disabledTestsCounter++;
+    }
+    else{
+        if (isEnabled)
+            suites_[suiteName].tests.push_back(testFile);
+        else
+            suites_[suiteName].disabledTestsCounter++;
+    }
 }
 
 namespace{
@@ -163,37 +176,66 @@ void TestLauncher::reportBrokenTest(const fs::path& brokenTestConfig, const std:
     print("Test can't be started. Config file {} error:\n{}\n", brokenTestConfig.string(), errorInfo);
 }
 
-void TestLauncher::reportSuiteResult(std::string suiteName, int passedNumber, int totalNumber)
+void TestLauncher::reportSuiteResult(std::string suiteName, int passedNumber, int totalNumber, int disabledNumber)
 {
+    if (totalNumber == 0 && disabledNumber == 0)
+        return;
+
     auto width = reportWidth_ / 2 + 4;
     suiteName = truncateString(suiteName, width - 1) + ":";
     auto resultType = passedNumber == totalNumber ?
         TestResultType::Success : TestResultType::Failure;
-    auto resultStr = fmt::format("{} out of {} passed, {} failed",
-                                 passedNumber, totalNumber, totalNumber - passedNumber);
+    auto resultStr = std::string{};
+    if (disabledNumber)
+        resultStr = fmt::format("{} out of {} passed, {} failed, {} disabled",
+                                passedNumber, totalNumber, totalNumber - passedNumber, disabledNumber);
+    else
+        resultStr = fmt::format("{} out of {} passed, {} failed",
+                                passedNumber, totalNumber, totalNumber - passedNumber);
     print(resultType, "{:" + std::to_string(width) + "} {}", suiteName, resultStr);
+}
+
+std::tuple<int, int, int> TestLauncher::countTotals()
+{
+    auto totalTests = defaultSuite_.tests.size();
+    auto totalPassed = defaultSuite_.passedTestsCounter;
+    auto totalDisabled = defaultSuite_.disabledTestsCounter;
+    for (const auto& suitePair : suites_){
+        const auto& suite = suitePair.second;
+        totalTests += suite.tests.size();
+        totalPassed += suite.passedTestsCounter;
+        totalDisabled += suite.disabledTestsCounter;
+    }
+    return std::make_tuple(totalTests, totalPassed, totalDisabled);
 }
 
 void TestLauncher::reportSummary()
 {
     auto totalTests = 0;
     auto totalPassed = 0;
-
-    printNewLine();
-    print("{:#^" + std::to_string(reportWidth_) + "}", "  SUMMARY  ");
-    if (!defaultSuite_.tests.empty()){
-        totalTests += defaultSuite_.tests.size();
-        totalPassed += defaultSuite_.passedTestsCounter;
-        reportSuiteResult("Default", defaultSuite_.passedTestsCounter, static_cast<int>(defaultSuite_.tests.size()));
+    auto totalDisabled = 0;
+    std::tie(totalTests, totalPassed, totalDisabled) = countTotals();
+    if (totalTests == 0 && totalDisabled == 0){
+        print("No tests were found. Exiting.");
+        return;
     }
+
+    if (totalTests)
+        printNewLine();
+    print("{:#^" + std::to_string(reportWidth_) + "}", "  SUMMARY  ");
+    reportSuiteResult("Default",
+                      defaultSuite_.passedTestsCounter,
+                      static_cast<int>(defaultSuite_.tests.size()),
+                      defaultSuite_.disabledTestsCounter);
     for (const auto& suitePair : suites_){
-        const auto& suite = suitePair.second;
-        totalTests += suite.tests.size();
-        totalPassed += suite.passedTestsCounter;
-        reportSuiteResult(suitePair.first, suite.passedTestsCounter, static_cast<int>(suite.tests.size()));
+        const auto& suite = suitePair.second;        
+        reportSuiteResult(suitePair.first,
+                          suite.passedTestsCounter,
+                          static_cast<int>(suite.tests.size()),
+                          suite.disabledTestsCounter);
     }
     print("---");
-    reportSuiteResult("Total", totalPassed, totalTests);
+    reportSuiteResult("Total", totalPassed, totalTests, totalDisabled);
 }
 
 void TestLauncher::initReporter(const boost::filesystem::path& reportFilePath)

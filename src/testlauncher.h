@@ -8,6 +8,7 @@ class TestResult;
 struct TestSuite{
     std::vector<fs::path> tests;
     int passedTestsCounter = 0;
+    int disabledTestsCounter = 0;
 };
 
 class TestLauncher
@@ -28,8 +29,9 @@ private:
                       const std::string& suite, int suiteTestNumber, int suiteNumOfTests);
     void reportBrokenTest(const fs::path& brokenTestConfig, const std::string& errorInfo,
                           const std::string& suite, int suiteTestNumber, int suiteNumOfTests);
-    void reportSuiteResult(std::string suiteName, int passedNumber, int totalNumber);
+    void reportSuiteResult(std::string suiteName, int passedNumber, int totalNumber, int disabledNumber);
     void reportSummary();
+    std::tuple<int, int, int> countTotals();
     void initReporter(const fs::path& reportFilePath);
     bool processSuite(const std::string& suiteName, TestSuite& suite);
 
