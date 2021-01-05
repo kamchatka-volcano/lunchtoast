@@ -1,6 +1,7 @@
 #pragma once
 #include "testresult.h"
 #include "testaction.h"
+#include "filenamereader.h"
 #include "alias_boost_filesystem.h"
 #include <vector>
 #include <set>
@@ -27,12 +28,13 @@ private:
     void createCompareFilesAction(TestActionType type, const std::string& filenamesStr);
     void createCompareFileContentAction(TestActionType type, const std::string& filenameStr, const std::string& expectedFileContent);
     bool createComparisonAction(TestActionType type, const std::string& encodedActionType, const std::string& value);
-    void saveDirectoryState();
-    void restoreDirectoryState();
-    std::vector<fs::path> readFileNames(const std::string& input);
+    void cleanTestFiles();
     bool readParam(std::string& param, const std::string& paramName, const Section& section);
     bool readParam(fs::path& param, const std::string& paramName, const Section& section);
+    bool readParam(std::vector<FilenameGroup>& param, const std::string& paramName, const Section& section);
     bool readParam(bool& param, const std::string& paramName, const Section& section);
+    void postProcessCleanupConfig(const fs::path& configPath);
+    void checkParams();
 
 private:
     std::vector<TestAction> actions_;
@@ -43,8 +45,7 @@ private:
     std::string shellCommand_;
     bool isEnabled_;
     bool requiresCleanup_;
-    std::set<fs::path> directoryState_;
-
+    std::vector<FilenameGroup> cleanupWhitelist_;
 };
 
 class TestConfigError: public std::runtime_error{

@@ -1,25 +1,15 @@
 #pragma once
 #include "testactionresult.h"
 #include "alias_boost_filesystem.h"
+#include "filenamereader.h"
 #include <vector>
 #include <regex>
-
-class ComparedFiles{
-public:
-    ComparedFiles(const fs::path& filePath);
-    std::vector<fs::path> pathList() const;
-    std::string string() const;
-private:
-    fs::path filePath_;
-    std::regex fileMatchingRegexp_;
-    bool isRegexp_ = false;
-};
 
 class CompareFiles
 {
 public:
-    CompareFiles(const fs::path& lhs,
-                 const fs::path& rhs);
+    CompareFiles(const FilenameGroup& lhs,
+                 const FilenameGroup& rhs);
 
     TestActionResult process() const;
 
@@ -27,7 +17,7 @@ private:
     bool compareFiles(const fs::path& lhs, const fs::path& rhs, std::string& failedComparisonInfo) const;
 
 private:
-    ComparedFiles lhs_;
-    ComparedFiles rhs_;    
+    FilenameGroup lhs_;
+    FilenameGroup rhs_;
 };
 

@@ -7,37 +7,12 @@
 #include <sstream>
 #include <iostream>
 
-
 namespace{
-std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::regex& pathFilter);
 std::string filenameListStr(const std::vector<fs::path>& pathList);
 }
 
-ComparedFiles::ComparedFiles(const fs::path& filePath)
-    : filePath_(filePath)
-{
-    const auto filename = filePath.filename().string();
-    if (boost::starts_with(filename, "{") && boost::ends_with(filename, "}")){
-        fileMatchingRegexp_ = std::regex{filename.substr(1, filename.size() - 2)};
-        isRegexp_ = true;
-    }
-}
-
-std::vector<fs::path> ComparedFiles::pathList() const
-{
-    if (isRegexp_)
-        return getMatchingPaths(filePath_.parent_path(), fileMatchingRegexp_);
-    else
-        return {filePath_};
-}
-
-std::string ComparedFiles::string() const
-{
-    return filePath_.filename().string();
-}
-
-CompareFiles::CompareFiles(const fs::path& lhs,
-                           const fs::path& rhs)
+CompareFiles::CompareFiles(const FilenameGroup& lhs,
+                           const FilenameGroup& rhs)
     : lhs_(lhs)
     , rhs_(rhs)    
 {
@@ -45,9 +20,9 @@ CompareFiles::CompareFiles(const fs::path& lhs,
 
 TestActionResult CompareFiles::process() const
 {
-    auto lhsPaths = lhs_.pathList();
+    auto lhsPaths = lhs_.fileList();
     std::sort(lhsPaths.begin(), lhsPaths.end());
-    auto rhsPaths = rhs_.pathList();
+    auto rhsPaths = rhs_.fileList();
     std::sort(rhsPaths.begin(), rhsPaths.end());
     if (lhsPaths.size() != rhsPaths.size()){
         return TestActionResult::Failure(
@@ -94,20 +69,6 @@ bool CompareFiles::compareFiles(const fs::path& lhs, const fs::path& rhs, std::s
 }
 
 namespace{
-std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::regex& pathFilter)
-{
-    auto result = std::vector<fs::path>{};
-    const auto end = fs::directory_iterator{};
-    for(auto it = fs::directory_iterator{directory}; it != end; ++it){
-        if(!fs::is_regular_file(it->status()))
-            continue;
-        auto match = std::smatch{};
-        auto fileEntry = it->path().filename().string();
-        if (std::regex_match(fileEntry, match, pathFilter))
-            result.push_back(fs::absolute(fileEntry, directory));
-    }
-    return result;
-}
 
 std::string filenameListStr(const std::vector<fs::path>& pathList)
 {

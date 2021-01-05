@@ -19,6 +19,7 @@ find_package(Boost 1.67 REQUIRED COMPONENTS
 set(SRC
     src/comparefilecontent.cpp
     src/comparefiles.cpp
+    src/filenamereader.cpp
     src/launchprocess.cpp
     src/main.cpp
     src/sectionsreader.cpp

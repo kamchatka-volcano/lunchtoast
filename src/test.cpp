@@ -18,6 +18,7 @@ Test::Test(const fs::path& configPath)
     , requiresCleanup_(false)
 {
     readConfig(configPath);
+    postProcessCleanupConfig(configPath);
 }
 
 TestConfigError::TestConfigError(const std::string& msg)
@@ -28,7 +29,7 @@ TestConfigError::TestConfigError(const std::string& msg)
 TestResult Test::process()
 {
     if (requiresCleanup_)
-        saveDirectoryState();
+        cleanTestFiles();
 
     auto failedActionsMessages = std::vector<std::string>{};
     if (actions_.empty())
@@ -52,7 +53,7 @@ TestResult Test::process()
     }
 
     if (ok && requiresCleanup_)
-        restoreDirectoryState();
+        cleanTestFiles();
 
     if (ok)
         return TestResult::Success();
@@ -67,6 +68,7 @@ bool Test::readParamFromSection(const Section& section)
     if (readParam(description_, "Description", section)) return true;
     if (readParam(directory_, "Directory", section)) return true;
     if (readParam(isEnabled_, "Enabled", section)) return true;
+    if (readParam(cleanupWhitelist_, "Cleanup whitelist", section)) return true;
     if (readParam(requiresCleanup_, "Cleanup", section)) return true;
     if (readParam(shellCommand_, "Shell", section)) return true;
     return false;
@@ -115,9 +117,16 @@ void Test::readConfig(const boost::filesystem::path& path)
         throw TestConfigError{e.what()};
     }
 
+    checkParams();
     processVariablesSubstitution(name_, path.stem().string(), directory_.stem().string());
     processVariablesSubstitution(description_, path.stem().string(), directory_.stem().string());
     processVariablesSubstitution(suite_, path.stem().string(), directory_.stem().string());
+}
+
+void Test::checkParams()
+{
+    if (!fs::exists(directory_))
+        throw TestConfigError{"Specified directory '" + directory_.string() + "' doesn't exist"};
 }
 
 bool Test::createComparisonAction(TestActionType type, const std::string& encodedActionType, const std::string& value)
@@ -152,10 +161,10 @@ void Test::createWriteAction(const Section& section)
 
 void Test::createCompareFilesAction(TestActionType type, const std::string& filenamesStr)
 {
-    const auto paths = readFileNames(filenamesStr);
-    if (paths.size() != 2)
+    const auto filenameGroups = readFilenames(filenamesStr, directory_);
+    if (filenameGroups.size() != 2)
         throw TestConfigError{"Comparison of files require exactly two filenames or filename matching regular expressions to be specified"};    
-    actions_.push_back(TestAction{CompareFiles{paths[0], paths[1]}, type});
+    actions_.push_back(TestAction{CompareFiles{filenameGroups[0], filenameGroups[1]}, type});
 }
 
 void Test::createCompareFileContentAction(TestActionType type, const std::string& filenameStr, const std::string &expectedFileContent)
@@ -164,20 +173,22 @@ void Test::createCompareFileContentAction(TestActionType type, const std::string
     actions_.push_back(TestAction{CompareFileContent{fs::absolute(filename, directory_), expectedFileContent}, type});
 }
 
-void Test::saveDirectoryState()
+void Test::cleanTestFiles()
 {
-    directoryState_.clear();
-    auto end = fs::directory_iterator{};
-    for (auto it = fs::directory_iterator{directory_}; it != end; ++it)
-        directoryState_.insert(it->path());
-}
+    if (cleanupWhitelist_.empty())
+        return;
+    auto whiteListPaths = std::set<fs::path>{};
+    for (const auto& filenameGroup : cleanupWhitelist_){
+        const auto paths = filenameGroup.pathList();
+        std::copy(paths.begin(), paths.end(), std::inserter(whiteListPaths, whiteListPaths.end()));
+    }
 
-void Test::restoreDirectoryState()
-{
-    auto end = fs::directory_iterator{};
-    for (auto it = fs::directory_iterator{directory_}; it != end; ++it)
-        if (!directoryState_.count(it->path()))
-            fs::remove_all(it->path());            
+    auto paths = getDirectoryContent(directory_);
+    std::sort(paths.begin(), paths.end(), std::greater<>{});
+
+    for (const auto& path : paths)
+        if (!whiteListPaths.count(path))
+            fs::remove(path);
 }
 
 const std::string& Test::suite() const
@@ -195,16 +206,6 @@ const std::string& Test::description() const
     return description_;
 }
 
-std::vector<fs::path> Test::readFileNames(const std::string& input)
-{
-    auto result = std::vector<fs::path>{};
-    auto fileName = std::string{};
-    auto stream = std::istringstream{input};
-    while (stream >> std::quoted(fileName))
-        result.push_back(fs::absolute(fileName, directory_));
-    return result;
-}
-
 bool Test::readParam(std::string& param, const std::string& paramName, const Section& section)
 {
     if (section.name != paramName)
@@ -215,10 +216,17 @@ bool Test::readParam(std::string& param, const std::string& paramName, const Sec
 
 bool Test::readParam(fs::path& param, const std::string& paramName, const Section& section)
 {
-    auto dir = directory_;
     if (section.name != paramName)
         return false;
-    param = fs::canonical(boost::trim_copy(section.value), dir);
+    param = fs::absolute(boost::trim_copy(section.value), directory_);
+    return true;
+}
+
+bool Test::readParam(std::vector<FilenameGroup>& param, const std::string& paramName, const Section& section)
+{
+    if (section.name != paramName)
+        return false;
+    param = readFilenames(section.value, directory_);
     return true;
 }
 
@@ -231,3 +239,14 @@ bool Test::readParam(bool& param, const std::string& paramName, const Section& s
     return true;
 }
 
+void Test::postProcessCleanupConfig(const fs::path& configPath)
+{
+    if (cleanupWhitelist_.empty()){
+        auto pathList = getDirectoryContent(directory_);
+        std::transform(pathList.begin(), pathList.end(), std::back_inserter(cleanupWhitelist_), [this](const fs::path& path){
+            return FilenameGroup{fs::relative(path, directory_).string(), directory_};
+        });
+        return;
+    }
+    cleanupWhitelist_.push_back(FilenameGroup{fs::relative(configPath, directory_).string(), directory_});
+}

@@ -46,3 +46,17 @@ void processVariablesSubstitution(std::string& value,
     value = boost::replace_all_copy(value, "$filename$", varFileName);
     value = boost::replace_all_copy(value, "$dir$", varDirName);
 }
+
+std::vector<fs::path> getDirectoryContent(const fs::path& dir)
+{
+    auto result = std::vector<fs::path>{};
+    auto end = fs::directory_iterator{};
+    for (auto it = fs::directory_iterator{dir}; it != end; ++it){
+        result.push_back(it->path());
+        if (fs::is_directory(it->status())){
+            auto subdirResult = getDirectoryContent(it->path());
+            std::copy(subdirResult.begin(), subdirResult.end(), std::back_inserter(result));
+        }
+    }
+    return result;
+}

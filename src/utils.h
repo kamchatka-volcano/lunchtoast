@@ -8,3 +8,4 @@ std::string calcMd5(const std::string& data);
 void processVariablesSubstitution(std::string& value,
                                   const std::string& varFileName,
                                   const std::string& varDirName);
+std::vector<fs::path> getDirectoryContent(const fs::path& dir);
