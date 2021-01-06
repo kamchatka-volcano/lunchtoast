@@ -12,7 +12,8 @@ void printUsageInfo()
                  "                         required when specified test path is a directory\n"
                  "                         (default value: .toast)\n"
                  " --report <file path>    save test report to file\n"
-                 " --reportwidth <number>  set test report's width in number of characters\n";
+                 " --reportwidth <number>  set test report's width in number of characters\n"
+                 " --help                  show usage info\n";
 }
 
 struct Cfg{
@@ -76,6 +77,11 @@ bool parseCommandLine(Cfg& cfg, int argc, char**argv)
     if (cfg.testPath.empty()){
         std::cout << "Command line error: the argument with test directory "
                      "or file path is required but missing." << std::endl;
+        return false;
+    }
+    if (!fs::exists(cfg.testPath)){
+        std::cout << "Command line error: specified test directory "
+                     "or file path '" + cfg.testPath.string() + "' doesn't exist." << std::endl;
         return false;
     }
     return true;
