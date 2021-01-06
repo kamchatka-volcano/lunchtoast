@@ -6,6 +6,7 @@
 #include "comparefilecontent.h"
 #include "utils.h"
 #include "string_utils.h"
+#include <spdlog/fmt/fmt.h>
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 #include <iomanip>
@@ -99,19 +100,19 @@ void Test::readConfig(const boost::filesystem::path& path)
 {
     auto fileStream = std::ifstream{path.string()};
     if (!fileStream.is_open())
-        throw TestConfigError{"Test config file " + path.string() + " doesn't exist"};
+        throw TestConfigError{fmt::format("Test config file {} doesn't exist", path.string())};
 
     auto sections = std::vector<Section>{};
     try{
         sections = readSections(fileStream, {"Write"});
         if (sections.empty())
-            throw TestConfigError{"Test config file " + path.string() +  "is empty or invalid"};
+            throw TestConfigError{fmt::format("Test config file {} is empty or invalid", path.string())};
         for (const auto& section : sections){
             if (readParamFromSection(section))
                 continue;
             if (readActionFromSection(section))
                 continue;
-            throw TestConfigError{"Unsupported section name: " + section.name};
+            throw TestConfigError{fmt::format("Unsupported section name: {}", section.name)};
         }
     } catch(const std::exception& e){
         throw TestConfigError{e.what()};
@@ -126,7 +127,7 @@ void Test::readConfig(const boost::filesystem::path& path)
 void Test::checkParams()
 {
     if (!fs::exists(directory_))
-        throw TestConfigError{"Specified directory '" + directory_.string() + "' doesn't exist"};
+        throw TestConfigError{fmt::format("Specified directory '{}' doesn't exist", directory_.string())};
 }
 
 bool Test::createComparisonAction(TestActionType type, const std::string& encodedActionType, const std::string& value)

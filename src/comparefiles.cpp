@@ -1,11 +1,11 @@
 #include "comparefiles.h"
 #include "utils.h"
 #include "alias_boost_filesystem.h"
+#include <spdlog/fmt/fmt.h>
 #include <boost/algorithm/string.hpp>
 #include <regex>
 #include <string>
 #include <sstream>
-#include <iostream>
 
 namespace{
 std::string filenameListStr(const std::vector<fs::path>& pathList);
@@ -26,9 +26,8 @@ TestActionResult CompareFiles::process() const
     std::sort(rhsPaths.begin(), rhsPaths.end());
     if (lhsPaths.size() != rhsPaths.size()){
         return TestActionResult::Failure(
-                "Files equality check has failed, file lists have different number of elements:\n" +
-                lhs_.string() + " : " + filenameListStr(lhsPaths) + "\n" +
-                rhs_.string() + " : " + filenameListStr(rhsPaths) + "\n");
+                fmt::format("Files equality check has failed, file lists have different number of elements:\n{} : {}\n{} : {}\n",
+                lhs_.string(), filenameListStr(lhsPaths), rhs_.string(), filenameListStr(rhsPaths)));
     }
     auto result = true;
     auto errorInfo = std::vector<std::string>{};
@@ -51,18 +50,17 @@ bool CompareFiles::compareFiles(const fs::path& lhs, const fs::path& rhs, std::s
     auto rhsExists = fs::exists(rhs);
     auto bothFilesExist = lhsExists && rhsExists;
     if (!bothFilesExist)
-        failedComparisonInfo += "Files " + lhs_.string() + " and " + rhs_.string() + " equality check has failed, ";
+        failedComparisonInfo += fmt::format("Files {} and {} equality check has failed, ", lhs_.string(), rhs_.string());
     if (!lhsExists)
-        failedComparisonInfo += "file " + lhs.filename().string() + " doesn't exist; ";
+        failedComparisonInfo += fmt::format("file {} doesn't exist; ", lhs.filename().string());
     if (!rhsExists)
-        failedComparisonInfo += "file " + rhs.filename().string() + " doesn't exist; ";
+        failedComparisonInfo += fmt::format("file {} doesn't exist; ", rhs.filename().string());
     if (!bothFilesExist)
         return false;
 
     if (calcMd5(lhs) != calcMd5(rhs)){
-        failedComparisonInfo += "Files " + lhs_.string() + " and " + rhs_.string() + " equality check has failed, files "
-                  + lhs.filename().string() + " and "
-                  + rhs.filename().string() + " are different";
+        failedComparisonInfo += fmt::format("Files {} and {} equality check has failed, files {} and {} are different",
+                                            lhs_.string(), rhs_.string(), lhs.filename().string(), rhs.filename().string());
         return false;
     }
     return true;

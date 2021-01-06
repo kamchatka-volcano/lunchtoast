@@ -1,4 +1,5 @@
 #include "writefile.h"
+#include <spdlog/fmt/fmt.h>
 #include <fstream>
 
 WriteFile::WriteFile(const fs::path& filePath, const std::string& content)
@@ -15,7 +16,7 @@ TestActionResult WriteFile::process() const
         fileStream.write(content_.c_str(), static_cast<std::streamsize>(content_.size()));
     } catch(std::exception& e)
     {
-        return TestActionResult::Failure("File " + filePath_.string() + " writing error:" + e.what());
+        return TestActionResult::Failure(fmt::format("File {} writing error: {}", filePath_.string(), e.what()));
     }
     return TestActionResult::Success();
 }

@@ -1,7 +1,7 @@
 #include "launchprocess.h"
 #include "alias_boost_process.h"
 #include "string_utils.h"
-#include <iostream>
+#include <spdlog/fmt/fmt.h>
 
 namespace proc = boost::process;
 
@@ -46,7 +46,7 @@ TestActionResult LaunchProcess::process() const
         return TestActionResult::Success();
 
     if (result != 0)
-        return TestActionResult::Failure("Launched process '" + command_+ "' returned non-zero exit code");
+        return TestActionResult::Failure(fmt::format("Launched process '{}' returned non-zero exit code", command_));
     else
         return TestActionResult::Success();
 }

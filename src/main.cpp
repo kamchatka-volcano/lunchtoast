@@ -2,18 +2,18 @@
 #include "testlauncher.h"
 #include "alias_boost_program_options.h"
 #include "alias_boost_program_options.h"
-#include <iostream>
+#include <spdlog/fmt/fmt.h>
 
 void printUsageInfo()
 {
-    std::cout << "Usage: lunchtoast [options] [dir|file]path\n"
-                 "Options:\n"                 
-                 " --ext <file extension>  the extension of searched test files,\n"
-                 "                         required when specified test path is a directory\n"
-                 "                         (default value: .toast)\n"
-                 " --report <file path>    save test report to file\n"
-                 " --reportwidth <number>  set test report's width in number of characters\n"
-                 " --help                  show usage info\n";
+    fmt::print("Usage: lunchtoast [options] [dir|file]path\n"
+               "Options:\n"
+               " --ext <file extension>  the extension of searched test files,\n"
+               "                         required when specified test path is a directory\n"
+               "                         (default value: .toast)\n"
+               " --report <file path>    save test report to file\n"
+               " --reportwidth <number>  set test report's width in number of characters\n"
+               " --help                  show usage info\n");
 }
 
 struct Cfg{
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
         auto testLauncher = TestLauncher{cfg.testPath, cfg.testFileExtension, cfg.reportFilePath, cfg.reportWidth};
         allTestsPassed = testLauncher.process();
     } catch(const std::exception& e){
-        std::cout << "Unknown error occured during test processing: " << e.what() << std::endl;
+        fmt::print("Unknown error occured during test processing: {}\n", e.what());
         return -1;
     }
 
@@ -68,20 +68,20 @@ bool parseCommandLine(Cfg& cfg, int argc, char**argv)
         opts::store(parser.run(), params);
         opts::notify(params);
     } catch(const std::exception& e){
-        std::cout << "Command line error: " << e.what() << std::endl;
+        fmt::print("Command line error: {}\n", e.what());
         return false;
     }
     if (params.count("help"))
         return false;
 
     if (cfg.testPath.empty()){
-        std::cout << "Command line error: the argument with test directory "
-                     "or file path is required but missing." << std::endl;
+        fmt::print("Command line error: the argument with test directory "
+                   "or file path is required but missing.\n");
         return false;
     }
     if (!fs::exists(cfg.testPath)){
-        std::cout << "Command line error: specified test directory "
-                     "or file path '" + cfg.testPath.string() + "' doesn't exist." << std::endl;
+        fmt::print("Command line error: specified test directory "
+                   "or file path '{}' doesn't exist.\n", cfg.testPath.string());
         return false;
     }
     return true;
