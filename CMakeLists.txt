@@ -28,6 +28,7 @@ set(SRC
     src/testactionresult.cpp
     src/test.cpp
     src/testlauncher.cpp
+    src/testreporter.cpp
     src/testresult.cpp
     src/utils.cpp
     src/writefile.cpp

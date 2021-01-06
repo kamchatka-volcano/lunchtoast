@@ -1,5 +1,6 @@
 #include "test.h"
 #include "testlauncher.h"
+#include "testreporter.h"
 #include "alias_boost_program_options.h"
 #include "alias_boost_program_options.h"
 #include <spdlog/fmt/fmt.h>
@@ -34,7 +35,8 @@ int main(int argc, char **argv)
 
     auto allTestsPassed = false;
     try{
-        auto testLauncher = TestLauncher{cfg.testPath, cfg.testFileExtension, cfg.reportFilePath, cfg.reportWidth};
+        const auto testReporter = TestReporter{cfg.reportFilePath, cfg.reportWidth};
+        auto testLauncher = TestLauncher{cfg.testPath, cfg.testFileExtension, testReporter};
         allTestsPassed = testLauncher.process();
     } catch(const std::exception& e){
         fmt::print("Unknown error occured during test processing: {}\n", e.what());

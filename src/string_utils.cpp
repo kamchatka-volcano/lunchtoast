@@ -30,5 +30,4 @@ std::string after(const std::string &input, const std::string& marker)
     return std::string(input.begin() + static_cast<int>(res + marker.size()), input.end());
 }
 
-
 }
