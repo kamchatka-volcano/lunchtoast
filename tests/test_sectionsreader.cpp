@@ -23,6 +23,15 @@ void testSectionReader(const std::string& input,
     EXPECT_EQ(sections, expectedSections);
 }
 
+void testRawSectionReader(const std::string& input,
+                          const std::vector<RawSection>& expectedSections,
+                          const std::vector<std::string>& rawSectionsList = {})
+{
+    auto stream = std::istringstream{input};
+    auto sections = readRawSections(stream, rawSectionsList);
+    EXPECT_EQ(sections, expectedSections);
+}
+
 void testSectionValueReader(const std::string& input,
                             const std::string& sectionName,
                             const std::string& expectedValue,
@@ -63,6 +72,20 @@ TEST(SectionsReader, Basic)
         });
 }
 
+TEST(RawSectionsReader, Basic)
+{
+    testRawSectionReader(
+        "-Name:foo\n"
+        "test\n"
+        "\n"
+        "-Value:\n"
+        "bar\n",
+        {
+            {"Name", "foo\ntest\n\n", "-Name:foo\ntest\n\n"},
+            {"Value", "bar\n", "-Value:\nbar\n"}
+        });
+}
+
 TEST(SectionsReader, EmptySection)
 {
     testSectionReader(
@@ -79,12 +102,37 @@ TEST(SectionsReader, EmptySection)
         });
 }
 
+TEST(RawSectionsReader, EmptySection)
+{
+    testRawSectionReader(
+        "-Name:foo\n"
+        "test\n"
+        "\n"
+        "-Empty:\n"
+        "-Value:\n"
+        "bar\n",
+        {
+            {"Name", "foo\ntest\n\n", "-Name:foo\ntest\n\n"},
+            {"Empty", "", "-Empty:\n"},
+            {"Value", "bar\n", "-Value:\nbar\n"}
+        });
+}
+
 TEST(SectionsReader, SingleEmptySection)
 {
     testSectionReader(
         "-Empty:",
         {
             {"Empty", ""}
+        });
+}
+
+TEST(RawSectionsReader, SingleEmptySection)
+{
+    testRawSectionReader(
+        "-Empty:",
+        {
+            {"Empty", "", "-Empty:"}
         });
 }
 
@@ -96,12 +144,32 @@ TEST(SectionsReader, NoSections)
         {});
 }
 
+TEST(RawSectionsReader, NoSections)
+{
+    testRawSectionReader(
+        "Empty:"
+        "Value",
+        {});
+}
+
 TEST(SectionsReader, NamelessSection)
 {
     assert_exception<std::runtime_error>([]{
         auto input = std::string{"-Name: foo\n-:\n-Value:foo\n"};
         auto stream = std::istringstream{input};
         readSections(stream);
+    },
+    [](const std::runtime_error& e){
+        ASSERT_EQ(std::string{e.what()}, "line#2: Section must have a name");
+    });
+}
+
+TEST(RawSectionsReader, NamelessSection)
+{
+    assert_exception<std::runtime_error>([]{
+        auto input = std::string{"-Name: foo\n-:\n-Value:foo\n"};
+        auto stream = std::istringstream{input};
+        readRawSections(stream);
     },
     [](const std::runtime_error& e){
         ASSERT_EQ(std::string{e.what()}, "line#2: Section must have a name");
@@ -120,6 +188,17 @@ TEST(SectionsReader, SectionWithoutDelimiter)
     });
 }
 
+TEST(RawSectionsReader, SectionWithoutDelimiter)
+{
+    assert_exception<std::runtime_error>([]{
+        auto input = std::string{"-Name: foo\n-\n-Value:foo\n"};
+        auto stream = std::istringstream{input};
+        readRawSections(stream);
+    },
+    [](const std::runtime_error& e){
+        ASSERT_EQ(std::string{e.what()}, "line#2: Section's first line must contain a name delimiter ':'");
+    });
+}
 
 
 TEST(SectionsReader, WithComment)
@@ -137,6 +216,57 @@ TEST(SectionsReader, WithComment)
         });
 }
 
+TEST(RawSectionsReader, WithComment)
+{
+    testRawSectionReader(
+        "-Name:foo\n"
+        "#this is Name section\n"
+        "test\n"
+        "\n"
+        "-Value:\n"
+        "bar\n",
+        {
+            {"Name", "foo\ntest\n\n",
+             "-Name:foo\n"
+             "#this is Name section\n"
+             "test\n"
+             "\n"},
+            {"Value", "bar\n",
+             "-Value:\n"
+             "bar\n"}
+        });
+}
+
+TEST(RawSectionsReader, WithComments)
+{
+    testRawSectionReader(
+        "#first comment\n"
+        "#line2\n"
+        "#line3\n"
+        "-Name:foo\n"
+        "#this is Name section\n"
+        "test\n"
+        "\n"
+        "-Value:\n"
+        "bar\n"
+        "#another comment",
+        {
+            {"", "",
+             "#first comment\n"
+             "#line2\n"
+             "#line3\n", true},
+            {"Name", "foo\ntest\n\n",
+             "-Name:foo\n"
+             "#this is Name section\n"
+             "test\n"
+             "\n"},
+            {"Value", "bar\n",
+             "-Value:\n"
+             "bar\n"
+             "#another comment"}
+        });
+}
+
 TEST(SectionsReader, RawSectionWithComment)
 {
     testSectionReader(
@@ -148,6 +278,27 @@ TEST(SectionsReader, RawSectionWithComment)
         {
             {"Write test.txt", "foo\n#this line should be in test.txt\n\n"},
             {"Value", "bar\n"}
+        },
+        {"Write"});
+}
+
+
+TEST(RawSectionsReader, RawSectionWithComment)
+{
+    testRawSectionReader(
+        "-Write test.txt:foo\n"
+        "#this line should be in test.txt\n"
+        "\n"
+        "-Value:\n"
+        "bar\n",
+        {
+            {"Write test.txt", "foo\n#this line should be in test.txt\n\n",
+             "-Write test.txt:foo\n"
+             "#this line should be in test.txt\n"
+             "\n"},
+            {"Value", "bar\n",
+             "-Value:\n"
+             "bar\n"}
         },
         {"Write"});
 }
@@ -168,6 +319,30 @@ TEST(SectionsReader, TextBeforeSections)
             {"Value", "bar\n"}
         });
 }
+
+TEST(RawSectionsReader, TextBeforeSections)
+{
+    testRawSectionReader(
+        "Loren ipsum\n"
+        "# some comment\n"
+        "\n"
+        "-Name:foo\n"
+        "test\n"
+        "\n"
+        "-Value:\n"
+        "bar\n",
+        {
+            {"","", "# some comment\n", true},
+            {"Name", "foo\ntest\n\n",
+             "-Name:foo\n"
+             "test\n"
+             "\n"},
+            {"Value", "bar\n",
+             "-Value:\n"
+             "bar\n"}
+        });
+}
+
 
 TEST(SectionValueReader, Basic)
 {

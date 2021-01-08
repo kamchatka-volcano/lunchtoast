@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(lunchtoast VERSION 1.0.0 DESCRIPTION "lunchtoast - a simple test automation utility")
+project(lunchtoast VERSION 1.0.0 DESCRIPTION "lunchtoast - a command line functional testing automation tool")
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -17,6 +17,7 @@ find_package(Boost 1.67 REQUIRED COMPONENTS
              program_options filesystem system)
 
 set(SRC
+    src/cleanupwhitelistgenerator.cpp
     src/comparefilecontent.cpp
     src/comparefiles.cpp
     src/filenamereader.cpp

@@ -102,9 +102,8 @@ void Test::readConfig(const boost::filesystem::path& path)
     if (!fileStream.is_open())
         throw TestConfigError{fmt::format("Test config file {} doesn't exist", path.string())};
 
-    auto sections = std::vector<Section>{};
     try{
-        sections = readSections(fileStream, {"Write"});
+        const auto sections = readSections(fileStream, {"Write"});
         if (sections.empty())
             throw TestConfigError{fmt::format("Test config file {} is empty or invalid", path.string())};
         for (const auto& section : sections){

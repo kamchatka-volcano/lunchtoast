@@ -58,6 +58,43 @@ std::vector<Section> readSections(std::istream& input, const std::vector<std::st
     return sections;
 }
 
+std::vector<RawSection> readRawSections(std::istream& input, const std::vector<std::string>& rawSectionsList)
+{
+    auto sections = std::vector<RawSection>{};
+    auto line = std::string{};
+    auto lineIndex = -1;
+    while(std::getline(input, line)){
+        lineIndex++;
+        line+="\n";
+        auto isSectionRaw = !sections.empty() &&
+                            !sections.back().isComment &&
+                            containsAnySubstr(sections.back().name, rawSectionsList);
+        if (!isSectionRaw && line[0] == '#'){
+            if (sections.empty()){
+                auto commentSection = RawSection{};
+                commentSection.isComment = true;
+                commentSection.originalText = line;
+                sections.push_back(commentSection);
+            }
+            else
+                sections.back().originalText += line;
+            continue;
+        }
+        if (line[0] == '-'){
+            sections.emplace_back();
+            readSectionFirstLine(sections.back(), line, lineIndex);
+            sections.back().originalText += line;
+            continue;
+        }
+        if (sections.empty() || sections.back().isComment)
+            continue;
+        auto& section = sections.back();
+        section.value += line;
+        section.originalText += line;
+    }
+    return sections;
+}
+
 std::string readSectionValue(std::istream& input, const std::string& sectionName, bool isRaw)
 {
     auto result = std::string{};
