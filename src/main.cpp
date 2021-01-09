@@ -76,12 +76,12 @@ bool parseCommandLine(Cfg& cfg, int argc, char**argv)
 {
     auto optionsList = opts::options_description{"options"};
     optionsList.add_options()
-        ("help", "")
-        ("preserve-current-state", "")
+        ("help,h", "")
+        ("preserve-current-state,p", "")
         ("input",  opts::value(&cfg.testPath))
-        ("report", opts::value(&cfg.reportFilePath))
-        ("reportwidth", opts::value(&cfg.reportWidth))
-        ("ext",    opts::value(&cfg.testFileExtension))
+        ("report,r", opts::value(&cfg.reportFilePath))
+        ("reportwidth,w", opts::value(&cfg.reportWidth))
+        ("ext,e",    opts::value(&cfg.testFileExtension))
     ;
     auto args = opts::positional_options_description{};
     args.add("input", 1);
@@ -89,9 +89,7 @@ bool parseCommandLine(Cfg& cfg, int argc, char**argv)
     auto params = opts::variables_map{};
     auto parser = opts::command_line_parser{argc, argv}
                   .options(optionsList)
-                  .style(opts::command_line_style::allow_long |
-                         opts::command_line_style::long_allow_adjacent |
-                         opts::command_line_style::long_allow_next)
+                  .style(opts::command_line_style::default_style & ~opts::command_line_style::allow_guessing)
                   .positional(args);
     try{
         opts::store(parser.run(), params);
