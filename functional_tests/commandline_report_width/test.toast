@@ -1,0 +1,9 @@
+-Name: $dir$
+-Cleanup: true
+-Cleanup whitelist: test test/lhs.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
+-Description: 
+    GIVEN 2 equal files (lhs.txt and rhs.txt)
+    WHEN test single assertion of files equality, setting report width to 80
+    THEN test should pass, report should have a width of 80 characters
+-Launch silently: ../bin/lunchtoast ./test/lunchtoast.test --report report.res --reportwidth 80
+-Assert files equal: report.res report.ref

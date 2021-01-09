@@ -1,0 +1,22 @@
+-Name: $dir$
+-Cleanup: true
+-Cleanup whitelist: test test/data2 test/data2/inner test/data2/inner/preserved.txt test/data2/lhs.txt test/data2/rhs.txt test/lunchtoast.test test/data test/data/lhs.txt test/rhs.txt test.toast report.ref
+-Description: 
+    GIVEN 2 equal files (lhs.txt (inside folder data) and rhs.txt), and 2 equal files inside folder data2, and text file data2/inner/preserved.txt
+    WHEN enable cleanup of files created during testing, test single assertion of files equality, write file test.txt, 
+         make directory tmp and write file tmp/test.txt
+    THEN test should pass, file test.txt should be removed, directory tmp should be removed
+-Launch silently: ../bin/lunchtoast ./test/lunchtoast.test --report report.res
+-Launch command: find test | sort > dir.res
+-Assert content of dir.res:
+test
+test/data
+test/data2
+test/data2/inner
+test/data2/inner/preserved.txt
+test/data2/lhs.txt
+test/data2/rhs.txt
+test/data/lhs.txt
+test/lunchtoast.test
+test/rhs.txt
+-Assert files equal: report.res report.ref

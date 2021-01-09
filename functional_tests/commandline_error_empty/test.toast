@@ -1,0 +1,10 @@
+-Name: $dir$
+-Suite: errors
+-Cleanup: true
+-Cleanup whitelist: test test/lhs.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
+-Description: 
+    GIVEN 2 equal files (lhs.txt and rhs.txt)
+    WHEN launch lunchtoast without command line parameters
+    THEN lunchtoast should print usage info and exit
+-Launch command unchecked and silently: ../bin/lunchtoast > report.res
+-Assert files equal: report.res report.ref

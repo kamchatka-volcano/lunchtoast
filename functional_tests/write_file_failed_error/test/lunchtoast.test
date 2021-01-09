@@ -1,0 +1,3 @@
+-Write dir:
+Hello world
+-Assert files equal: dir test.ref

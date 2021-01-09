@@ -1,0 +1,13 @@
+-Name: $dir$
+-Cleanup: true
+-Cleanup whitelist: test test/testdata test/testdata/test.txt test/testdata/lhs.txt test/testdata/rhs.txt test/lunchtoast.test test.toast report.ref
+-Description: 
+    GIVEN 2 equal files (lhs.txt and rhs.txt) inside directory testdata
+    WHEN set test directory to testdata, test single assertion of files equality, 
+         write file test.txt and assert its content (everything is relative to directory testdata)
+    THEN test should pass
+-Launch command silently and unchecked: rm test/testdata/test.txt
+-Launch silently: ../bin/lunchtoast ./test/lunchtoast.test --report report.res
+-Assert content of test/testdata/test.txt:
+Hello world
+-Assert files equal: report.res report.ref

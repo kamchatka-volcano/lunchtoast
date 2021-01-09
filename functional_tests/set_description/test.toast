@@ -1,0 +1,11 @@
+-Name: $dir$
+-Suite: setting params
+-Cleanup: true
+-Cleanup whitelist: test test/lhs2.txt test/lhs.txt test/rhs2.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
+-Description:
+GIVEN 2 different files (lhs.txt and rhs.txt) and 2 different files (lhs2.txt and rhs2.txt), test has a description
+WHEN test assertion of lhs.txt and rhs.txt equality, test assertion of lhs2.txt and rhs2.txt equality
+THEN first assertion should fail, test should fail after the first assertion without checking the second one, the test description should be in the report
+
+-Launch unchecked and silently: ../bin/lunchtoast ./test/lunchtoast.test --report report.res
+-Assert files equal: report.res report.ref

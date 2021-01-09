@@ -1,0 +1,2 @@
+-Name: Files equality assertion
+-Assert files equal: lhs.txt rhs.txt

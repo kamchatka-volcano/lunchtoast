@@ -1,0 +1,10 @@
+-Name: $dir$
+-Suite: command line
+-Cleanup: true
+-Cleanup whitelist: test test/lhs.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
+-Description: 
+    GIVEN 2 equal files (lhs.txt and rhs.txt)
+    WHEN test single assertion of files equality, launch test by specifying directory and extension of config file
+    THEN test should pass
+-Launch silently: ../bin/lunchtoast test/ --ext .test --report report.res
+-Assert files equal: report.res report.ref

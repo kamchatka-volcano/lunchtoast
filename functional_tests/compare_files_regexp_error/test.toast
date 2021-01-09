@@ -1,0 +1,11 @@
+-Name: $dir$
+-Suite: errors
+-Cleanup: true
+-Cleanup whitelist: test test/rhs2.ref test/rhs.ref test/lhs.res test/lunchtoast.test test/lhs2.res test.toast report.ref
+-Description: 
+    GIVEN 2 equal files (lhs.res and rhs.ref) and 2 equal files (lhs2.res and rhs2.ref)
+    WHEN test assertion of files equality using broken regexp matching files 
+         with extension .res and with extension .ref
+    THEN test should not start because of the config error
+-Launch silently unchecked: ../bin/lunchtoast ./test/lunchtoast.test --report report.res
+-Assert files equal: report.res report.ref

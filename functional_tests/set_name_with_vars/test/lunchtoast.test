@@ -1,0 +1,2 @@
+-Name: Files equality assertion ($filename$ - $dir$)
+-Assert files equal: lhs.txt rhs.txt

@@ -1,0 +1,2 @@
+-Enabled: false
+-Assert files equal: lhs.txt rhs.txt

@@ -1,0 +1,9 @@
+################## [ 1 / 1 ] ###################
+Name: lunchtoast
+Failure: File file.txt content isn't equal to the expected string
+                              Result:     FAILED
+ 
+##################  SUMMARY  ###################
+Default:                     0 out of 1 passed, 1 failed
+---
+Total:                       0 out of 1 passed, 1 failed

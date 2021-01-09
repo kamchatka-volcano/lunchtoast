@@ -1,0 +1,6 @@
+-Directory: testdata
+-Assert files equal: lhs.txt rhs.txt
+-Write test.txt:
+Hello world
+-Assert content of test.txt:
+Hello world

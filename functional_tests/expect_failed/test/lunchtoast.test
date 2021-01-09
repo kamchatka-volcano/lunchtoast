@@ -1,0 +1,2 @@
+-Expect files equal: lhs.txt rhs.txt
+-Expect files equal: lhs2.txt rhs2.txt

@@ -1,0 +1,9 @@
+################## [ 1 / 1 ] ###################
+Name: lunchtoast
+execve failed: No such file or directory
+                              Result:      ERROR
+ 
+##################  SUMMARY  ###################
+Default:                     0 out of 1 passed, 1 failed
+---
+Total:                       0 out of 1 passed, 1 failed

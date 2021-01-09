@@ -1,0 +1,9 @@
+################## [ 1 / 1 ] ###################
+Name: lunchtoast
+Failure: Files {.*\.res} and {.*\.ref} equality check has failed, files lhs2.res and rhs2.ref are different
+                              Result:     FAILED
+ 
+##################  SUMMARY  ###################
+Default:                     0 out of 1 passed, 1 failed
+---
+Total:                       0 out of 1 passed, 1 failed

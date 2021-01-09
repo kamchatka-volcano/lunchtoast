@@ -1,0 +1,2 @@
+-Launch: process.sh
+-Assert files equal: test.res test.ref

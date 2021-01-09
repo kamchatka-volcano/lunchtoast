@@ -1,0 +1,11 @@
+-Name: $dir$
+-Suite: errors
+-Cleanup: true
+-Cleanup whitelist: test test/lunchtoast.test test.toast report.ref
+-Description: 
+    GIVEN 
+    WHEN set test directory to unexistent directory testdata
+    THEN test should fail because test directory doesn't exist
+-Launch command silently and unchecked: rm test/testdata/test.txt
+-Launch silently and unchecked: ../bin/lunchtoast ./test/lunchtoast.test --report report.res
+-Assert files equal: report.res report.ref

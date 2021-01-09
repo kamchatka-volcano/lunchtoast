@@ -45,6 +45,12 @@ option(ENABLE_TESTS "Enable tests" OFF)
 if (${ENABLE_TESTS})
     enable_testing()
     add_subdirectory(tests)
+    add_custom_command(
+        TARGET lunchtoast POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                lunchtoast
+                ${CMAKE_SOURCE_DIR}/functional_tests/bin/lunchtoast)
+    add_test(NAME functional_test_lunchtoast COMMAND ${CMAKE_SOURCE_DIR}/functional_tests/bin/lunchtoast ..)
 endif()
 
 include(GNUInstallDirs)

@@ -1,0 +1,2 @@
+-Suite: $filename$ - $dir$
+-Assert files equal: lhs.txt rhs.txt

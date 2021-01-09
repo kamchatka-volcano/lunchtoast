@@ -1,0 +1,9 @@
+################## [ 1 / 1 ] ###################
+Test can't be started. Config file /home/lizardperson/syncbox/src/c++/lunchtoast/functional_tests/compare_files_regexp_error/test/lunchtoast.test error:
+regex_error
+
+ 
+##################  SUMMARY  ###################
+Default:                     0 out of 1 passed, 1 failed
+---
+Total:                       0 out of 1 passed, 1 failed

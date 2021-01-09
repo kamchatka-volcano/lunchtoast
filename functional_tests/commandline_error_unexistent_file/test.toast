@@ -1,0 +1,10 @@
+-Name: $dir$
+-Suite: errors
+-Cleanup: true
+-Cleanup whitelist: test test/lhs.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
+-Description: 
+    GIVEN 2 equal files (lhs.txt and rhs.txt)
+    WHEN launch lunchtoast with passing path to unexistent test config
+    THEN lunchtoast should print error message with usage info and exit
+-Launch command unchecked and silently: ../bin/lunchtoast test.cfg > report.res
+-Assert files equal: report.res report.ref

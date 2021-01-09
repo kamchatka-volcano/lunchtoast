@@ -1,0 +1,9 @@
+########## valid assertions [ 1 / 1 ] ##########
+Name: lunchtoast
+                              Result:     PASSED
+ 
+##################  SUMMARY  ###################
+invalid assertions:          0 out of 0 passed, 0 failed, 1 disabled
+valid assertions:            1 out of 1 passed, 0 failed, 1 disabled
+---
+Total:                       1 out of 1 passed, 0 failed, 2 disabled

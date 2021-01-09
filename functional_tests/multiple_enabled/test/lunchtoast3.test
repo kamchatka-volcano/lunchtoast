@@ -1,0 +1,3 @@
+-Suite: invalid assertions
+-Enabled: false
+-Assert files equal: lhs.txt rhs2.txt

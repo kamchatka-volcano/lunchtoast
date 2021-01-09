@@ -1,0 +1,10 @@
+-Name: $dir$
+-Cleanup: true
+-Cleanup whitelist: test test/lhs2.txt test/lhs.txt test/rhs2.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
+-Description:
+GIVEN 2 different files (lhs.txt and rhs.txt) and 2 different files (lhs2.txt rhs2.txt)
+WHEN test two expectations of files equality
+THEN first expectation should fail, second expectation should fail, after that the test should fail 
+
+-Launch unchecked and silently: ../bin/lunchtoast ./test/lunchtoast.test --report report.res
+-Assert files equal: report.res report.ref
