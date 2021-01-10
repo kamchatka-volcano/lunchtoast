@@ -10,4 +10,5 @@
 -Launch silently: ../bin/lunchtoast ./test/lunchtoast.test --report report.res
 -Assert content of test/testdata/test.txt:
 Hello world
+---
 -Assert files equal: report.res report.ref

@@ -48,7 +48,7 @@ bool CleanupWhitelistGenerator::process()
 }
 
 namespace{
-    fs::path getTestDirectory(const fs::path &cfgPath, const std::vector<RawSection>& sections)
+    fs::path getTestDirectory(const fs::path &cfgPath, const std::vector<RestorableSection>& sections)
     {
         auto testDir = cfgPath.parent_path();
         auto cfgDir = fs::path{};
@@ -70,7 +70,7 @@ namespace{
         return boost::join(testDirPathsStr, " ");
     }
 
-    void writeSections(const std::vector<RawSection>& sections, const fs::path& outFilePath)
+    void writeSections(const std::vector<RestorableSection>& sections, const fs::path& outFilePath)
     {
         auto stream = std::ofstream{};
         stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -86,10 +86,12 @@ void CleanupWhitelistGenerator::processTestConfig(const fs::path &cfgPath)
     if (!stream.is_open())
         throw TestConfigError{fmt::format("Test config file {} doesn't exist", cfgPath.string())};
 
-    auto sections = readRawSections(stream, {"Write"});
+    auto sections = readRestorableSections(stream, {RawSectionSpecifier{"Write", "---"},
+                                                    RawSectionSpecifier{"Assert content of", "---"},
+                                                    RawSectionSpecifier{"Expect content of", "---"}});
     auto testDir = getTestDirectory(cfgPath, sections);
     const auto testDirContent = getDirectoryContentString(testDir);
-    auto newWhiteListSection = RawSection{"Cleanup whitelist", testDirContent, "-Cleanup whitelist: " + testDirContent + "\n"};
+    auto newWhiteListSection = RestorableSection{"Cleanup whitelist", testDirContent, "-Cleanup whitelist: " + testDirContent + "\n"};
 
     const auto whitelistSectionIt = std::find_if(sections.cbegin(), sections.cend(), [](const Section& section){return section.name == "Cleanup whitelist";});
     if (whitelistSectionIt != sections.cend()){

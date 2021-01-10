@@ -50,7 +50,6 @@ if (${ENABLE_TESTS})
         COMMAND ${CMAKE_COMMAND} -E copy
                 lunchtoast
                 ${CMAKE_SOURCE_DIR}/functional_tests/bin/lunchtoast)
-    add_test(NAME functional_test_lunchtoast COMMAND ${CMAKE_SOURCE_DIR}/functional_tests/bin/lunchtoast ..)
 endif()
 
 include(GNUInstallDirs)

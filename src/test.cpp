@@ -103,7 +103,9 @@ void Test::readConfig(const boost::filesystem::path& path)
         throw TestConfigError{fmt::format("Test config file {} doesn't exist", path.string())};
 
     try{
-        const auto sections = readSections(fileStream, {"Write"});
+        const auto sections = readSections(fileStream, {RawSectionSpecifier{"Write", "---"},
+                                                        RawSectionSpecifier{"Assert content of", "---"},
+                                                        RawSectionSpecifier{"Expect content of", "---"}});
         if (sections.empty())
             throw TestConfigError{fmt::format("Test config file {} is empty or invalid", path.string())};
         for (const auto& section : sections){

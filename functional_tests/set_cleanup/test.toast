@@ -3,8 +3,7 @@
 -Cleanup whitelist: test test/lunchtoast.test test/data test/data/lhs.txt test/rhs.txt test.toast report.ref
 -Description: 
     GIVEN 2 equal files (lhs.txt (inside folder data) and rhs.txt)
-    WHEN enable cleanup of files created during testing, test single assertion of files equality, write file test.txt, 
-         make directory tmp and write file tmp/test.txt
+    WHEN enable cleanup of files created during testing, test single assertion of files equality, write file test.txt, make directory tmp and write file tmp/test.txt
     THEN test should pass, file test.txt should be removed, directory tmp should be removed
 -Launch silently: ../bin/lunchtoast ./test/lunchtoast.test --report report.res
 -Launch command: find test | sort > testdir.res
@@ -14,4 +13,5 @@ test/data
 test/data/lhs.txt
 test/lunchtoast.test
 test/rhs.txt
+---
 -Assert files equal: report.res report.ref

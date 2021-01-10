@@ -6,17 +6,34 @@
 bool operator==(const Section& lhs, const Section& rhs)
 {
     return lhs.name == rhs.name &&
-           lhs.value == rhs.value;
+           lhs.value == rhs.value &&
+           lhs.isVoid == rhs.isVoid;
 }
+
+bool operator==(const RestorableSection& lhs, const RestorableSection& rhs)
+{
+    return lhs.name == rhs.name &&
+           lhs.value == rhs.value &&
+           lhs.isVoid == rhs.isVoid &&
+           lhs.originalText == rhs.originalText &&
+           lhs.isComment == rhs.isComment;
+}
+
 
 void PrintTo(const Section& section, std::ostream *os)
 {
-  *os << section.name << "=" << section.value << std::endl;
+  *os << section.name << "=" << section.value << " (isVoid:" << section.isVoid << ")" <<std::endl;
+}
+
+void PrintTo(const RestorableSection& section, std::ostream *os)
+{
+  *os << section.name << "=" << section.value << "|"
+      << section.originalText << " (isComment" << section.isComment << ")" << std::endl;
 }
 
 void testSectionReader(const std::string& input,
                        const std::vector<Section>& expectedSections,
-                       const std::vector<std::string>& rawSectionsList = {})
+                       const std::vector<RawSectionSpecifier>& rawSectionsList = {})
 {
     auto stream = std::istringstream{input};
     auto sections = readSections(stream, rawSectionsList);
@@ -24,11 +41,11 @@ void testSectionReader(const std::string& input,
 }
 
 void testRawSectionReader(const std::string& input,
-                          const std::vector<RawSection>& expectedSections,
-                          const std::vector<std::string>& rawSectionsList = {})
+                          const std::vector<RestorableSection>& expectedSections,
+                          const std::vector<RawSectionSpecifier>& rawSectionsList = {})
 {
     auto stream = std::istringstream{input};
-    auto sections = readRawSections(stream, rawSectionsList);
+    auto sections = readRestorableSections(stream, rawSectionsList);
     EXPECT_EQ(sections, expectedSections);
 }
 
@@ -132,7 +149,7 @@ TEST(RawSectionsReader, SingleEmptySection)
     testRawSectionReader(
         "-Empty:",
         {
-            {"Empty", "", "-Empty:"}
+            {"Empty", "", "-Empty:\n"}
         });
 }
 
@@ -169,7 +186,7 @@ TEST(RawSectionsReader, NamelessSection)
     assert_exception<std::runtime_error>([]{
         auto input = std::string{"-Name: foo\n-:\n-Value:foo\n"};
         auto stream = std::istringstream{input};
-        readRawSections(stream);
+        readRestorableSections(stream);
     },
     [](const std::runtime_error& e){
         ASSERT_EQ(std::string{e.what()}, "line#2: Section must have a name");
@@ -193,7 +210,7 @@ TEST(RawSectionsReader, SectionWithoutDelimiter)
     assert_exception<std::runtime_error>([]{
         auto input = std::string{"-Name: foo\n-\n-Value:foo\n"};
         auto stream = std::istringstream{input};
-        readRawSections(stream);
+        readRestorableSections(stream);
     },
     [](const std::runtime_error& e){
         ASSERT_EQ(std::string{e.what()}, "line#2: Section's first line must contain a name delimiter ':'");
@@ -263,7 +280,7 @@ TEST(RawSectionsReader, WithComments)
             {"Value", "bar\n",
              "-Value:\n"
              "bar\n"
-             "#another comment"}
+             "#another comment\n"}
         });
 }
 
@@ -272,14 +289,16 @@ TEST(SectionsReader, RawSectionWithComment)
     testSectionReader(
         "-Write test.txt:foo\n"
         "#this line should be in test.txt\n"
+        "-this shoudln't be a new section:\n"
         "\n"
+        "---\n"
         "-Value:\n"
         "bar\n",
         {
-            {"Write test.txt", "foo\n#this line should be in test.txt\n\n"},
+            {"Write test.txt", "foo\n#this line should be in test.txt\n-this shoudln't be a new section:\n\n"},
             {"Value", "bar\n"}
         },
-        {"Write"});
+        {RawSectionSpecifier{"Write", "---"}});
 }
 
 
@@ -288,19 +307,23 @@ TEST(RawSectionsReader, RawSectionWithComment)
     testRawSectionReader(
         "-Write test.txt:foo\n"
         "#this line should be in test.txt\n"
+        "-this shoudln't be a new section:\n"
         "\n"
+        "---\n"
         "-Value:\n"
         "bar\n",
         {
-            {"Write test.txt", "foo\n#this line should be in test.txt\n\n",
+            {"Write test.txt", "foo\n#this line should be in test.txt\n-this shoudln't be a new section:\n\n",
              "-Write test.txt:foo\n"
              "#this line should be in test.txt\n"
+             "-this shoudln't be a new section:\n"
              "\n"},
+            {"", "", "---\n", true},
             {"Value", "bar\n",
              "-Value:\n"
              "bar\n"}
         },
-        {"Write"});
+        {RawSectionSpecifier{"Write", "---"}});
 }
 
 TEST(SectionsReader, TextBeforeSections)
