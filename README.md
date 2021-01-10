@@ -165,5 +165,5 @@ ctest
 
 **lunchtoast** can be tested for regression by **lunchtoast** itself, or more specifically you can run the master branch binary against the `functional_tests` directory, after placing the development branch binary in `functional_tests/bin`. Like this:
 ```
-<lunchtoast_master_branch_dir>/build/lunchtoast <lunctoast_dev_branch_dir>/functional_tests
+<lunchtoast_master_branch_dir>/build/lunchtoast <lunchtoast_dev_branch_dir>/functional_tests
 ```
