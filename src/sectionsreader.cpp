@@ -122,11 +122,12 @@ std::vector<RestorableSection> readRestorableSections(std::istream& input, const
             sections.back().originalText = line;
             continue;
         }
-        if (sections.empty() || sections.back().isComment)
+        if (sections.empty())
             continue;
         auto& section = sections.back();
-        section.value += line;
         section.originalText += line;
+        if (!section.isComment)
+            section.value += line;
     }
     return sections;
 }

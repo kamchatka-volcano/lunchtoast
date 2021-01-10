@@ -40,7 +40,7 @@ void testSectionReader(const std::string& input,
     EXPECT_EQ(sections, expectedSections);
 }
 
-void testRawSectionReader(const std::string& input,
+void testRestorableSectionReader(const std::string& input,
                           const std::vector<RestorableSection>& expectedSections,
                           const std::vector<RawSectionSpecifier>& rawSectionsList = {})
 {
@@ -89,9 +89,9 @@ TEST(SectionsReader, Basic)
         });
 }
 
-TEST(RawSectionsReader, Basic)
+TEST(RestorableSectionsReader, Basic)
 {
-    testRawSectionReader(
+    testRestorableSectionReader(
         "-Name:foo\n"
         "test\n"
         "\n"
@@ -119,9 +119,9 @@ TEST(SectionsReader, EmptySection)
         });
 }
 
-TEST(RawSectionsReader, EmptySection)
+TEST(RestorableSectionsReader, EmptySection)
 {
-    testRawSectionReader(
+    testRestorableSectionReader(
         "-Name:foo\n"
         "test\n"
         "\n"
@@ -144,9 +144,9 @@ TEST(SectionsReader, SingleEmptySection)
         });
 }
 
-TEST(RawSectionsReader, SingleEmptySection)
+TEST(RestorableSectionsReader, SingleEmptySection)
 {
-    testRawSectionReader(
+    testRestorableSectionReader(
         "-Empty:",
         {
             {"Empty", "", "-Empty:\n"}
@@ -161,9 +161,9 @@ TEST(SectionsReader, NoSections)
         {});
 }
 
-TEST(RawSectionsReader, NoSections)
+TEST(RestorableSectionsReader, NoSections)
 {
-    testRawSectionReader(
+    testRestorableSectionReader(
         "Empty:"
         "Value",
         {});
@@ -181,7 +181,7 @@ TEST(SectionsReader, NamelessSection)
     });
 }
 
-TEST(RawSectionsReader, NamelessSection)
+TEST(RestorableSectionsReader, NamelessSection)
 {
     assert_exception<std::runtime_error>([]{
         auto input = std::string{"-Name: foo\n-:\n-Value:foo\n"};
@@ -205,7 +205,7 @@ TEST(SectionsReader, SectionWithoutDelimiter)
     });
 }
 
-TEST(RawSectionsReader, SectionWithoutDelimiter)
+TEST(RestorableSectionsReader, SectionWithoutDelimiter)
 {
     assert_exception<std::runtime_error>([]{
         auto input = std::string{"-Name: foo\n-\n-Value:foo\n"};
@@ -233,9 +233,9 @@ TEST(SectionsReader, WithComment)
         });
 }
 
-TEST(RawSectionsReader, WithComment)
+TEST(RestorableSectionsReader, WithComment)
 {
-    testRawSectionReader(
+    testRestorableSectionReader(
         "-Name:foo\n"
         "#this is Name section\n"
         "test\n"
@@ -254,9 +254,9 @@ TEST(RawSectionsReader, WithComment)
         });
 }
 
-TEST(RawSectionsReader, WithComments)
+TEST(RestorableSectionsReader, WithComments)
 {
-    testRawSectionReader(
+    testRestorableSectionReader(
         "#first comment\n"
         "#line2\n"
         "#line3\n"
@@ -302,9 +302,12 @@ TEST(SectionsReader, RawSectionWithComment)
 }
 
 
-TEST(RawSectionsReader, RawSectionWithComment)
+TEST(RestorableSectionsReader, RawSectionWithComment)
 {
-    testRawSectionReader(
+    testRestorableSectionReader(
+        "#Comment\n"
+        "\n"
+        "#Comment2\n"
         "-Write test.txt:foo\n"
         "#this line should be in test.txt\n"
         "-this shoudln't be a new section:\n"
@@ -313,6 +316,10 @@ TEST(RawSectionsReader, RawSectionWithComment)
         "-Value:\n"
         "bar\n",
         {
+            {"","",
+             "#Comment\n"
+             "\n"
+             "#Comment2\n", true},
             {"Write test.txt", "foo\n#this line should be in test.txt\n-this shoudln't be a new section:\n\n",
              "-Write test.txt:foo\n"
              "#this line should be in test.txt\n"
@@ -343,9 +350,9 @@ TEST(SectionsReader, TextBeforeSections)
         });
 }
 
-TEST(RawSectionsReader, TextBeforeSections)
+TEST(RestorableSectionsReader, TextBeforeSections)
 {
-    testRawSectionReader(
+    testRestorableSectionReader(
         "Loren ipsum\n"
         "# some comment\n"
         "\n"
@@ -355,7 +362,7 @@ TEST(RawSectionsReader, TextBeforeSections)
         "-Value:\n"
         "bar\n",
         {
-            {"","", "# some comment\n", true},
+            {"","", "# some comment\n\n", true},
             {"Name", "foo\ntest\n\n",
              "-Name:foo\n"
              "test\n"

@@ -54,7 +54,7 @@ namespace{
         auto cfgDir = fs::path{};
         const auto dirSectionIt = std::find_if(sections.cbegin(), sections.cend(), [](const Section& section){return section.name == "Directory";});
         if (dirSectionIt != sections.end())
-            cfgDir = dirSectionIt->value;
+            cfgDir = boost::trim_copy(dirSectionIt->value);
         if (!cfgDir.empty())
             testDir = fs::canonical(cfgDir, testDir);
         return testDir;
@@ -78,6 +78,18 @@ namespace{
         for (const auto& section : sections)
             stream << section.originalText;
     }
+
+    void copyComments(const std::string& input, std::string& output)
+    {
+        auto stream = std::stringstream{input};
+        auto line = std::string{};
+        while(std::getline(stream, line)){
+            if (boost::trim_copy(line).empty())
+                output += "\n";
+            else if (boost::starts_with(line, "#"))
+                output += line + "\n";
+        }
+    }
 }
 
 void CleanupWhitelistGenerator::processTestConfig(const fs::path &cfgPath)
@@ -96,6 +108,7 @@ void CleanupWhitelistGenerator::processTestConfig(const fs::path &cfgPath)
     const auto whitelistSectionIt = std::find_if(sections.cbegin(), sections.cend(), [](const Section& section){return section.name == "Cleanup whitelist";});
     if (whitelistSectionIt != sections.cend()){
         auto whitelistSectionPos = std::distance(sections.cbegin(), whitelistSectionIt);
+        copyComments(whitelistSectionIt->originalText, newWhiteListSection.originalText);
         sections.erase(whitelistSectionIt);
         sections.insert(sections.begin() + whitelistSectionPos, newWhiteListSection);
     }
