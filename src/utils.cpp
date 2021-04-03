@@ -2,6 +2,7 @@
 #include <boost/uuid/detail/md5.hpp>
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string.hpp>
+#include <fstream>
 
 using boost::uuids::detail::md5;
 

@@ -56,7 +56,7 @@ namespace{
         if (dirSectionIt != sections.end())
             cfgDir = boost::trim_copy(dirSectionIt->value);
         if (!cfgDir.empty())
-            testDir = fs::canonical(cfgDir, testDir);
+            testDir = fs::canonical(testDir) / cfgDir;
         return testDir;
     }
 

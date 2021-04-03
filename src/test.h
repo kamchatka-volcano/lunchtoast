@@ -2,12 +2,13 @@
 #include "testresult.h"
 #include "testaction.h"
 #include "filenamereader.h"
-#include "alias_boost_filesystem.h"
+#include "alias_filesystem.h"
 #include <vector>
+#include <memory>
 #include <set>
 #include <string>
 
-class Section;
+struct Section;
 
 class Test
 {
@@ -37,7 +38,7 @@ private:
     void checkParams();
 
 private:
-    std::vector<TestAction> actions_;
+    std::vector<std::unique_ptr<TestAction>> actions_;
     std::string name_;
     std::string description_;
     fs::path directory_;

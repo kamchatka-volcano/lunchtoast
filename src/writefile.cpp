@@ -8,7 +8,12 @@ WriteFile::WriteFile(const fs::path& filePath, const std::string& content)
 {
 }
 
-TestActionResult WriteFile::process() const
+TestActionType WriteFile::type() const
+{
+    return TestActionType::RequiredOperation;
+}
+
+TestActionResult WriteFile::process()
 {
     auto fileStream = std::ofstream(filePath_.string());
     fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);

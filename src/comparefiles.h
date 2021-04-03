@@ -1,17 +1,19 @@
 #pragma once
-#include "testactionresult.h"
-#include "alias_boost_filesystem.h"
+#include "testaction.h"
+#include "alias_filesystem.h"
 #include "filenamereader.h"
 #include <vector>
 #include <regex>
 
-class CompareFiles
+class CompareFiles : public TestAction
 {
 public:
     CompareFiles(const FilenameGroup& lhs,
-                 const FilenameGroup& rhs);
+                 const FilenameGroup& rhs,
+                 TestActionType actionType);
 
-    TestActionResult process() const;
+    TestActionResult process() override;
+    TestActionType type() const override;
 
 private:
     bool compareFiles(const fs::path& lhs, const fs::path& rhs, std::string& failedComparisonInfo) const;
@@ -19,5 +21,6 @@ private:
 private:
     FilenameGroup lhs_;
     FilenameGroup rhs_;
+    TestActionType actionType_;
 };
 

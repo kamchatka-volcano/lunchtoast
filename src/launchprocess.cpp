@@ -18,7 +18,12 @@ LaunchProcess::LaunchProcess(const std::string& command,
 {
 }
 
-TestActionResult LaunchProcess::process() const
+TestActionType LaunchProcess::type() const
+{
+    return TestActionType::RequiredOperation;
+}
+
+TestActionResult LaunchProcess::process()
 {
     auto env = boost::this_process::environment();
     env["PATH"] += workingDir_.string();
@@ -31,15 +36,15 @@ TestActionResult LaunchProcess::process() const
         cmdParts.push_back(command_);
         auto shell = proc::search_path(shellCmd);
         if (silently_)
-            result = proc::system(shell, proc::args(cmdParts), env, proc::start_dir = workingDir_, proc::std_out > proc::null, proc::std_err > proc::null);
+            result = proc::system(shell, proc::args(cmdParts), env, proc::start_dir = workingDir_.string(), proc::std_out > proc::null, proc::std_err > proc::null);
         else
-            result = proc::system(shell, proc::args(cmdParts), env, proc::start_dir = workingDir_);
+            result = proc::system(shell, proc::args(cmdParts), env, proc::start_dir = workingDir_.string());
     }
     else{
         if (silently_)
-            result = proc::system(proc::cmd(command_), env, proc::start_dir = workingDir_, proc::std_out > proc::null, proc::std_err > proc::null);
+            result = proc::system(proc::cmd(command_), env, proc::start_dir = workingDir_.string(), proc::std_out > proc::null, proc::std_err > proc::null);
         else
-            result = proc::system(proc::cmd(command_), env, proc::start_dir = workingDir_);
+            result = proc::system(proc::cmd(command_), env, proc::start_dir = workingDir_.string());
     }
 
     if (uncheckedResult_)

@@ -1,6 +1,6 @@
 #pragma once
 #include "testsuite.h"
-#include "alias_boost_filesystem.h"
+#include "alias_filesystem.h"
 #include <map>
 
 class Test;

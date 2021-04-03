@@ -28,7 +28,7 @@ std::vector<fs::path> FilenameGroup::fileList() const
         return getMatchingPaths(directory_, fileMatchingRegexp_,
                                 [](const fs::path& path) {return fs::is_regular_file(path);});
     else
-        return {fs::absolute(filenameOrRegexp_, directory_)};
+        return {fs::absolute(directory_) / fs::path{filenameOrRegexp_}};
 }
 
 std::vector<fs::path> FilenameGroup::pathList() const
@@ -37,7 +37,7 @@ std::vector<fs::path> FilenameGroup::pathList() const
     if (isRegexp_)
         result = getMatchingPaths(directory_, fileMatchingRegexp_);
     else
-        result = {fs::absolute(filenameOrRegexp_, directory_)};
+        result = {fs::absolute(directory_) / fs::path{filenameOrRegexp_}};
 
     auto dirs = std::set<fs::path>{};
     for (const auto& path : result){
@@ -78,7 +78,7 @@ std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::reg
         auto match = std::smatch{};
         auto fileEntry = fs::relative(path, directory).string();
         if (std::regex_match(fileEntry, match, pathFilter))
-            result.push_back(fs::absolute(fileEntry, directory));
+            result.push_back(fs::absolute(directory) / fileEntry);
     }
     return result;
 }

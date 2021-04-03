@@ -167,7 +167,7 @@ void TestReporter::reportSummary(const TestSuite& defaultSuite, const std::map<s
     reportSuiteResult("Total", totalPassed, totalTests, totalDisabled);
 }
 
-void TestReporter::initReporter(const boost::filesystem::path& reportFilePath)
+void TestReporter::initReporter(const fs::path& reportFilePath)
 {
     auto makeConsoleSink = []{
         auto sink = std::make_shared<spdlog::sinks::stdout_color_sink_st>();

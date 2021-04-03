@@ -1,6 +1,6 @@
 #include "comparefiles.h"
 #include "utils.h"
-#include "alias_boost_filesystem.h"
+#include "alias_filesystem.h"
 #include <spdlog/fmt/fmt.h>
 #include <boost/algorithm/string.hpp>
 #include <regex>
@@ -12,13 +12,20 @@ std::string filenameListStr(const std::vector<fs::path>& pathList);
 }
 
 CompareFiles::CompareFiles(const FilenameGroup& lhs,
-                           const FilenameGroup& rhs)
+                           const FilenameGroup& rhs,
+                           TestActionType actionType)
     : lhs_(lhs)
-    , rhs_(rhs)    
+    , rhs_(rhs)
+    , actionType_(actionType)
 {
 }
 
-TestActionResult CompareFiles::process() const
+TestActionType CompareFiles::type() const
+{
+    return actionType_;
+}
+
+TestActionResult CompareFiles::process()
 {
     auto lhsPaths = lhs_.fileList();
     std::sort(lhsPaths.begin(), lhsPaths.end());

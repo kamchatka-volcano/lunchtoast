@@ -1,9 +1,9 @@
 #pragma once
-#include "testactionresult.h"
-#include "alias_boost_filesystem.h"
+#include "testaction.h"
+#include "alias_filesystem.h"
 #include <string>
 
-class LaunchProcess
+class LaunchProcess : public TestAction
 {
 public:
     LaunchProcess(const std::string& command,
@@ -11,7 +11,8 @@ public:
                   const std::string& shellCommand,
                   bool uncheckedResult,
                   bool silently);
-    TestActionResult process() const;
+    TestActionResult process() override;
+    TestActionType type() const override;
 
 private:
     bool launchCommand();

@@ -10,6 +10,7 @@
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 #include <iomanip>
+#include <fstream>
 
 Test::Test(const fs::path& configPath)
     : name_(configPath.stem().string())
@@ -37,9 +38,9 @@ TestResult Test::process()
         return TestResult::RuntimeError("Test has nothing to check", failedActionsMessages);
 
     auto ok = true;
-    for (const auto& action : actions_){
+    for (auto& action : actions_){
         try{
-            auto result = action.process();
+            auto result = action->process();
             if(!result.isSuccessful()){
                 ok = false;
                 failedActionsMessages.push_back(result.errorInfo());
@@ -47,8 +48,8 @@ TestResult Test::process()
         } catch(const std::exception& e){
             return TestResult::RuntimeError(e.what(), failedActionsMessages);
         }        
-        auto stopOnFailure = (action.type() == TestActionType::Assertion ||
-                              action.type() == TestActionType::RequiredOperation);
+        auto stopOnFailure = (action->type() == TestActionType::Assertion ||
+                              action->type() == TestActionType::RequiredOperation);
         if (!ok && stopOnFailure)
             break;
     }
@@ -96,7 +97,7 @@ bool Test::readActionFromSection(const Section &section)
     return false;
 }
 
-void Test::readConfig(const boost::filesystem::path& path)
+void Test::readConfig(const fs::path& path)
 {
     auto fileStream = std::ifstream{path.string()};
     if (!fileStream.is_open())
@@ -151,14 +152,14 @@ void Test::createLaunchAction(const Section& section)
     auto isShellCommand = std::find(parts.begin(), parts.end(), "command") != parts.end();
     auto silently = std::find(parts.begin(), parts.end(), "silently") != parts.end();
     const auto command = boost::trim_copy(section.value);
-    actions_.push_back(LaunchProcess{command, directory_, (isShellCommand ? shellCommand_ : ""), uncheckedResult, silently});
+    actions_.push_back(std::make_unique<LaunchProcess>(command, directory_, (isShellCommand ? shellCommand_ : ""), uncheckedResult, silently));
 }
 
 void Test::createWriteAction(const Section& section)
 {
     const auto fileName = boost::trim_copy(str::after(section.name, "Write"));
-    const auto path = fs::absolute(fileName, directory_);
-    actions_.push_back(WriteFile{path.string(), section.value});
+    const auto path = fs::absolute(directory_) / fileName;
+    actions_.push_back(std::make_unique<WriteFile>(path.string(), section.value));
 }
 
 void Test::createCompareFilesAction(TestActionType type, const std::string& filenamesStr)
@@ -166,13 +167,13 @@ void Test::createCompareFilesAction(TestActionType type, const std::string& file
     const auto filenameGroups = readFilenames(filenamesStr, directory_);
     if (filenameGroups.size() != 2)
         throw TestConfigError{"Comparison of files require exactly two filenames or filename matching regular expressions to be specified"};    
-    actions_.push_back(TestAction{CompareFiles{filenameGroups[0], filenameGroups[1]}, type});
+    actions_.push_back(std::make_unique<CompareFiles>(filenameGroups[0], filenameGroups[1], type));
 }
 
 void Test::createCompareFileContentAction(TestActionType type, const std::string& filenameStr, const std::string &expectedFileContent)
 {
     const auto filename = boost::trim_copy(boost::replace_first_copy(filenameStr, "content of ", ""));
-    actions_.push_back(TestAction{CompareFileContent{fs::absolute(filename, directory_), expectedFileContent}, type});
+    actions_.push_back(std::make_unique<CompareFileContent>(fs::absolute(directory_) / filename, expectedFileContent, type));
 }
 
 void Test::cleanTestFiles()
@@ -220,7 +221,7 @@ bool Test::readParam(fs::path& param, const std::string& paramName, const Sectio
 {
     if (section.name != paramName)
         return false;
-    param = fs::absolute(boost::trim_copy(section.value), directory_);
+    param = fs::absolute(directory_) / boost::trim_copy(section.value);
     return true;
 }
 

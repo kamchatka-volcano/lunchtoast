@@ -1,13 +1,14 @@
 #pragma once
-#include "testactionresult.h"
-#include "alias_boost_filesystem.h"
+#include "testaction.h"
+#include "alias_filesystem.h"
 #include <string>
 
-class WriteFile
+class WriteFile : public TestAction
 {
 public:
     WriteFile(const fs::path& fileName, const std::string& content);
-    TestActionResult process() const;
+    TestActionResult process() override;
+    TestActionType type() const override;
 
 private:
     fs::path filePath_;
