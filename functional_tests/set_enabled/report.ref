@@ -1,4 +1,8 @@
+################## [ 1 / 1 ] ###################
+Name: lunchtoast
+                              Result:   DISABLED
+ 
 ##################  SUMMARY  ###################
-Default:                     0 out of 0 passed, 0 failed, 1 disabled
+Default:                     0 out of 1 passed, 0 failed, 1 disabled
 ---
-Total:                       0 out of 0 passed, 0 failed, 1 disabled
+Total:                       0 out of 1 passed, 0 failed, 1 disabled
