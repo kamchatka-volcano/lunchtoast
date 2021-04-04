@@ -87,7 +87,7 @@ void TestReporter::reportResult(const Test& test, const TestResult& result,
     if (result.type() == TestResultType::RuntimeError)
         if (!result.errorInfo().empty())
             print(result.errorInfo());
-    auto resultStr = fmt::format("Result: {:>10}", testResultStr(result.type()));
+    const auto resultStr = fmt::format("Result: {:>10}", testResultStr(result.type()));
     print(result.type(), "{:>"+ std::to_string(reportWidth_) + "}", resultStr);
 }
 
@@ -103,22 +103,44 @@ void TestReporter::reportBrokenTest(const fs::path& brokenTestConfig, const std:
     print("Test can't be started. Config file {} error:\n{}\n", brokenTestConfig.string(), errorInfo);
 }
 
+void TestReporter::reportDisabledTest(const Test& test,
+                      std::string suiteName, int suiteTestNumber, int suiteNumOfTests) const
+{
+    suiteName = truncateString(suiteName, reportWidth_ / 2);
+    auto header = fmt::format(" {} [ {} / {} ] ", suiteName, suiteTestNumber, suiteNumOfTests);
+    if (suiteName.empty())
+        header = header.substr(1);
+    print("{:#^" + std::to_string(reportWidth_) + "}", header);
+    print("Name: {}", test.name());
+
+    if (!test.description().empty()){
+        auto descriptionHasMultipleLines = !str::after(test.description(), "\n").empty();
+        if (descriptionHasMultipleLines)
+            print("Description:\n{}", test.description());
+        else
+            print("Description: {}", test.description());
+    }
+
+    const auto resultStr = fmt::format("Result: {:>10}", "DISABLED");
+    print("{:>"+ std::to_string(reportWidth_) + "}", resultStr);
+}
+
 void TestReporter::reportSuiteResult(std::string suiteName, int passedNumber, int totalNumber, int disabledNumber) const
 {
     if (totalNumber == 0 && disabledNumber == 0)
         return;
-
-    auto width = reportWidth_ / 2 + 4;
+    const auto failedNumber = totalNumber - disabledNumber - passedNumber;
+    const auto width = reportWidth_ / 2 + 4;
     suiteName = truncateString(suiteName, width - 1) + ":";
-    auto resultType = passedNumber == totalNumber ?
-        TestResultType::Success : TestResultType::Failure;
+    const auto resultType = failedNumber ?
+        TestResultType::Failure : TestResultType::Success;
     auto resultStr = std::string{};
     if (disabledNumber)
         resultStr = fmt::format("{} out of {} passed, {} failed, {} disabled",
-                                passedNumber, totalNumber, totalNumber - passedNumber, disabledNumber);
+                                passedNumber, totalNumber, failedNumber, disabledNumber);
     else
         resultStr = fmt::format("{} out of {} passed, {} failed",
-                                passedNumber, totalNumber, totalNumber - passedNumber);
+                                passedNumber, totalNumber, failedNumber);
     print(resultType, "{:" + std::to_string(width) + "} {}", suiteName, resultStr);
 }
 
@@ -140,10 +162,7 @@ std::tuple<int, int, int> countTotals(const TestSuite& defaultSuite, const std::
 
 void TestReporter::reportSummary(const TestSuite& defaultSuite, const std::map<std::string, TestSuite>& suites) const
 {
-    auto totalTests = 0;
-    auto totalPassed = 0;
-    auto totalDisabled = 0;
-    std::tie(totalTests, totalPassed, totalDisabled) = countTotals(defaultSuite, suites);
+    auto[totalTests, totalPassed, totalDisabled] = countTotals(defaultSuite, suites);
     if (totalTests == 0 && totalDisabled == 0){
         print("No tests were found. Exiting.");
         return;

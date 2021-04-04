@@ -30,10 +30,14 @@ bool TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
     const auto testsCount = static_cast<int>(tests.size());
     auto testNumber = 0;
     bool ok = true;
-    for (const auto& testFile : tests){
+    for (const auto& testCfg : tests){
         testNumber++;
         try{
-            auto test = Test{testFile};
+            auto test = Test{testCfg.path};
+            if (!testCfg.isEnabled){
+                reporter_.reportDisabledTest(test, suiteName, testNumber, testsCount);
+                continue;
+            }
             auto result = test.process();
             if (result.type() == TestResultType::Success)
                 suite.passedTestsCounter++;
@@ -43,7 +47,7 @@ bool TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
 
         }
         catch(const TestConfigError& error){
-            reporter_.reportBrokenTest(testFile, error.what(), suiteName, testNumber, testsCount);
+            reporter_.reportBrokenTest(testCfg.path, error.what(), suiteName, testNumber, testsCount);
             ok = false;
         }
     }
@@ -78,15 +82,13 @@ void TestLauncher::addTest(const fs::path &testFile)
     processVariablesSubstitution(suiteName, testFile.stem().string(), testFile.parent_path().stem().string());
 
     if (suiteName.empty()){
-        if (isEnabled)
-            defaultSuite_.tests.push_back(testFile);
-        else
+        defaultSuite_.tests.push_back({testFile, isEnabled});
+        if (!isEnabled)
             defaultSuite_.disabledTestsCounter++;
     }
     else{
-        if (isEnabled)
-            suites_[suiteName].tests.push_back(testFile);
-        else
+        suites_[suiteName].tests.push_back({testFile, isEnabled});
+        if (!isEnabled)
             suites_[suiteName].disabledTestsCounter++;
     }
 }

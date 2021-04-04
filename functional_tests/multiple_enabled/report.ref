@@ -1,9 +1,15 @@
-########## valid assertions [ 1 / 1 ] ##########
+######### invalid assertions [ 1 / 1 ] #########
+Name: lunchtoast3
+                              Result:   DISABLED
+########## valid assertions [ 1 / 2 ] ##########
+Name: lunchtoast2
+                              Result:   DISABLED
+########## valid assertions [ 2 / 2 ] ##########
 Name: lunchtoast
                               Result:     PASSED
  
 ##################  SUMMARY  ###################
-invalid assertions:          0 out of 0 passed, 0 failed, 1 disabled
-valid assertions:            1 out of 1 passed, 0 failed, 1 disabled
+invalid assertions:          0 out of 1 passed, 0 failed, 1 disabled
+valid assertions:            1 out of 2 passed, 0 failed, 1 disabled
 ---
-Total:                       1 out of 1 passed, 0 failed, 2 disabled
+Total:                       1 out of 3 passed, 0 failed, 2 disabled
