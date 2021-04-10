@@ -10,9 +10,9 @@ struct Cfg{
     std::optional<fs::path> report = fs::path{};
     std::optional<std::string> ext = ".toast";
     std::optional<int> width = 48;
-    std::optional<bool> preserve_current_state = false;
+    std::optional<bool> save_state = false;
 };
-STRUCTOPT(Cfg, test_path, report, ext, width, preserve_current_state);
+STRUCTOPT(Cfg, test_path, report, ext, width, save_state);
 
 bool parseCommandLine(Cfg& cfg, int argc, char** argv);
 int generateCleanupWhiteList(const Cfg& cfg);
@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     if (!parseCommandLine(cfg, argc, argv))
         return -1;
 
-    if (cfg.preserve_current_state.value())
+    if (cfg.save_state.value())
         return generateCleanupWhiteList(cfg);
 
     auto allTestsPassed = false;
@@ -62,18 +62,18 @@ bool parseCommandLine(Cfg& cfg, int argc, char** argv)
     auto parser = structopt::app{"lunchtoast", {},
                                  "Usage: lunchtoast [options] [dir|file]test_path\n"
                                  "Options:\n"
-                                 " --ext <file extension>   the extension of searched test files,\n"
-                                 "                          required when specified test path is a directory\n"
-                                 "                          (default value: .toast)\n"
-                                 " --report <file path>     save test report to file\n"
-                                 " --width <number>         set test report's width in number of characters\n"
-                                 " --preserve-current-state generate cleanup whitelist with content\n"
-                                 "                          of the test directory\n"
-                                 " --help                   show usage info\n"};
+                                 " --ext <file extension>  the extension of searched test files,\n"
+                                 "                         required when specified test path is a directory\n"
+                                 "                         (default value: .toast)\n"
+                                 " --report <file path>    save test report to file\n"
+                                 " --width <number>        set test report's width in number of characters\n"
+                                 " --save-state            generate cleanup whitelist with content\n"
+                                 "                         of the test directory\n"
+                                 " --help                  show usage info\n"};
     try{
         cfg = parser.parse<Cfg>(argc, argv);
     }
-    catch (structopt::exception& e) {
+    catch (const structopt::exception& e) {
         fmt::print("{}\n",e.what());
         fmt::print(e.help());
         return false;

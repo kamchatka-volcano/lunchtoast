@@ -5,9 +5,9 @@
 -Description: 
     GIVEN 2 equal files (lhs.txt and rhs.txt) and empty file file_to_preserve.txt, 
     test config has a cleanup whitelist, listing all test files except file_to_preserve.txt
-    WHEN launch lunchtoast with --preserve-current-state
+    WHEN launch lunchtoast with --save-state
     THEN test config should get file_to_preserve.txt in a cleanup whitelist section
 -Launch command: cp lunchtoast.test test/
--Launch command: ../../build/lunchtoast test/lunchtoast.test --preserve-current-state > report.res
+-Launch command: ../../build/lunchtoast test/lunchtoast.test --save-state > report.res
 -Assert files equal: report.res report.ref
 -Assert files equal: test/lunchtoast.test lunchtoast_test.ref
