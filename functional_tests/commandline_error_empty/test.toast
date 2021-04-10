@@ -6,5 +6,5 @@
     GIVEN 2 equal files (lhs.txt and rhs.txt)
     WHEN launch lunchtoast without command line parameters
     THEN lunchtoast should print usage info and exit
--Launch command unchecked and silently: ../bin/lunchtoast > report.res
+-Launch command unchecked and silently: ../../build/lunchtoast > report.res
 -Assert files equal: report.res report.ref

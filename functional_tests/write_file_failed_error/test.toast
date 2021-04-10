@@ -7,5 +7,5 @@
     WHEN writing file to file 'dir' with the same content as test.ref and assert that files are equal
     THEN file writing should fail because directory with the same name exist
 -Launch unchecked command silently: mkdir ./test/dir
--Launch silently unchecked: ../bin/lunchtoast ./test/lunchtoast.test --report report.res
+-Launch silently unchecked: ../../build/lunchtoast ./test/lunchtoast.test --report report.res
 -Assert files equal: report.res report.ref

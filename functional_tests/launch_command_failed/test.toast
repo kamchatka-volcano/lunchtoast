@@ -5,5 +5,5 @@
     GIVEN file test.ref
     WHEN launching shell command that outputs content of unexistent file test.res
     THEN test should fail
--Launch unchecked and silently: ../bin/lunchtoast ./test/lunchtoast.test --report report.res
+-Launch unchecked and silently: ../../build/lunchtoast ./test/lunchtoast.test --report report.res
 -Assert files equal: report.res report.ref

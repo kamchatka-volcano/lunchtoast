@@ -7,5 +7,5 @@
     WHEN test assertion of files equality using broken regexp matching files 
          with extension .res and with extension .ref
     THEN test should not start because of the config error
--Launch silently unchecked: ../bin/lunchtoast ./test/lunchtoast.test --report report.res
+-Launch silently unchecked: ../../build/lunchtoast ./test/lunchtoast.test --report report.res
 -Assert files equal: report.res report.ref

@@ -8,6 +8,6 @@
     WHEN launch lunchtoast with --preserve-current-state
     THEN test config should get file_to_preserve.txt in a cleanup whitelist section
 -Launch command: cp lunchtoast.test test/
--Launch command: ../bin/lunchtoast test/lunchtoast.test --preserve-current-state > report.res
+-Launch command: ../../build/lunchtoast test/lunchtoast.test --preserve-current-state > report.res
 -Assert files equal: report.res report.ref
 -Assert files equal: test/lunchtoast.test lunchtoast_test.ref
