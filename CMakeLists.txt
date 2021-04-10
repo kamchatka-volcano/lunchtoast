@@ -38,7 +38,8 @@ add_subdirectory(lib/spdlog)
     
 add_executable(lunchtoast ${SRC})
 target_include_directories(lunchtoast PRIVATE lib/spdlog/include)
-target_link_libraries(lunchtoast boost_system boost_filesystem boost_program_options spdlog::spdlog stdc++fs)
+target_include_directories(lunchtoast PRIVATE lib/structopt/include)
+target_link_libraries(lunchtoast boost_system boost_filesystem spdlog::spdlog stdc++fs)
 
 option(ENABLE_TESTS "Enable tests" OFF)
 if (${ENABLE_TESTS})

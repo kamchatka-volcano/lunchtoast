@@ -31,7 +31,7 @@ Total:                               1 out of 1 passed, 0 failed
 Command line options:
  *	**--ext** or **-e** **`<file extension>`** the extension of searched test files, required when specified test path is a directory , default value: **.toast**
  * **--report** or **-r** **`<file path>`**  save test report to file
- * **--reportwidth** or **-w** **`<number>`**   set test report's width in a number of characters
+ * **--width** or **-w** **`<number>`**   set test report's width in a number of characters
  * **--preserve-current-state** or **-p** generate cleanup whitelist with content of the test directory
  * **--help** or **-h**                  show usage info
 
