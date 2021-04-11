@@ -1,6 +1,7 @@
 #pragma once
 #include "alias_filesystem.h"
 #include <string>
+#include <vector>
 
 std::string readFile(const fs::path& filePath);
 std::string calcMd5(const fs::path& filePath);
