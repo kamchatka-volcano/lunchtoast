@@ -38,13 +38,13 @@ TestActionResult LaunchProcess::process()
         if (silently_)
             result = proc::system(shell, proc::args(cmdParts), env, proc::start_dir = workingDir_.string(), proc::std_out > proc::null, proc::std_err > proc::null);
         else
-            result = proc::system(shell, proc::args(cmdParts), env, proc::start_dir = workingDir_.string());
+            result = proc::system(shell, proc::args(cmdParts), env, proc::start_dir = workingDir_.string(), proc::std_err > stdout);
     }
     else{
         if (silently_)
             result = proc::system(proc::cmd(command_), env, proc::start_dir = workingDir_.string(), proc::std_out > proc::null, proc::std_err > proc::null);
         else
-            result = proc::system(proc::cmd(command_), env, proc::start_dir = workingDir_.string());
+            result = proc::system(proc::cmd(command_), env, proc::start_dir = workingDir_.string(), proc::std_err > stdout);
     }
 
     if (uncheckedResult_)

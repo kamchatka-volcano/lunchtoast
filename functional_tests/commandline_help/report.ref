@@ -1,11 +1,16 @@
-Usage: lunchtoast [options] [dir|file]test_path
-Options:
- --ext <file extension>  the extension of searched test files,
-                         required when specified test path is a directory
-                         (default value: .toast)
- --report <file path>    save test report to file
- --width <number>        set test report's width in number of characters
- --save-state            generate cleanup whitelist with content
-                         of the test directory
- --help                  show usage info
+Usage: lunchtoast <test-path> [params] [flags] 
+Arguments:
+    <test-path> (path)     
+Parameters:
+   -r, --report <path>     save test report to file
+                             (optional, default: "")
+   -e, --ext <string>      the extension of searched test files, required when
+                             specified test path is a directory
+                             (optional, default: .toast)
+   -w, --width <int>       set test report's width in number of characters
+                             (optional, default: 48)
+Flags:
+   -s, --save-state        generate cleanup whitelist with content
+                             of the test directory
+       --help              show usage info and exit
 

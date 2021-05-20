@@ -1,11 +1,3 @@
-Error: expected value for positional argument `test_path`.
-Usage: lunchtoast [options] [dir|file]test_path
-Options:
- --ext <file extension>  the extension of searched test files,
-                         required when specified test path is a directory
-                         (default value: .toast)
- --report <file path>    save test report to file
- --width <number>        set test report's width in number of characters
- --save-state            generate cleanup whitelist with content
-                         of the test directory
- --help                  show usage info
+Positional argument 'test-path' is missing.
+Usage: lunchtoast <test-path> [--report <path>] [--ext <string>] [--width <int>] [--save-state] [--help] 
+

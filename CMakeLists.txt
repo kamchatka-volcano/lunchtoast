@@ -13,8 +13,7 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
  
-find_package(Boost 1.67 REQUIRED COMPONENTS
-             program_options system)
+find_package(Boost 1.67 REQUIRED COMPONENTS system)
 
 set(SRC
     src/cleanupwhitelistgenerator.cpp
@@ -35,10 +34,11 @@ set(SRC
     )
 
 add_subdirectory(lib/spdlog)
+add_subdirectory(lib/cmdlime)
     
 add_executable(lunchtoast ${SRC})
 target_include_directories(lunchtoast PRIVATE lib/spdlog/include)
-target_include_directories(lunchtoast PRIVATE lib/structopt/include)
+target_include_directories(lunchtoast PRIVATE lib/cmdlime/include)
 target_link_libraries(lunchtoast boost_system boost_filesystem spdlog::spdlog stdc++fs)
 
 option(ENABLE_TESTS "Enable tests" OFF)
