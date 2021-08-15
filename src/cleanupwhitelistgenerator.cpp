@@ -6,6 +6,10 @@
 #include <boost/algorithm/string.hpp>
 #include <fstream>
 
+namespace {
+void processTestConfig(const fs::path &cfgPath);
+}
+
 CleanupWhitelistGenerator::CleanupWhitelistGenerator(const fs::path& testPath,
                                                      const std::string& testFileExt)
 {
@@ -48,51 +52,50 @@ bool CleanupWhitelistGenerator::process()
 }
 
 namespace{
-    fs::path getTestDirectory(const fs::path &cfgPath, const std::vector<RestorableSection>& sections)
-    {
-        auto testDir = cfgPath.parent_path();
-        auto cfgDir = fs::path{};
-        const auto dirSectionIt = std::find_if(sections.cbegin(), sections.cend(), [](const Section& section){return section.name == "Directory";});
-        if (dirSectionIt != sections.end())
-            cfgDir = boost::trim_copy(dirSectionIt->value);
-        if (!cfgDir.empty())
-            testDir = fs::canonical(testDir) / cfgDir;
-        return testDir;
-    }
+fs::path getTestDirectory(const fs::path &cfgPath, const std::vector<RestorableSection>& sections)
+{
+    auto testDir = cfgPath.parent_path();
+    auto cfgDir = fs::path{};
+    const auto dirSectionIt = std::find_if(sections.cbegin(), sections.cend(), [](const Section& section){return section.name == "Directory";});
+    if (dirSectionIt != sections.end())
+        cfgDir = boost::trim_copy(dirSectionIt->value);
+    if (!cfgDir.empty())
+        testDir = fs::canonical(testDir) / cfgDir;
+    return testDir;
+}
 
-    std::string getDirectoryContentString(const fs::path& dir)
-    {
-        auto testDirPaths = getDirectoryContent(dir);
-        auto testDirPathsStr = std::vector<std::string>{};
-        std::transform(testDirPaths.begin(), testDirPaths.end(),
-                       std::back_inserter(testDirPathsStr),
-                       [&dir](const fs::path& path) {return fs::relative(path, dir).string();});
-        return boost::join(testDirPathsStr, " ");
-    }
+std::string getDirectoryContentString(const fs::path& dir)
+{
+    auto testDirPaths = getDirectoryContent(dir);
+    auto testDirPathsStr = std::vector<std::string>{};
+    std::transform(testDirPaths.begin(), testDirPaths.end(),
+                   std::back_inserter(testDirPathsStr),
+                   [&dir](const fs::path& path) {return fs::relative(path, dir).string();});
+    return boost::join(testDirPathsStr, " ");
+}
 
-    void writeSections(const std::vector<RestorableSection>& sections, const fs::path& outFilePath)
-    {
-        auto stream = std::ofstream{};
-        stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-        stream.open(outFilePath.string());
-        for (const auto& section : sections)
-            stream << section.originalText;
-    }
+void writeSections(const std::vector<RestorableSection>& sections, const fs::path& outFilePath)
+{
+    auto stream = std::ofstream{};
+    stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    stream.open(outFilePath.string());
+    for (const auto& section : sections)
+        stream << section.originalText;
+}
 
-    void copyComments(const std::string& input, std::string& output)
-    {
-        auto stream = std::stringstream{input};
-        auto line = std::string{};
-        while(std::getline(stream, line)){
-            if (boost::trim_copy(line).empty())
-                output += "\n";
-            else if (boost::starts_with(line, "#"))
-                output += line + "\n";
-        }
+void copyComments(const std::string& input, std::string& output)
+{
+    auto stream = std::stringstream{input};
+    auto line = std::string{};
+    while(std::getline(stream, line)){
+        if (boost::trim_copy(line).empty())
+            output += "\n";
+        else if (boost::starts_with(line, "#"))
+            output += line + "\n";
     }
 }
 
-void CleanupWhitelistGenerator::processTestConfig(const fs::path &cfgPath)
+void processTestConfig(const fs::path &cfgPath)
 {
     auto stream = std::ifstream{cfgPath.string()};
     if (!stream.is_open())
@@ -116,4 +119,5 @@ void CleanupWhitelistGenerator::processTestConfig(const fs::path &cfgPath)
         sections.push_back(newWhiteListSection);
     }
     writeSections(sections, cfgPath);
+}
 }

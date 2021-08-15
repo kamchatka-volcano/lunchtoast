@@ -38,7 +38,7 @@ int main(int argc, char **argv)
         auto testLauncher = TestLauncher{cfg.testPath, cfg.ext, testReporter};
         allTestsPassed = testLauncher.process();
     } catch(const std::exception& e){
-        fmt::print("Unknown error occured during test processing: {}\n", e.what());
+        fmt::print("Unknown error occurred during test processing: {}\n", e.what());
         return -1;
     }
 
@@ -58,7 +58,7 @@ int generateCleanupWhiteList(const Cfg& cfg)
             return -1;
     }
     catch(const std::exception& e){
-        fmt::print("Unknown error occured during creation of test cleanup whitelist: {}\n", e.what());
+        fmt::print("Unknown error occurred during creation of test cleanup whitelist: {}\n", e.what());
         return -1;
     }
 }

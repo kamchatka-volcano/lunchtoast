@@ -3,11 +3,13 @@
 #include "alias_filesystem.h"
 #include <spdlog/fmt/fmt.h>
 
-CompareFileContent::CompareFileContent(const fs::path& filePath,
-                                       const std::string& expectedFileContent,
+#include <utility>
+
+CompareFileContent::CompareFileContent(fs::path filePath,
+                                       std::string expectedFileContent,
                                        TestActionType actionType)
-    : filePath_(filePath)
-    , expectedFileContent_(expectedFileContent)
+    : filePath_(std::move(filePath))
+    , expectedFileContent_(std::move(expectedFileContent))
     , actionType_(actionType)
 {
 }

@@ -18,12 +18,12 @@ namespace cmdlime::detail{
 template <typename T>
 class ParamList : public IParamList, public ConfigVar{
 public:
-    ParamList(const std::string& name,
-              const std::string& shortName,
-              const std::string& type,
+    ParamList(std::string name,
+              std::string shortName,
+              std::string type,
               std::function<std::vector<T>&()> paramListGetter)
-        : ConfigVar(name, shortName, type)
-        , paramListGetter_(paramListGetter)
+        : ConfigVar(std::move(name), std::move(shortName), std::move(type))
+        , paramListGetter_(std::move(paramListGetter))
     {
     }
 
@@ -123,7 +123,8 @@ public:
         Expects(!type.empty());
         paramList_ = std::make_unique<ParamList<T>>(NameProvider::name(varName),
                                                     NameProvider::shortName(varName),
-                                                    NameProvider::valueName(type), paramListGetter);
+                                                    NameProvider::valueName(type),
+                                                    std::move(paramListGetter));
     }
 
     ParamListCreator<T, TConfig>& operator<<(const std::string& info)
@@ -140,14 +141,16 @@ public:
 
     ParamListCreator<T, TConfig>& operator<<(const ShortName& customName)
     {
-        static_assert(Format<ConfigAccess<TConfig>::format()>::shortNamesEnabled, "Current command line format doesn't support short names");
+        static_assert(Format<ConfigAccess<TConfig>::format()>::shortNamesEnabled,
+                      "Current command line format doesn't support short names");
         paramList_->resetShortName(customName.value());
         return *this;
     }
 
     ParamListCreator<T, TConfig>& operator<<(const WithoutShortName&)
     {
-        static_assert(Format<ConfigAccess<TConfig>::format()>::shortNamesEnabled, "Current command line format doesn't support short names");
+        static_assert(Format<ConfigAccess<TConfig>::format()>::shortNamesEnabled,
+                      "Current command line format doesn't support short names");
         paramList_->resetShortName({});
         return *this;
     }
@@ -158,9 +161,9 @@ public:
         return *this;
     }
 
-    ParamListCreator<T, TConfig>& operator()(const std::vector<T>& defaultValue = {})
+    ParamListCreator<T, TConfig>& operator()(std::vector<T> defaultValue = {})
     {
-        defaultValue_ = defaultValue;
+        defaultValue_ = std::move(defaultValue);
         paramList_->setDefaultValue(defaultValue_);
         return *this;
     }
@@ -183,7 +186,7 @@ ParamListCreator<T, TConfig> makeParamListCreator(TConfig& cfg,
                                                   const std::string& type,
                                                   std::function<std::vector<T>&()> paramListGetter)
 {
-    return ParamListCreator<T, TConfig>{cfg, varName, type, paramListGetter};
+    return ParamListCreator<T, TConfig>{cfg, varName, type, std::move(paramListGetter)};
 }
 
 }

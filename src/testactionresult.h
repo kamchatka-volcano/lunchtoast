@@ -13,6 +13,6 @@ private:
     TestActionResult() = default;
 
 private:
-    bool isSuccessful_;
+    bool isSuccessful_ = false;
     std::string errorInfo_;
 };

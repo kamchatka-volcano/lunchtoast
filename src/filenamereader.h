@@ -6,7 +6,7 @@
 
 class FilenameGroup{
 public:
-    FilenameGroup(const std::string& filenameOrRegexp, const fs::path& directory);
+    FilenameGroup(std::string filenameOrRegexp, fs::path directory);
     std::vector<fs::path> fileList() const;
     std::vector<fs::path> pathList() const;
     std::string string() const;

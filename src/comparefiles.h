@@ -8,8 +8,8 @@
 class CompareFiles : public TestAction
 {
 public:
-    CompareFiles(const FilenameGroup& lhs,
-                 const FilenameGroup& rhs,
+    CompareFiles(FilenameGroup lhs,
+                 FilenameGroup rhs,
                  TestActionType actionType);
 
     TestActionResult process() override;

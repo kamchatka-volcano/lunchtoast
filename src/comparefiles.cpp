@@ -3,19 +3,18 @@
 #include "alias_filesystem.h"
 #include <spdlog/fmt/fmt.h>
 #include <boost/algorithm/string.hpp>
-#include <regex>
 #include <string>
-#include <sstream>
+#include <utility>
 
 namespace{
 std::string filenameListStr(const std::vector<fs::path>& pathList);
 }
 
-CompareFiles::CompareFiles(const FilenameGroup& lhs,
-                           const FilenameGroup& rhs,
+CompareFiles::CompareFiles(FilenameGroup lhs,
+                           FilenameGroup rhs,
                            TestActionType actionType)
-    : lhs_(lhs)
-    , rhs_(rhs)
+    : lhs_(std::move(lhs))
+    , rhs_(std::move(rhs))
     , actionType_(actionType)
 {
 }

@@ -9,7 +9,7 @@
 #include <boost/algorithm/string.hpp>
 
 TestReporter::TestReporter(const fs::path& reportFilePath,
-                           const int reportWidth)
+                           int reportWidth)
     : reportWidth_(reportWidth)
 {
     initReporter(reportFilePath);

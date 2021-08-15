@@ -11,7 +11,7 @@ class TestReporter
 {
 public:
     TestReporter(const fs::path& reportFilePath,
-                 const int reportWidth);
+                 int reportWidth);
     void reportResult(const Test& test, const TestResult& result,
                       std::string suiteName, int suiteTestNumber, int suiteNumOfTests) const;
     void reportBrokenTest(const fs::path& brokenTestConfig, const std::string& errorInfo,

@@ -251,5 +251,5 @@ void Test::postProcessCleanupConfig(const fs::path& configPath)
         });
         return;
     }
-    cleanupWhitelist_.push_back(FilenameGroup{fs::relative(configPath, directory_).string(), directory_});
+    cleanupWhitelist_.emplace_back(fs::relative(configPath, directory_).string(), directory_);
 }

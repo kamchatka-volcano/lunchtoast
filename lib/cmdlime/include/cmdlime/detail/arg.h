@@ -16,11 +16,11 @@ namespace cmdlime::detail{
 template <typename T>
 class Arg : public IArg, public ConfigVar{
 public:
-    Arg(const std::string& name,
-        const std::string& type,
+    Arg(std::string name,
+        std::string type,
         std::function<T&()> argGetter)
-        : ConfigVar(name, {}, type)
-        , argGetter_(argGetter)
+        : ConfigVar(std::move(name), {}, std::move(type))
+        , argGetter_(std::move(argGetter))
     {
     }
 
@@ -64,8 +64,9 @@ public:
     {
         Expects(!varName.empty());
         Expects(!type.empty());
-        arg_ = std::make_unique<Arg<T>>(NameProvider::argName(varName),
-                                        NameProvider::valueName(type), argGetter);
+        arg_ = std::make_unique<Arg<T>>(NameProvider::fullName(varName),
+                                        NameProvider::valueName(type),
+                                        std::move(argGetter));
     }
 
     ArgCreator<T, TConfig>& operator<<(const std::string& info)
@@ -103,7 +104,7 @@ ArgCreator<T, TConfig> makeArgCreator(TConfig& cfg,
                                        const std::string& type,
                                        std::function<T&()> argGetter)
 {
-    return ArgCreator<T, TConfig>{cfg, varName, type, argGetter};
+    return ArgCreator<T, TConfig>{cfg, varName, type, std::move(argGetter)};
 }
 
 

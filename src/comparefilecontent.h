@@ -5,8 +5,8 @@
 class CompareFileContent : public TestAction
 {
 public:
-    CompareFileContent(const fs::path& filePath,
-                       const std::string& expectedFileContent,
+    CompareFileContent(fs::path filePath,
+                       std::string expectedFileContent,
                        TestActionType actionType);
     TestActionResult process() override;
     TestActionType type() const override;

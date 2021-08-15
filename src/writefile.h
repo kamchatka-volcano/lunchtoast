@@ -6,7 +6,7 @@
 class WriteFile : public TestAction
 {
 public:
-    WriteFile(const fs::path& fileName, const std::string& content);
+    WriteFile(fs::path fileName, std::string content);
     TestActionResult process() override;
     TestActionType type() const override;
 

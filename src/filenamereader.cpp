@@ -5,19 +5,20 @@
 #include <iomanip>
 #include <set>
 #include <algorithm>
+#include <utility>
 
 namespace {
 std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::regex& pathFilter,
-                                       std::function<bool(const fs::path& path)> pathMatchPredicate = [](const fs::path&){return true;});
+                                       const std::function<bool(const fs::path& path)>& pathMatchPredicate = [](const fs::path&){return true;});
 }
 
-FilenameGroup::FilenameGroup(const std::string& filenameOrRegexp, const fs::path& directory)
-    : filenameOrRegexp_(filenameOrRegexp)
-    , directory_(directory)
+FilenameGroup::FilenameGroup(std::string filenameOrRegexp, fs::path directory)
+    : filenameOrRegexp_(std::move(filenameOrRegexp))
+    , directory_(std::move(directory))
     , isRegexp_(false)
 {
-    if (boost::starts_with(filenameOrRegexp, "{") && boost::ends_with(filenameOrRegexp, "}")){
-        fileMatchingRegexp_ = std::regex{filenameOrRegexp.substr(1, filenameOrRegexp.size() - 2)};
+    if (boost::starts_with(filenameOrRegexp_, "{") && boost::ends_with(filenameOrRegexp_, "}")){
+        fileMatchingRegexp_ = std::regex{filenameOrRegexp_.substr(1, filenameOrRegexp_.size() - 2)};
         isRegexp_ = true;
     }
 }
@@ -63,12 +64,12 @@ std::vector<FilenameGroup> readFilenames(const std::string& input, const fs::pat
     auto fileName = std::string{};
     auto stream = std::istringstream{input};
     while (stream >> std::quoted(fileName))
-        result.push_back(FilenameGroup{fileName, directory});
+        result.emplace_back(fileName, directory);
     return result;
 }
 
 namespace{
-std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::regex& pathFilter, std::function<bool(const fs::path&)> pathMatchPredicate)
+std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::regex& pathFilter, const std::function<bool(const fs::path&)>& pathMatchPredicate)
 {
     auto result = std::vector<fs::path>{};
     const auto paths = getDirectoryContent(directory);

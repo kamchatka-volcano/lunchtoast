@@ -4,11 +4,13 @@
 #include "iflag.h"
 #include "iarg.h"
 #include "iarglist.h"
+#include "icommand.h"
 #include "configvar.h"
 #include "format.h"
 #include "string_utils.h"
 #include "gsl/pointers"
 #include <cmdlime/usageinfoformat.h>
+#include <utility>
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -62,19 +64,19 @@ inline std::vector<not_null<T*>> getParamsByOptionality(const std::vector<not_nu
 }
 
 template <typename T>
-const std::string getName(T& configVar)
+const std::string& getName(T& configVar)
 {
     return configVar.info().name();
 }
 
 template <typename T>
-const std::string getType(T& configVar)
+const std::string& getType(T& configVar)
 {
     return configVar.info().type();
 }
 
 template <typename T>
-const std::string getDescription(T& configVar)
+const std::string& getDescription(T& configVar)
 {
     return configVar.info().description();
 }
@@ -82,21 +84,23 @@ const std::string getDescription(T& configVar)
 template <FormatType formatType>
 class UsageInfoCreator{
 public:
-    UsageInfoCreator(const std::string& programName,
+    UsageInfoCreator(std::string programName,
                      UsageInfoFormat outputSettings,
-                     std::vector<not_null<IParam*>> params,
-                     std::vector<not_null<IParamList*>> paramLists,
+                     const std::vector<not_null<IParam*>>& params,
+                     const std::vector<not_null<IParamList*>>& paramLists,
                      std::vector<not_null<IFlag*>> flags,
                      std::vector<not_null<IArg*>> args,
-                     IArgList* argList)
-    : programName_(programName)
+                     IArgList* argList,
+                     std::vector<not_null<ICommand*>> commands)
+    : programName_(std::move(programName))
     , params_(getParamsByOptionality(params, false))
     , optionalParams_(getParamsByOptionality(params, true))
     , paramLists_(getParamsByOptionality(paramLists, false))
     , optionalParamLists_(getParamsByOptionality(paramLists, true))
-    , flags_(flags)
-    , args_(args)
+    , flags_(std::move(flags))
+    , args_(std::move(args))
     , argList_(argList)
+    , commands_(std::move(commands))
     , outputSettings_(outputSettings)
     , maxOptionNameSize_(maxOptionNameLength() + outputSettings.columnsSpacing)
     {
@@ -110,7 +114,8 @@ public:
                paramListsInfo() +
                optionsInfo() +
                optionalParamListsInfo() +
-               flagsInfo();
+               flagsInfo() +
+               commandsInfo();
     }
 
     std::string create()
@@ -124,6 +129,9 @@ private:
     std::string usageInfo()
     {
         auto result = "Usage: " + programName_ + " ";
+        if (!commands_.empty())
+            result += "[commands] ";
+
         for (auto arg : args_)
             result += OutputFormatter::argUsageName(*arg) + " ";
 
@@ -149,6 +157,10 @@ private:
     std::string minimizedUsageInfo()
     {
         auto result = "Usage: " + programName_ + " ";
+
+        if (!commands_.empty())
+            result += "[commands] ";
+
         for (auto arg : args_)
             result += OutputFormatter::argUsageName(*arg) + " ";
 
@@ -295,6 +307,22 @@ private:
         return result;
     }
 
+    std::string commandsInfo()
+    {
+        if (commands_.empty())
+            return {};
+        auto result = std::string{"Commands:\n"};
+        for (const auto command : commands_){
+            auto nameStream = std::stringstream{};
+            if (outputSettings_.nameIndentation)
+                nameStream << std::setw(outputSettings_.nameIndentation) << " ";
+            nameStream << getName(*command)
+                       << " [options]";
+            result += makeConfigFieldInfo(nameStream.str(), getDescription(*command));
+        }
+        return result;
+    }
+
     int maxOptionNameLength()
     {        
         auto length = 0;
@@ -354,7 +382,8 @@ private:
     std::vector<not_null<IParamList*>> optionalParamLists_;
     std::vector<not_null<IFlag*>> flags_;
     std::vector<not_null<IArg*>> args_;
-    IArgList* argList_;    
+    IArgList* argList_;
+    std::vector<not_null<ICommand*>> commands_;
     UsageInfoFormat outputSettings_;
     int maxOptionNameSize_;
 };

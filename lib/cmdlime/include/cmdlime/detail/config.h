@@ -1,4 +1,10 @@
 #pragma once
+#include "iparam.h"
+#include "iparamlist.h"
+#include "iflag.h"
+#include "iarg.h"
+#include "iarglist.h"
+#include "icommand.h"
 #include "format.h"
 #include "usageinfocreator.h"
 #include "configaccess.h"
@@ -14,12 +20,6 @@
 
 namespace cmdlime::detail{
 using namespace gsl;
-
-class IParam;
-class IParamList;
-class IFlag;
-class IArg;
-class IArgList;
 
 template <typename T>
 inline std::vector<not_null<T*>> getPtrList(const std::vector<std::unique_ptr<T>>& ownerList)
@@ -43,12 +43,13 @@ public:
     {
         if (!configError_.empty())
             throw ConfigError{configError_};
-        auto params = getPtrList(params_);
-        auto paramLists = getPtrList(paramLists_);
-        auto flags = getPtrList(flags_);
-        auto args = getPtrList(args_);
         using ParserType = typename Format<formatType>::parser;
-        auto parser = ParserType{params, paramLists, flags, args, argList_.get()};
+        auto parser = ParserType{getPtrList(params_),
+                                 getPtrList(paramLists_),
+                                 getPtrList(flags_),
+                                 getPtrList(args_),
+                                 argList_.get(),
+                                 getPtrList(commands_)};
         parser.parse(cmdLine);
     }
 
@@ -62,11 +63,14 @@ public:
         if (!customUsageInfo_.empty())
             return customUsageInfo_;
 
-        auto params = getPtrList(params_);
-        auto paramLists = getPtrList(paramLists_);
-        auto flags = getPtrList(flags_);
-        auto args = getPtrList(args_);
-        return UsageInfoCreator<formatType>{name, UsageInfoFormat{}, params, paramLists, flags, args, argList_.get()}.create();
+        return UsageInfoCreator<formatType>{name,
+                                            UsageInfoFormat{},
+                                            getPtrList(params_),
+                                            getPtrList(paramLists_),
+                                            getPtrList(flags_),
+                                            getPtrList(args_),
+                                            argList_.get(),
+                                            getPtrList(commands_)}.create();
     }
 
     std::string usageInfoDetailed(const std::string& name, UsageInfoFormat outputSettings = {}) const
@@ -74,11 +78,14 @@ public:
         if (!customUsageInfoDetailed_.empty())
             return customUsageInfoDetailed_;
 
-        auto params = getPtrList(params_);
-        auto paramLists = getPtrList(paramLists_);
-        auto flags = getPtrList(flags_);
-        auto args = getPtrList(args_);
-        return UsageInfoCreator<formatType>{name, outputSettings, params, paramLists, flags, args, argList_.get()}.createDetailed();
+        return UsageInfoCreator<formatType>{name,
+                                            outputSettings,
+                                            getPtrList(params_),
+                                            getPtrList(paramLists_),
+                                            getPtrList(flags_),
+                                            getPtrList(args_),
+                                            argList_.get(),
+                                            getPtrList(commands_)}.createDetailed();
     }
 
     void setVersionInfo(const std::string& info)
@@ -124,12 +131,30 @@ private:
         argList_ = std::move(argList);
     }
 
+    void addCommand(std::unique_ptr<ICommand> command)
+    {
+        commands_.emplace_back(std::move(command));
+    }
+
+    std::vector<not_null<ICommand*>> commandList() const
+    {
+        return getPtrList(commands_);
+    }
+
+    void addHelpFlagToCommands(const std::string& commandName)
+    {
+        for (auto& cmd : commands_)
+            cmd->enableHelpFlag(commandName);
+    }
+
+
 private:
     std::vector<std::unique_ptr<IParam>> params_;
     std::vector<std::unique_ptr<IParamList>> paramLists_;
     std::vector<std::unique_ptr<IFlag>> flags_;
     std::vector<std::unique_ptr<IArg>> args_;
-    std::unique_ptr<detail::IArgList> argList_;
+    std::unique_ptr<IArgList> argList_;
+    std::vector<std::unique_ptr<ICommand>> commands_;
     std::string versionInfo_;
     std::string customUsageInfo_;
     std::string customUsageInfoDetailed_;

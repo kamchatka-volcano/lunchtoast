@@ -1,10 +1,11 @@
 #include "writefile.h"
 #include <spdlog/fmt/fmt.h>
 #include <fstream>
+#include <utility>
 
-WriteFile::WriteFile(const fs::path& filePath, const std::string& content)
-    : filePath_(filePath)
-    , content_(content)
+WriteFile::WriteFile(fs::path filePath, std::string content)
+    : filePath_(std::move(filePath))
+    , content_(std::move(content))
 {
 }
 

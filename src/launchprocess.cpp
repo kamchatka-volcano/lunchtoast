@@ -3,16 +3,18 @@
 #include "string_utils.h"
 #include <spdlog/fmt/fmt.h>
 
+#include <utility>
+
 namespace proc = boost::process;
 
-LaunchProcess::LaunchProcess(const std::string& command,
-                             const fs::path& workingDir,
-                             const std::string& shellCommand,
+LaunchProcess::LaunchProcess(std::string command,
+                             fs::path workingDir,
+                             std::string shellCommand,
                              bool uncheckedResult,
                              bool silently)
-    : command_(command)
-    , workingDir_(workingDir)
-    , shellCommand_(shellCommand)
+    : command_(std::move(command))
+    , workingDir_(std::move(workingDir))
+    , shellCommand_(std::move(shellCommand))
     , uncheckedResult_(uncheckedResult)
     , silently_(silently)
 {

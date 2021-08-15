@@ -22,7 +22,7 @@ private:
     TestResult() = default;
 
 private:
-    TestResultType type_;
+    TestResultType type_ = TestResultType::Failure;
     std::string errorInfo_;
     std::vector<std::string> failedActionsMessages_;
 };

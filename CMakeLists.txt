@@ -1,18 +1,7 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.18)
 
 project(lunchtoast VERSION 1.0.0 DESCRIPTION "lunchtoast - a command line functional testing automation tool")
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
-endif()
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
- 
 find_package(Boost 1.67 REQUIRED COMPONENTS system)
 
 set(SRC
@@ -37,12 +26,13 @@ add_subdirectory(lib/spdlog)
 add_subdirectory(lib/cmdlime)
     
 add_executable(lunchtoast ${SRC})
+target_compile_features(lunchtoast PUBLIC cxx_std_17)
+set_target_properties(lunchtoast PROPERTIES CXX_EXTENSIONS OFF)
 target_include_directories(lunchtoast PRIVATE lib/spdlog/include)
-target_include_directories(lunchtoast PRIVATE lib/cmdlime/include)
-target_link_libraries(lunchtoast boost_system boost_filesystem spdlog::spdlog stdc++fs)
+target_link_libraries(lunchtoast PRIVATE cmdlime boost_system boost_filesystem spdlog::spdlog)
 
 option(ENABLE_TESTS "Enable tests" OFF)
-if (${ENABLE_TESTS})
+if (ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)
     add_custom_command(

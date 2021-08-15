@@ -13,7 +13,7 @@ struct Section;
 class Test
 {
 public:
-    Test(const fs::path& configPath);
+    explicit Test(const fs::path& configPath);
     TestResult process();
 
     const std::string& suite() const;
@@ -51,5 +51,5 @@ private:
 
 class TestConfigError: public std::runtime_error{
 public:
-    TestConfigError(const std::string& msg);
+    explicit TestConfigError(const std::string& msg);
 };
