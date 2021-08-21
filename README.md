@@ -147,18 +147,20 @@ You can find this config at `examples/readme.toast`
 ### Installation
 ```
 git clone https://github.com/kamchatka-volcano/lunchtoast.git
-cd lunchtoast && mkdir build && cd build
-cmake ..
-make
-make install
+cd lunchtoast
+cmake -S . -B build
+cmake --build build
+cmake --install build
 ```
+Dependencies:
+*  Boost 1.67
 
 ### Running tests
 ```
-cd lunchtoast/build
-cmake .. -DENABLE_TESTS=ON
-make
-ctest
+cd lunchtoast
+cmake -S . -B build -DENABLE_TESTS=ON
+cmake --build build 
+cd build/tests && ctest
 ```
 
 ### Running functional tests
