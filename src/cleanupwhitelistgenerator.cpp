@@ -44,9 +44,9 @@ bool CleanupWhitelistGenerator::process()
         try{
             processTestConfig(cfgPath);
         } catch(const TestConfigError& error){
-            fmt::print("Can't generate cleanup whitelist in config {}. Error: {}\n", cfgPath.string(), error.what());
+            fmt::print("Can't generate cleanup whitelist in config {}. Error: {}\n", homePathString(cfgPath), error.what());
         }
-        fmt::print("Generating cleanup whitelist in test config {}\n", cfgPath.string());
+        fmt::print("Generating cleanup whitelist in test config {}\n", homePathString(cfgPath));
     }
     return true;
 }
@@ -71,6 +71,7 @@ std::string getDirectoryContentString(const fs::path& dir)
     std::transform(testDirPaths.begin(), testDirPaths.end(),
                    std::back_inserter(testDirPathsStr),
                    [&dir](const fs::path& path) {return fs::relative(path, dir).string();});
+    std::sort(testDirPathsStr.begin(), testDirPathsStr.end());
     return boost::join(testDirPathsStr, " ");
 }
 
@@ -99,7 +100,7 @@ void processTestConfig(const fs::path &cfgPath)
 {
     auto stream = std::ifstream{cfgPath.string()};
     if (!stream.is_open())
-        throw TestConfigError{fmt::format("Test config file {} doesn't exist", cfgPath.string())};
+        throw TestConfigError{fmt::format("Test config file {} doesn't exist", homePathString(cfgPath))};
 
     auto sections = readRestorableSections(stream, {RawSectionSpecifier{"Write", "---"},
                                                     RawSectionSpecifier{"Assert content of", "---"},

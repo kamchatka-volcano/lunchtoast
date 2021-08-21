@@ -1,6 +1,6 @@
 ################## [ 1 / 1 ] ###################
-Test can't be started. Config file /home/lizardperson/syncbox/src/c++/lunchtoast/functional_tests/set_directory_unexistant_error/test/lunchtoast.test error:
-Specified directory '/home/lizardperson/syncbox/src/c++/lunchtoast/functional_tests/set_directory_unexistant_error/test/testdata' doesn't exist
+Test can't be started. Config file ~/syncbox/src/c++/lunchtoast/functional_tests/set_directory_unexistant_error/test/lunchtoast.test error:
+Specified directory '~/syncbox/src/c++/lunchtoast/functional_tests/set_directory_unexistant_error/test/testdata' doesn't exist
 
  
 ##################  SUMMARY  ###################

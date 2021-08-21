@@ -2,6 +2,7 @@
 #include <boost/uuid/detail/md5.hpp>
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string.hpp>
+#include <stdlib.h>
 #include <fstream>
 
 using boost::uuids::detail::md5;
@@ -60,4 +61,24 @@ std::vector<fs::path> getDirectoryContent(const fs::path& dir)
         }
     }
     return result;
+}
+
+fs::path homePath(const fs::path& path)
+{
+    auto homePath = fs::path{getenv("HOME")};
+    if (homePath.empty())
+        return path;
+    else
+        return fs::relative(path, homePath);
+}
+
+std::string homePathString(const fs::path& path)
+{
+    auto resPath = homePath(path);
+    if (resPath == path)
+        return resPath.string();
+    else if (resPath.string() == ".")
+        return "~/";
+    else
+        return "~/" + resPath.string();
 }

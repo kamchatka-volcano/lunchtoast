@@ -101,14 +101,14 @@ void Test::readConfig(const fs::path& path)
 {
     auto fileStream = std::ifstream{path.string()};
     if (!fileStream.is_open())
-        throw TestConfigError{fmt::format("Test config file {} doesn't exist", path.string())};
+        throw TestConfigError{fmt::format("Test config file {} doesn't exist", homePathString(path))};
 
     try{
         const auto sections = readSections(fileStream, {RawSectionSpecifier{"Write", "---"},
                                                         RawSectionSpecifier{"Assert content of", "---"},
                                                         RawSectionSpecifier{"Expect content of", "---"}});
         if (sections.empty())
-            throw TestConfigError{fmt::format("Test config file {} is empty or invalid", path.string())};
+            throw TestConfigError{fmt::format("Test config file {} is empty or invalid", homePathString(path))};
         for (const auto& section : sections){
             if (readParamFromSection(section))
                 continue;
@@ -129,7 +129,7 @@ void Test::readConfig(const fs::path& path)
 void Test::checkParams()
 {
     if (!fs::exists(directory_))
-        throw TestConfigError{fmt::format("Specified directory '{}' doesn't exist", directory_.string())};
+        throw TestConfigError{fmt::format("Specified directory '{}' doesn't exist", homePathString(directory_))};
 }
 
 bool Test::createComparisonAction(TestActionType type, const std::string& encodedActionType, const std::string& value)

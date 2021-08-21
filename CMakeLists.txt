@@ -28,18 +28,12 @@ add_subdirectory(lib/cmdlime)
 add_executable(lunchtoast ${SRC})
 target_compile_features(lunchtoast PUBLIC cxx_std_17)
 set_target_properties(lunchtoast PROPERTIES CXX_EXTENSIONS OFF)
-target_include_directories(lunchtoast PRIVATE lib/spdlog/include)
 target_link_libraries(lunchtoast PRIVATE cmdlime boost_system boost_filesystem spdlog::spdlog)
 
 option(ENABLE_TESTS "Enable tests" OFF)
 if (ENABLE_TESTS)
     enable_testing()
     add_subdirectory(tests)
-    add_custom_command(
-        TARGET lunchtoast POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-                lunchtoast
-                ${CMAKE_SOURCE_DIR}/functional_tests/bin/lunchtoast)
 endif()
 
 include(GNUInstallDirs)

@@ -2,6 +2,7 @@
 #include "test.h"
 #include "testresult.h"
 #include "string_utils.h"
+#include "utils.h"
 #include <spdlog/spdlog.h>
 #include <spdlog/logger.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -100,7 +101,7 @@ void TestReporter::reportBrokenTest(const fs::path& brokenTestConfig, const std:
         header = header.substr(1);
 
     print(TestResultType::Failure, "{:#^" + std::to_string(reportWidth_) + "}", header);
-    print("Test can't be started. Config file {} error:\n{}\n", brokenTestConfig.string(), errorInfo);
+    print("Test can't be started. Config file {} error:\n{}\n", homePathString(brokenTestConfig), errorInfo);
 }
 
 void TestReporter::reportDisabledTest(const Test& test,
