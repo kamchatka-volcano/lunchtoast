@@ -1,13 +1,15 @@
 #include "testreporter.h"
 #include "test.h"
 #include "testresult.h"
-#include "string_utils.h"
 #include "utils.h"
+#include <sfun/string_utils.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/logger.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <boost/algorithm/string.hpp>
+
+namespace str = sfun::string_utils;
 
 TestReporter::TestReporter(const fs::path& reportFilePath,
                            int reportWidth)

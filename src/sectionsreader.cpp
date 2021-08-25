@@ -1,8 +1,10 @@
 #include "sectionsreader.h"
-#include "string_utils.h"
+#include <sfun/string_utils.h>
 #include <boost/algorithm/string.hpp>
 #include <algorithm>
 #include <cassert>
+
+namespace str = sfun::string_utils;
 
 namespace {
     void readSectionFirstLine(Section& section, const std::string& line, int lineIndex)

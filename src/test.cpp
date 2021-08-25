@@ -5,12 +5,14 @@
 #include "comparefiles.h"
 #include "comparefilecontent.h"
 #include "utils.h"
-#include "string_utils.h"
+#include <sfun/string_utils.h>
 #include <spdlog/fmt/fmt.h>
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 #include <iomanip>
 #include <fstream>
+
+namespace str = sfun::string_utils;
 
 Test::Test(const fs::path& configPath)
     : name_(configPath.stem().string())
@@ -147,7 +149,7 @@ bool Test::createComparisonAction(TestActionType type, const std::string& encode
 
 void Test::createLaunchAction(const Section& section)
 {
-    const auto parts = str::splitted(section.name);
+    const auto parts = str::split(section.name);
     auto uncheckedResult = std::find(parts.begin(), parts.end(), "unchecked") != parts.end();
     auto isShellCommand = std::find(parts.begin(), parts.end(), "command") != parts.end();
     auto silently = std::find(parts.begin(), parts.end(), "silently") != parts.end();

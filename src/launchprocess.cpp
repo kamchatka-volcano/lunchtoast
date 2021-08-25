@@ -1,11 +1,12 @@
 #include "launchprocess.h"
 #include "alias_boost_process.h"
-#include "string_utils.h"
+#include <sfun/string_utils.h>
 #include <spdlog/fmt/fmt.h>
 
 #include <utility>
 
 namespace proc = boost::process;
+namespace str = sfun::string_utils;
 
 LaunchProcess::LaunchProcess(std::string command,
                              fs::path workingDir,
@@ -32,7 +33,7 @@ TestActionResult LaunchProcess::process()
 
     auto result = 0;
     if (!shellCommand_.empty()){
-        auto cmdParts = str::splitted(shellCommand_);
+        auto cmdParts = str::split(shellCommand_);
         auto shellCmd = cmdParts[0];
         cmdParts.erase(cmdParts.begin());
         cmdParts.push_back(command_);
