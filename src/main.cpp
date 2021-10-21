@@ -6,13 +6,13 @@
 #include <cmdlime/config.h>
 
 struct Cfg : public cmdlime::Config{
-    ARG(testPath, fs::path);
-    PARAM(report, fs::path)()           << "save test report to file";
-    PARAM(ext, std::string)(".toast")   << "the extension of searched test files, "
-                                           "required when specified test path is a directory";
-    PARAM(width, int)(48)               << "set test report's width in number of characters";
-    FLAG(saveState)                     << "generate cleanup whitelist with content\n"
-                                           "of the test directory";    
+    CMDLIME_ARG(testPath, fs::path);
+    CMDLIME_PARAM(report, fs::path)()           << "save test report to file";
+    CMDLIME_PARAM(ext, std::string)(".toast")   << "the extension of searched test files, "
+                                                   "required when specified test path is a directory";
+    CMDLIME_PARAM(width, int)(48)               << "set test report's width in number of characters";
+    CMDLIME_FLAG(saveState)                     << "generate cleanup whitelist with content\n"
+                                                   "of the test directory";
 };
 
 bool validateConfig(Cfg& cfg);
