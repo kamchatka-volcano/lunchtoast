@@ -13,5 +13,6 @@ test/data
 test/data/lhs.txt
 test/lunchtoast.test
 test/rhs.txt
+
 ---
 -Assert files equal: report.res report.ref

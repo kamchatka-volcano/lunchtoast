@@ -33,7 +33,7 @@ void PrintTo(const RestorableSection& section, std::ostream *os)
 
 void testSectionReader(const std::string& input,
                        const std::vector<Section>& expectedSections,
-                       const std::vector<RawSectionSpecifier>& rawSectionsList = {})
+                       const std::vector<std::string>& rawSectionsList = {})
 {
     auto stream = std::istringstream{input};
     auto sections = readSections(stream, rawSectionsList);
@@ -42,7 +42,7 @@ void testSectionReader(const std::string& input,
 
 void testRestorableSectionReader(const std::string& input,
                           const std::vector<RestorableSection>& expectedSections,
-                          const std::vector<RawSectionSpecifier>& rawSectionsList = {})
+                          const std::vector<std::string>& rawSectionsList = {})
 {
     auto stream = std::istringstream{input};
     auto sections = readRestorableSections(stream, rawSectionsList);
@@ -73,6 +73,36 @@ void assert_exception(std::function<void()> throwingCode, std::function<void(con
     catch(...){
         FAIL() << "Unexpected exception was thrown";
     }
+}
+
+TEST(SectionsReader, RawSection)
+{
+    testSectionReader(
+        "-Write test.txt:foo\n"
+        "---\n"
+        "-Write test2.txt:foo\n"
+        "\n"
+        "---\n"
+        "-Write test3.txt:\n"
+        "foo",
+        {
+            {"Write test.txt", "foo\n"},
+            {"Write test2.txt", "foo\n\n"},
+            {"Write test3.txt", "foo"},
+        },
+        {"Write"});
+}
+
+TEST(SectionsReader, RawSection2)
+{
+    testSectionReader(
+        "-Write test.txt:\n"
+        "foo\n"
+        "\n",
+        {
+            {"Write test.txt", "foo\n\n"},
+        },
+        {"Write"});
 }
 
 TEST(SectionsReader, Basic)
@@ -298,7 +328,7 @@ TEST(SectionsReader, RawSectionWithComment)
             {"Write test.txt", "foo\n#this line should be in test.txt\n-this shoudln't be a new section:\n\n"},
             {"Value", "bar\n"}
         },
-        {RawSectionSpecifier{"Write", "---"}});
+        {"Write"});
 }
 
 
@@ -330,7 +360,7 @@ TEST(RestorableSectionsReader, RawSectionWithComment)
              "-Value:\n"
              "bar\n"}
         },
-        {RawSectionSpecifier{"Write", "---"}});
+        {"Write"});
 }
 
 TEST(SectionsReader, TextBeforeSections)

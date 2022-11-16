@@ -34,27 +34,14 @@ namespace {
                            });
     }
 
-    bool isRaw(const std::string& sectionName, const std::vector<RawSectionSpecifier>& rawSectionsList)
+    bool isRaw(const std::string& sectionName, const std::vector<std::string>& rawSectionsList)
     {
-        auto rawSessionNames = std::vector<std::string>{};
-        std::transform(rawSectionsList.begin(), rawSectionsList.end(), std::back_inserter(rawSessionNames),
-                       [](const RawSectionSpecifier& section){ return section.name;});
-        //return containsAnySubstr(sectionName, rawSessionNames); //startsWithAny ?
-        return startsWithAny(sectionName, rawSessionNames);
-    }
-
-    std::string rawSectionEnd(const std::string& sectionName, const std::vector<RawSectionSpecifier>& rawSectionsList)
-    {
-        auto it = std::find_if(rawSectionsList.begin(), rawSectionsList.end(),
-                               //[sectionName](const RawSectionSpecifier& section) {return sectionName.find(section.name) != std::string::npos;});
-                               [sectionName](const RawSectionSpecifier& section) {return boost::starts_with(sectionName, section.name);});
-        assert(it != rawSectionsList.end());
-        return it->end;
+        return startsWithAny(sectionName, rawSectionsList);
     }
 }
 
 
-std::vector<Section> readSections(std::istream& input, const std::vector<RawSectionSpecifier>& rawSectionsList)
+std::vector<Section> readSections(std::istream& input, const std::vector<std::string>& rawSectionsList)
 {
     auto sections = std::vector<Section>{};
     auto line = std::string{};
@@ -62,15 +49,17 @@ std::vector<Section> readSections(std::istream& input, const std::vector<RawSect
     auto isSectionRaw = false;
     while(std::getline(input, line)){
         lineIndex++;
-        line+="\n";
+        if (!input.eof())
+            line+="\n";
         if (!sections.empty())
             isSectionRaw = isRaw(sections.back().name, rawSectionsList);
 
         if (!isSectionRaw && line[0] == '#') //skip comment line
             continue;
 
-        if (isSectionRaw && boost::starts_with(line, rawSectionEnd(sections.back().name, rawSectionsList))){
+        if (isSectionRaw && boost::starts_with(line, "---")){
             sections.emplace_back();
+            sections.back().isRaw = true;
             sections.back().isVoid = true;
             continue;
         }
@@ -84,11 +73,13 @@ std::vector<Section> readSections(std::istream& input, const std::vector<RawSect
 
         sections.back().value += line;
     }
-    sections.erase(std::remove_if(sections.begin(), sections.end(), [](const Section& section){ return section.isVoid == true;}), sections.end());
+    sections.erase(std::remove_if(sections.begin(), sections.end(), [](const Section& section){ return section.isVoid;}), sections.end());
+    if (!sections.empty())
+        sections.back().isLast = true;
     return sections;
 }
 
-std::vector<RestorableSection> readRestorableSections(std::istream& input, const std::vector<RawSectionSpecifier>& rawSectionsList)
+std::vector<RestorableSection> readRestorableSections(std::istream& input, const std::vector<std::string>& rawSectionsList)
 {
     auto sections = std::vector<RestorableSection>{};
     auto line = std::string{};
@@ -98,8 +89,7 @@ std::vector<RestorableSection> readRestorableSections(std::istream& input, const
         lineIndex++;
         line+="\n";
         if (!sections.empty())
-            isSectionRaw = !sections.back().isComment &&
-                           isRaw(sections.back().name, rawSectionsList);
+            isSectionRaw = !sections.back().isComment && isRaw(sections.back().name, rawSectionsList);
 
         if (!isSectionRaw && line[0] == '#'){
             if (sections.empty()){
@@ -112,7 +102,7 @@ std::vector<RestorableSection> readRestorableSections(std::istream& input, const
                 sections.back().originalText += line;
             continue;
         }
-        if (isSectionRaw && boost::starts_with(line, rawSectionEnd(sections.back().name, rawSectionsList))){
+        if (isSectionRaw && boost::starts_with(line, "---")){
             sections.emplace_back();
             sections.back().originalText = line;
             sections.back().isComment = true;

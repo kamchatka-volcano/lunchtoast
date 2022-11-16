@@ -49,7 +49,7 @@ TestResult Test::process()
             }
         } catch(const std::exception& e){
             return TestResult::RuntimeError(e.what(), failedActionsMessages);
-        }        
+        }
         auto stopOnFailure = (action->type() == TestActionType::Assertion ||
                               action->type() == TestActionType::RequiredOperation);
         if (!ok && stopOnFailure)
@@ -90,11 +90,11 @@ bool Test::readActionFromSection(const Section &section)
     }
     if (boost::starts_with(section.name, "Assert")){
         auto actionType = boost::trim_copy(str::after(section.name, "Assert"));
-        return createComparisonAction(TestActionType::Assertion, actionType, section.value);
+        return createComparisonAction(TestActionType::Assertion, actionType, section);
     }
     if (boost::starts_with(section.name, "Expect")){
         auto actionType = boost::trim_copy(str::after(section.name, "Expect"));
-        return createComparisonAction(TestActionType::Expectation, actionType, section.value);
+        return createComparisonAction(TestActionType::Expectation, actionType, section);
     }
     return false;
 }
@@ -106,9 +106,7 @@ void Test::readConfig(const fs::path& path)
         throw TestConfigError{fmt::format("Test config file {} doesn't exist", homePathString(path))};
 
     try{
-        const auto sections = readSections(fileStream, {RawSectionSpecifier{"Write", "---"},
-                                                        RawSectionSpecifier{"Assert content of", "---"},
-                                                        RawSectionSpecifier{"Expect content of", "---"}});
+        const auto sections = readSections(fileStream, {"Write", "Assert content of", "Expect content of"});
         if (sections.empty())
             throw TestConfigError{fmt::format("Test config file {} is empty or invalid", homePathString(path))};
         for (const auto& section : sections){
@@ -134,14 +132,15 @@ void Test::checkParams()
         throw TestConfigError{fmt::format("Specified directory '{}' doesn't exist", homePathString(directory_))};
 }
 
-bool Test::createComparisonAction(TestActionType type, const std::string& encodedActionType, const std::string& value)
+bool Test::createComparisonAction(TestActionType type, const std::string& encodedActionType, const Section& section)
 {
     if (encodedActionType == "files equal"){
-        createCompareFilesAction(type, value);
+        createCompareFilesAction(type, section.value);
         return true;
     }
     if (boost::starts_with(encodedActionType, "content of ")){
-        createCompareFileContentAction(type, encodedActionType, value);
+        createCompareFileContentAction(type, encodedActionType,
+                                       (section.isLast && !section.isRaw) ? section.value : withoutLastNewLine(section.value));
         return true;
     }
     return false;
@@ -161,14 +160,15 @@ void Test::createWriteAction(const Section& section)
 {
     const auto fileName = boost::trim_copy(str::after(section.name, "Write"));
     const auto path = fs::absolute(directory_) / fileName;
-    actions_.push_back(std::make_unique<WriteFile>(path.string(), section.value));
+    actions_.push_back(std::make_unique<WriteFile>(path.string(),
+                                                   (section.isLast && !section.isRaw) ? section.value : withoutLastNewLine(section.value)));
 }
 
 void Test::createCompareFilesAction(TestActionType type, const std::string& filenamesStr)
 {
     const auto filenameGroups = readFilenames(filenamesStr, directory_);
     if (filenameGroups.size() != 2)
-        throw TestConfigError{"Comparison of files require exactly two filenames or filename matching regular expressions to be specified"};    
+        throw TestConfigError{"Comparison of files require exactly two filenames or filename matching regular expressions to be specified"};
     actions_.push_back(std::make_unique<CompareFiles>(filenameGroups[0], filenameGroups[1], type));
 }
 
@@ -215,7 +215,7 @@ bool Test::readParam(std::string& param, const std::string& paramName, const Sec
 {
     if (section.name != paramName)
         return false;
-    param = boost::trim_copy(section.value);    
+    param = boost::trim_copy(section.value);
     return true;
 }
 

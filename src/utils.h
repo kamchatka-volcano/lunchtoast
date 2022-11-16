@@ -13,3 +13,5 @@ std::vector<fs::path> getDirectoryContent(const fs::path& dir);
 
 fs::path homePath(const fs::path& path);
 std::string homePathString(const fs::path& path);
+
+std::string withoutLastNewLine(std::string value);

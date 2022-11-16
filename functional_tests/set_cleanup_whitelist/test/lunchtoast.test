@@ -11,9 +11,11 @@ Hello world
 -Launch command: echo "Hello world" > data/test.txt
 -Assert content of tmp/test.txt:
 Hello world
+
 ---
 -Assert content of data/test.txt:
 Hello world
+
 ---
 -Assert files equal: data/lhs.txt rhs.txt
 -Assert files equal: data2/lhs.txt data2/rhs.txt

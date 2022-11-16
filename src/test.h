@@ -28,7 +28,7 @@ private:
     void createWriteAction(const Section& section);
     void createCompareFilesAction(TestActionType type, const std::string& filenamesStr);
     void createCompareFileContentAction(TestActionType type, const std::string& filenameStr, const std::string& expectedFileContent);
-    bool createComparisonAction(TestActionType type, const std::string& encodedActionType, const std::string& value);
+    bool createComparisonAction(TestActionType type, const std::string& encodedActionType, const Section& section);
     void cleanTestFiles();
     bool readParam(std::string& param, const std::string& paramName, const Section& section);
     bool readParam(fs::path& param, const std::string& paramName, const Section& section);

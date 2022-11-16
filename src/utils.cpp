@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <sfun/string_utils.h>
 #include <boost/uuid/detail/md5.hpp>
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string.hpp>
@@ -6,6 +7,7 @@
 #include <fstream>
 
 using boost::uuids::detail::md5;
+namespace str = sfun::string_utils;
 
 namespace {
 std::string md5DigestToString(const md5::digest_type &digest)
@@ -82,3 +84,12 @@ std::string homePathString(const fs::path& path)
     else
         return "~/" + resPath.string();
 }
+
+std::string withoutLastNewLine(std::string value)
+{
+    if (str::endsWith(value, "\r\n"))
+        value.resize(value.size() - 2);
+    else if (str::endsWith(value, "\n"))
+        value.resize(value.size() - 1);
+    return value;
+};

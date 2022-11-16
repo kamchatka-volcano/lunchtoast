@@ -34,7 +34,7 @@ void CleanupWhitelistGenerator::collectTestConfigs(const fs::path& testPath, con
 }
 
 bool CleanupWhitelistGenerator::process()
-{    
+{
     if (testConfigs_.empty()){
         fmt::print("No tests were found for generation of cleanup whitelist. Exiting.");
         return false;
@@ -102,9 +102,7 @@ void processTestConfig(const fs::path &cfgPath)
     if (!stream.is_open())
         throw TestConfigError{fmt::format("Test config file {} doesn't exist", homePathString(cfgPath))};
 
-    auto sections = readRestorableSections(stream, {RawSectionSpecifier{"Write", "---"},
-                                                    RawSectionSpecifier{"Assert content of", "---"},
-                                                    RawSectionSpecifier{"Expect content of", "---"}});
+    auto sections = readRestorableSections(stream, {"Write", "Assert content of", "Expect content of"});
     auto testDir = getTestDirectory(cfgPath, sections);
     const auto testDirContent = getDirectoryContentString(testDir);
     auto newWhiteListSection = RestorableSection{"Cleanup whitelist", testDirContent, "-Cleanup whitelist: " + testDirContent + "\n"};

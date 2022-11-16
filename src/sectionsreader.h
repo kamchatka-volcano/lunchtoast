@@ -7,12 +7,9 @@
 struct Section{
     std::string name;
     std::string value;
+    bool isLast = false;
+    bool isRaw = false;
     bool isVoid = false;
-};
-
-struct RawSectionSpecifier{
-    std::string name;
-    std::string end;
 };
 
 struct RestorableSection : public Section{
@@ -27,6 +24,6 @@ struct RestorableSection : public Section{
     bool isComment = false;
 };
 
-std::vector<Section> readSections(std::istream& input, const std::vector<RawSectionSpecifier>& rawSectionsList = {});
-std::vector<RestorableSection> readRestorableSections(std::istream& input, const std::vector<RawSectionSpecifier>& rawSectionsList = {});
+std::vector<Section> readSections(std::istream& input, const std::vector<std::string>& rawSectionsList = {});
+std::vector<RestorableSection> readRestorableSections(std::istream& input, const std::vector<std::string>& rawSectionsList = {});
 std::string readSectionValue(std::istream& input, const std::string& sectionName, bool isRaw = false);
