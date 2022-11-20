@@ -1,8 +1,7 @@
 #include "launchprocess.h"
 #include "alias_boost_process.h"
 #include <sfun/string_utils.h>
-#include <spdlog/fmt/fmt.h>
-
+#include <fmt/format.h>
 #include <utility>
 
 namespace proc = boost::process;
@@ -37,7 +36,7 @@ TestActionResult LaunchProcess::process()
         auto shellCmd = cmdParts[0];
         cmdParts.erase(cmdParts.begin());
         cmdParts.push_back(command_);
-        auto shell = proc::search_path(shellCmd);
+        auto shell = proc::search_path(std::string{shellCmd});
         if (silently_)
             result = proc::system(shell, proc::args(cmdParts), env, proc::start_dir = workingDir_.string(), proc::std_out > proc::null, proc::std_err > proc::null);
         else

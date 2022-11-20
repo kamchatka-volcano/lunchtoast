@@ -2,11 +2,20 @@
 #include "testlauncher.h"
 #include "testreporter.h"
 #include "cleanupwhitelistgenerator.h"
-#include <spdlog/fmt/fmt.h>
-#include <cmdlime/config.h>
+#include <fmt/format.h>
+#include <cmdlime/commandlinereader.h>
+
+struct EnsurePathExists{
+    void operator()(const fs::path& path)
+    {
+        if (!fs::exists(path))
+            throw cmdlime::ValidationError{fmt::format("specified test directory "
+               "or file path '{}' doesn't exist.\n", path.string())};
+    }
+};
 
 struct Cfg : public cmdlime::Config{
-    CMDLIME_ARG(testPath, fs::path);
+    CMDLIME_ARG(testPath, fs::path)             << EnsurePathExists{};
     CMDLIME_PARAM(report, fs::path)()           << "save test report to file";
     CMDLIME_PARAM(ext, std::string)(".toast")   << "the extension of searched test files, "
                                                    "required when specified test path is a directory";
@@ -15,20 +24,9 @@ struct Cfg : public cmdlime::Config{
                                                    "of the test directory";
 };
 
-bool validateConfig(Cfg& cfg);
 int generateCleanupWhiteList(const Cfg& cfg);
-
-int main(int argc, char **argv)
-{    
-    auto cfg = Cfg{};
-    auto configReader = cmdlime::ConfigReader{cfg, "lunchtoast",
-                                              {}, cmdlime::ErrorOutputMode::STDOUT};
-    if (!configReader.readCommandLine(argc, argv))
-        return configReader.exitCode();
-
-    if (!validateConfig(cfg))
-        return -1;
-
+int mainApp(const Cfg& cfg)
+{
     if (cfg.saveState)
         return generateCleanupWhiteList(cfg);
 
@@ -48,6 +46,13 @@ int main(int argc, char **argv)
         return 1;
 }
 
+int main(int argc, char **argv)
+{
+    auto cmdlineReader = cmdlime::CommandLineReader{"lunchtoast"};
+    cmdlineReader.setErrorOutputStream(std::cout);
+    return cmdlineReader.exec<Cfg>(argc, argv, mainApp);
+}
+
 int generateCleanupWhiteList(const Cfg& cfg)
 {
     try{
@@ -61,15 +66,4 @@ int generateCleanupWhiteList(const Cfg& cfg)
         fmt::print("Unknown error occurred during creation of test cleanup whitelist: {}\n", e.what());
         return -1;
     }
-}
-
-bool validateConfig(Cfg& cfg)
-{
-    if (!fs::exists(cfg.testPath)){
-        fmt::print("Error: specified test directory "
-                   "or file path '{}' doesn't exist.\n", cfg.testPath.string());
-        fmt::print(cfg.usageInfo("lunchtoast"));
-        return false;
-    }
-    return true;
 }

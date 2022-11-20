@@ -1,8 +1,8 @@
 #include "comparefiles.h"
 #include "utils.h"
 #include "alias_filesystem.h"
-#include <spdlog/fmt/fmt.h>
 #include <boost/algorithm/string.hpp>
+#include <fmt/format.h>
 #include <string>
 #include <utility>
 

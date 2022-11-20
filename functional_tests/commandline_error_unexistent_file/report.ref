@@ -1,2 +1,4 @@
-Error: specified test directory or file path 'test.cfg' doesn't exist.
+Argument 'test-path' is invalid: specified test directory or file path 'test.cfg' doesn't exist.
+
 Usage: lunchtoast <test-path> [--report <path>] [--ext <string>] [--width <int>] [--save-state] [--help] 
+

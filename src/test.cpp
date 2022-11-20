@@ -6,7 +6,7 @@
 #include "comparefilecontent.h"
 #include "utils.h"
 #include <sfun/string_utils.h>
-#include <spdlog/fmt/fmt.h>
+#include <fmt/format.h>
 #include <boost/algorithm/string.hpp>
 #include <sstream>
 #include <iomanip>
@@ -89,12 +89,12 @@ bool Test::readActionFromSection(const Section &section)
         return true;
     }
     if (boost::starts_with(section.name, "Assert")){
-        auto actionType = boost::trim_copy(str::after(section.name, "Assert"));
-        return createComparisonAction(TestActionType::Assertion, actionType, section);
+        auto actionType = str::trim(str::after(section.name, "Assert"));
+        return createComparisonAction(TestActionType::Assertion, std::string{actionType}, section);
     }
     if (boost::starts_with(section.name, "Expect")){
-        auto actionType = boost::trim_copy(str::after(section.name, "Expect"));
-        return createComparisonAction(TestActionType::Expectation, actionType, section);
+        auto actionType = str::trim(str::after(section.name, "Expect"));
+        return createComparisonAction(TestActionType::Expectation, std::string{actionType}, section);
     }
     return false;
 }
@@ -158,7 +158,7 @@ void Test::createLaunchAction(const Section& section)
 
 void Test::createWriteAction(const Section& section)
 {
-    const auto fileName = boost::trim_copy(str::after(section.name, "Write"));
+    const auto fileName = str::trim(str::after(section.name, "Write"));
     const auto path = fs::absolute(directory_) / fileName;
     actions_.push_back(std::make_unique<WriteFile>(path.string(),
                                                    (section.isLast && !section.isRaw) ? section.value : withoutLastNewLine(section.value)));
