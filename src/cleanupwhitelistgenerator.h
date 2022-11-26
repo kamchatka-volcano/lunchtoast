@@ -3,17 +3,20 @@
 #include <vector>
 #include <string>
 
-class CleanupWhitelistGenerator
-{
+
+namespace lunchtoast {
+
+class CleanupWhitelistGenerator {
 public:
     CleanupWhitelistGenerator(const fs::path& testPath,
                               const std::string& testFileExt);
     bool process();
 
 private:
-    void collectTestConfigs(const fs::path &testPath, const std::string& testFileExt);
+    void collectTestConfigs(const fs::path& testPath, const std::string& testFileExt);
 
 private:
     std::vector<fs::path> testConfigs_;
 };
 
+}

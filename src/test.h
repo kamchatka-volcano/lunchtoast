@@ -1,4 +1,5 @@
 #pragma once
+#include "section.h"
 #include "testresult.h"
 #include "testaction.h"
 #include "filenamereader.h"
@@ -8,10 +9,10 @@
 #include <set>
 #include <string>
 
-struct Section;
 
-class Test
-{
+namespace lunchtoast{
+
+class Test{
 public:
     explicit Test(const fs::path& configPath);
     TestResult process();
@@ -27,7 +28,8 @@ private:
     void createLaunchAction(const Section& section);
     void createWriteAction(const Section& section);
     void createCompareFilesAction(TestActionType type, const std::string& filenamesStr);
-    void createCompareFileContentAction(TestActionType type, const std::string& filenameStr, const std::string& expectedFileContent);
+    void createCompareFileContentAction(TestActionType type, const std::string& filenameStr,
+                                        const std::string& expectedFileContent);
     bool createComparisonAction(TestActionType type, const std::string& encodedActionType, const Section& section);
     void cleanTestFiles();
     bool readParam(std::string& param, const std::string& paramName, const Section& section);
@@ -49,7 +51,9 @@ private:
     std::vector<FilenameGroup> cleanupWhitelist_;
 };
 
-class TestConfigError: public std::runtime_error{
+class TestConfigError : public std::runtime_error{
 public:
     explicit TestConfigError(const std::string& msg);
 };
+
+}

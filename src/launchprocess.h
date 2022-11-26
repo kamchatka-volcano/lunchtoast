@@ -3,8 +3,9 @@
 #include "alias_filesystem.h"
 #include <string>
 
-class LaunchProcess : public TestAction
-{
+namespace lunchtoast {
+
+class LaunchProcess : public TestAction {
 public:
     LaunchProcess(std::string command,
                   fs::path workingDir,
@@ -22,3 +23,4 @@ private:
     bool silently_;
 };
 
+}

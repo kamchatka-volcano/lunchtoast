@@ -6,13 +6,16 @@
 #include <stdlib.h>
 #include <fstream>
 
+
+namespace lunchtoast{
+
 using boost::uuids::detail::md5;
 namespace str = sfun::string_utils;
 
-namespace {
-std::string md5DigestToString(const md5::digest_type &digest)
+namespace{
+std::string md5DigestToString(const md5::digest_type& digest)
 {
-    const auto charDigest = reinterpret_cast<const char *>(&digest);
+    const auto charDigest = reinterpret_cast<const char*>(&digest);
     std::string result;
     boost::algorithm::hex(charDigest, charDigest + sizeof(md5::digest_type), std::back_inserter(result));
     return result;
@@ -85,11 +88,4 @@ std::string homePathString(const fs::path& path)
         return "~/" + resPath.string();
 }
 
-std::string withoutLastNewLine(std::string value)
-{
-    if (str::endsWith(value, "\r\n"))
-        value.resize(value.size() - 2);
-    else if (str::endsWith(value, "\n"))
-        value.resize(value.size() - 1);
-    return value;
-};
+}

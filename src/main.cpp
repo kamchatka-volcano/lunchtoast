@@ -32,8 +32,8 @@ int mainApp(const Cfg& cfg)
 
     auto allTestsPassed = false;
     try{
-        const auto testReporter = TestReporter{cfg.report, cfg.width};
-        auto testLauncher = TestLauncher{cfg.testPath, cfg.ext, testReporter};
+        const auto testReporter = lunchtoast::TestReporter{cfg.report, cfg.width};
+        auto testLauncher = lunchtoast::TestLauncher{cfg.testPath, cfg.ext, testReporter};
         allTestsPassed = testLauncher.process();
     } catch(const std::exception& e){
         fmt::print("Unknown error occurred during test processing: {}\n", e.what());
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 int generateCleanupWhiteList(const Cfg& cfg)
 {
     try{
-        auto whiteListGenerator = CleanupWhitelistGenerator{cfg.testPath, cfg.ext};
+        auto whiteListGenerator = lunchtoast::CleanupWhitelistGenerator{cfg.testPath, cfg.ext};
         if (whiteListGenerator.process())
             return 0;
         else

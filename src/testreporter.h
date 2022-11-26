@@ -4,11 +4,13 @@
 #include <string>
 #include <map>
 
+
+namespace lunchtoast{
+
 class Test;
 class TestResult;
 
-class TestReporter
-{
+class TestReporter{
 public:
     TestReporter(const fs::path& reportFilePath,
                  int reportWidth);
@@ -17,7 +19,7 @@ public:
     void reportBrokenTest(const fs::path& brokenTestConfig, const std::string& errorInfo,
                           std::string suiteName, int suiteTestNumber, int suiteNumOfTests) const;
     void reportDisabledTest(const Test& test,
-                          std::string suiteName, int suiteTestNumber, int suiteNumOfTests) const;
+                            std::string suiteName, int suiteTestNumber, int suiteNumOfTests) const;
     void reportSummary(const TestSuite& defaultSuite, const std::map<std::string, TestSuite>& suites) const;
 
 private:
@@ -28,3 +30,4 @@ private:
     const int reportWidth_;
 };
 
+}

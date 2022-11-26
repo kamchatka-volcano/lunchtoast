@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
 
+
+namespace lunchtoast{
+
 class TestActionResult{
 public:
     static TestActionResult Success();
@@ -16,3 +19,5 @@ private:
     bool isSuccessful_ = false;
     std::string errorInfo_;
 };
+
+}

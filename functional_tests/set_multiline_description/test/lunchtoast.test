@@ -1,4 +1,6 @@
--Description: two files equality assertions, 
+-Description: 
+two files equality assertions, 
 test should fail on the first one
+---
 -Assert files equal: lhs.txt rhs.txt
 -Assert files equal: lhs2.txt rhs2.txt

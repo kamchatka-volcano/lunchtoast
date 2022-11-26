@@ -5,13 +5,13 @@
 #include <vector>
 #include <regex>
 
-class CompareFiles : public TestAction
-{
+namespace lunchtoast {
+
+class CompareFiles : public TestAction {
 public:
     CompareFiles(FilenameGroup lhs,
                  FilenameGroup rhs,
                  TestActionType actionType);
-
     TestActionResult process() override;
     TestActionType type() const override;
 
@@ -24,3 +24,4 @@ private:
     TestActionType actionType_;
 };
 
+}

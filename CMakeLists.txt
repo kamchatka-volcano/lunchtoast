@@ -23,15 +23,24 @@ SealLake_Import(spdlog 1.11.0
         GIT_TAG v1.11.0
 )
 
+SealLake_Import(gsl 4.0.0
+        GIT_REPOSITORY https://github.com/microsoft/GSL.git
+        GIT_TAG        v4.0.0
+)
+SealLake_Import(range-v3 0.12.0
+        GIT_REPOSITORY https://github.com/ericniebler/range-v3
+        GIT_TAG        0.12.0
+)
+
 set(SRC
     src/cleanupwhitelistgenerator.cpp
     src/comparefilecontent.cpp
     src/comparefiles.cpp
     src/filenamereader.cpp
     src/launchprocess.cpp
+    src/linestream.cpp
     src/main.cpp
-    src/sectionsreader.cpp
-    src/stream.cpp
+        src/sectionsreader.cpp
     src/testactionresult.cpp
     src/test.cpp
     src/testlauncher.cpp
@@ -47,6 +56,6 @@ SealLake_Executable(
         PROPERTIES
             CXX_EXTENSIONS OFF
         LIBRARIES
-            boost_system boost_filesystem spdlog::spdlog sfun::sfun cmdlime::cmdlime fmt::fmt
+            boost_system boost_filesystem spdlog::spdlog sfun::sfun cmdlime::cmdlime fmt::fmt Microsoft.GSL::GSL range-v3::range-v3
 )
 SealLake_OptionalBuildSteps(tests)

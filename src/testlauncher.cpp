@@ -4,20 +4,24 @@
 #include "sectionsreader.h"
 #include "utils.h"
 #include <boost/algorithm/string.hpp>
+#include <range/v3/algorithm.hpp>
 #include <fstream>
+
+
+namespace lunchtoast{
 
 TestLauncher::TestLauncher(const fs::path& testPath,
                            const std::string& testFileExt,
                            const TestReporter& reporter)
-    : reporter_(reporter)
-{    
+        : reporter_(reporter)
+{
     collectTests(testPath, testFileExt);
 }
 
 bool TestLauncher::process()
 {
     auto ok = processSuite("", defaultSuite_);
-    for (auto& suitePair : suites_)
+    for (auto& suitePair: suites_)
         if (!processSuite(suitePair.first, suitePair.second))
             ok = false;
     reporter_.reportSummary(defaultSuite_, suites_);
@@ -30,7 +34,7 @@ bool TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
     const auto testsCount = static_cast<int>(tests.size());
     auto testNumber = 0;
     bool ok = true;
-    for (const auto& testCfg : tests){
+    for (const auto& testCfg: tests){
         testNumber++;
         try{
             auto test = Test{testCfg.path};
@@ -46,7 +50,7 @@ bool TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
             reporter_.reportResult(test, result, suiteName, testNumber, testsCount);
 
         }
-        catch(const TestConfigError& error){
+        catch (const TestConfigError& error){
             reporter_.reportBrokenTest(testCfg.path, error.what(), suiteName, testNumber, testsCount);
             ok = false;
         }
@@ -54,7 +58,7 @@ bool TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
     return ok;
 }
 
-void TestLauncher::collectTests(const fs::path &testPath, const std::string& testFileExt)
+void TestLauncher::collectTests(const fs::path& testPath, const std::string& testFileExt)
 {
     if (fs::is_directory(testPath)){
         if (testFileExt.empty())
@@ -64,33 +68,44 @@ void TestLauncher::collectTests(const fs::path &testPath, const std::string& tes
         for (auto it = fs::directory_iterator{testPath}; it != end; ++it)
             if (fs::is_directory(it->status()))
                 collectTests(it->path(), testFileExt);
-            else if(it->path().extension().string() == testFileExt)
+            else if (it->path().extension().string() == testFileExt)
                 addTest(fs::canonical(it->path()));
-    }
-    else
+    } else
         addTest(fs::canonical(testPath));
 }
 
-void TestLauncher::addTest(const fs::path &testFile)
+namespace{
+std::string getSectionValue(std::string_view sectionName, const std::vector<lunchtoast::Section>& sections)
+{
+    auto it = ranges::find_if(sections, [&](const auto& section){ return section.name == sectionName; });
+    if (it != sections.end())
+        return it->value;
+    return {};
+}
+
+}
+
+void TestLauncher::addTest(const fs::path& testFile)
 {
     auto stream = std::ifstream{testFile.string()};
-    auto enabledStr = boost::to_lower_copy(boost::trim_copy(readSectionValue(stream, "Enabled")));
+    auto sections = lunchtoast::readSections(stream);
+
+    auto enabledStr = boost::to_lower_copy(getSectionValue("Enabled", sections));
     auto isEnabled = (enabledStr.empty() || enabledStr == "true");
     stream.clear();
     stream.seekg(0, std::ios::beg);
-    auto suiteName = boost::trim_copy(readSectionValue(stream, "Suite"));
+    auto suiteName = getSectionValue("Suite", sections);
     processVariablesSubstitution(suiteName, testFile.stem().string(), testFile.parent_path().stem().string());
 
     if (suiteName.empty()){
         defaultSuite_.tests.push_back({testFile, isEnabled});
         if (!isEnabled)
             defaultSuite_.disabledTestsCounter++;
-    }
-    else{
+    } else{
         suites_[suiteName].tests.push_back({testFile, isEnabled});
         if (!isEnabled)
             suites_[suiteName].disabledTestsCounter++;
     }
 }
 
-
+}

@@ -3,9 +3,11 @@
 #include <fstream>
 #include <utility>
 
+
+namespace lunchtoast{
+
 WriteFile::WriteFile(fs::path filePath, std::string content)
-    : filePath_(std::move(filePath))
-    , content_(std::move(content))
+        : filePath_(std::move(filePath)), content_(std::move(content))
 {
 }
 
@@ -20,9 +22,10 @@ TestActionResult WriteFile::process()
     fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     try{
         fileStream.write(content_.c_str(), static_cast<std::streamsize>(content_.size()));
-    } catch(std::exception& e)
-    {
+    } catch (std::exception& e){
         return TestActionResult::Failure(fmt::format("File {} writing error: {}", filePath_.string(), e.what()));
     }
     return TestActionResult::Success();
+}
+
 }

@@ -9,11 +9,13 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <boost/algorithm/string.hpp>
 
+
+namespace lunchtoast{
 namespace str = sfun::string_utils;
 
 TestReporter::TestReporter(const fs::path& reportFilePath,
                            int reportWidth)
-    : reportWidth_(reportWidth)
+        : reportWidth_(reportWidth)
 {
     initReporter(reportFilePath);
 }
@@ -21,22 +23,25 @@ TestReporter::TestReporter(const fs::path& reportFilePath,
 namespace{
 std::string testResultStr(TestResultType resultType)
 {
-    switch(resultType){
-    case TestResultType::Success: return "PASSED";
-    case TestResultType::Failure: return "FAILED";
-    case TestResultType::RuntimeError: return "ERROR";
+    switch (resultType){
+        case TestResultType::Success:
+            return "PASSED";
+        case TestResultType::Failure:
+            return "FAILED";
+        case TestResultType::RuntimeError:
+            return "ERROR";
     }
     return {};
 }
 
-template <typename... Args>
-void print(Args&&... args)
+template<typename... Args>
+void print(Args&& ... args)
 {
     spdlog::trace(std::forward<Args>(args)...);
 };
 
-template <typename... Args>
-void print(TestResultType type, Args&&... args)
+template<typename... Args>
+void print(TestResultType type, Args&& ... args)
 {
     if (type == TestResultType::Success)
         spdlog::info(std::forward<Args>(args)...);
@@ -91,7 +96,7 @@ void TestReporter::reportResult(const Test& test, const TestResult& result,
         if (!result.errorInfo().empty())
             print(result.errorInfo());
     const auto resultStr = fmt::format("Result: {:>10}", testResultStr(result.type()));
-    print(result.type(), "{:>"+ std::to_string(reportWidth_) + "}", resultStr);
+    print(result.type(), "{:>" + std::to_string(reportWidth_) + "}", resultStr);
 }
 
 void TestReporter::reportBrokenTest(const fs::path& brokenTestConfig, const std::string& errorInfo,
@@ -107,7 +112,7 @@ void TestReporter::reportBrokenTest(const fs::path& brokenTestConfig, const std:
 }
 
 void TestReporter::reportDisabledTest(const Test& test,
-                      std::string suiteName, int suiteTestNumber, int suiteNumOfTests) const
+                                      std::string suiteName, int suiteTestNumber, int suiteNumOfTests) const
 {
     suiteName = truncateString(suiteName, reportWidth_ / 2);
     auto header = fmt::format(" {} [ {} / {} ] ", suiteName, suiteTestNumber, suiteNumOfTests);
@@ -125,7 +130,7 @@ void TestReporter::reportDisabledTest(const Test& test,
     }
 
     const auto resultStr = fmt::format("Result: {:>10}", "DISABLED");
-    print("{:>"+ std::to_string(reportWidth_) + "}", resultStr);
+    print("{:>" + std::to_string(reportWidth_) + "}", resultStr);
 }
 
 void TestReporter::reportSuiteResult(std::string suiteName, int passedNumber, int totalNumber, int disabledNumber) const
@@ -136,7 +141,7 @@ void TestReporter::reportSuiteResult(std::string suiteName, int passedNumber, in
     const auto width = reportWidth_ / 2 + 4;
     suiteName = truncateString(suiteName, width - 1) + ":";
     const auto resultType = failedNumber ?
-        TestResultType::Failure : TestResultType::Success;
+                            TestResultType::Failure : TestResultType::Success;
     auto resultStr = std::string{};
     if (disabledNumber)
         resultStr = fmt::format("{} out of {} passed, {} failed, {} disabled",
@@ -153,7 +158,7 @@ std::tuple<int, int, int> countTotals(const TestSuite& defaultSuite, const std::
     auto totalTests = defaultSuite.tests.size();
     auto totalPassed = defaultSuite.passedTestsCounter;
     auto totalDisabled = defaultSuite.disabledTestsCounter;
-    for (const auto& suitePair : suites){
+    for (const auto& suitePair: suites){
         const auto& suite = suitePair.second;
         totalTests += suite.tests.size();
         totalPassed += suite.passedTestsCounter;
@@ -165,7 +170,7 @@ std::tuple<int, int, int> countTotals(const TestSuite& defaultSuite, const std::
 
 void TestReporter::reportSummary(const TestSuite& defaultSuite, const std::map<std::string, TestSuite>& suites) const
 {
-    auto[totalTests, totalPassed, totalDisabled] = countTotals(defaultSuite, suites);
+    auto [totalTests, totalPassed, totalDisabled] = countTotals(defaultSuite, suites);
     if (totalTests == 0 && totalDisabled == 0){
         print("No tests were found. Exiting.");
         return;
@@ -178,7 +183,7 @@ void TestReporter::reportSummary(const TestSuite& defaultSuite, const std::map<s
                       defaultSuite.passedTestsCounter,
                       static_cast<int>(defaultSuite.tests.size()),
                       defaultSuite.disabledTestsCounter);
-    for (const auto& suitePair : suites){
+    for (const auto& suitePair: suites){
         const auto& suite = suitePair.second;
         reportSuiteResult(suitePair.first,
                           suite.passedTestsCounter,
@@ -209,9 +214,12 @@ void TestReporter::initReporter(const fs::path& reportFilePath)
     if (reportFilePath.empty())
         logger = std::make_shared<spdlog::logger>("reporter", spdlog::sinks_init_list{makeConsoleSink()});
     else
-        logger = std::make_shared<spdlog::logger>("reporter", spdlog::sinks_init_list{makeConsoleSink(), makeFileSink(reportFilePath)});
+        logger = std::make_shared<spdlog::logger>("reporter", spdlog::sinks_init_list{makeConsoleSink(),
+                                                                                      makeFileSink(reportFilePath)});
 
     logger->set_level(spdlog::level::trace);
     logger->flush_on(spdlog::level::trace);
     spdlog::set_default_logger(logger);
+}
+
 }

@@ -2,8 +2,10 @@
 #include "alias_filesystem.h"
 #include "testaction.h"
 
-class CompareFileContent : public TestAction
-{
+
+namespace lunchtoast {
+
+class CompareFileContent : public TestAction {
 public:
     CompareFileContent(fs::path filePath,
                        std::string expectedFileContent,
@@ -17,3 +19,4 @@ private:
     TestActionType actionType_;
 };
 
+}

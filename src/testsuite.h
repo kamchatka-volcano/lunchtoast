@@ -2,6 +2,9 @@
 #include "alias_filesystem.h"
 #include <vector>
 
+
+namespace lunchtoast{
+
 struct TestSuite{
     struct TestCfg{
         fs::path path;
@@ -11,3 +14,5 @@ struct TestSuite{
     int passedTestsCounter = 0;
     int disabledTestsCounter = 0;
 };
+
+}

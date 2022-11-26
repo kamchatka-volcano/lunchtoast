@@ -3,6 +3,9 @@
 #include <string>
 #include <vector>
 
+
+namespace lunchtoast{
+
 std::string readFile(const fs::path& filePath);
 std::string calcMd5(const fs::path& filePath);
 std::string calcMd5(const std::string& data);
@@ -15,3 +18,5 @@ fs::path homePath(const fs::path& path);
 std::string homePathString(const fs::path& path);
 
 std::string withoutLastNewLine(std::string value);
+
+}

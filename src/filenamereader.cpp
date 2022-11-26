@@ -7,17 +7,18 @@
 #include <algorithm>
 #include <utility>
 
+namespace lunchtoast {
+
 namespace {
 std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::regex& pathFilter,
-                                       const std::function<bool(const fs::path& path)>& pathMatchPredicate = [](const fs::path&){return true;});
+                                       const std::function<bool(const fs::path& path)>& pathMatchPredicate = [](
+                                               const fs::path&) { return true; });
 }
 
 FilenameGroup::FilenameGroup(std::string filenameOrRegexp, fs::path directory)
-    : filenameOrRegexp_(std::move(filenameOrRegexp))
-    , directory_(std::move(directory))
-    , isRegexp_(false)
+        : filenameOrRegexp_(std::move(filenameOrRegexp)), directory_(std::move(directory)), isRegexp_(false)
 {
-    if (boost::starts_with(filenameOrRegexp_, "{") && boost::ends_with(filenameOrRegexp_, "}")){
+    if (boost::starts_with(filenameOrRegexp_, "{") && boost::ends_with(filenameOrRegexp_, "}")) {
         fileMatchingRegexp_ = std::regex{filenameOrRegexp_.substr(1, filenameOrRegexp_.size() - 2)};
         isRegexp_ = true;
     }
@@ -27,7 +28,7 @@ std::vector<fs::path> FilenameGroup::fileList() const
 {
     if (isRegexp_)
         return getMatchingPaths(directory_, fileMatchingRegexp_,
-                                [](const fs::path& path) {return fs::is_regular_file(path);});
+                                [](const fs::path& path) { return fs::is_regular_file(path); });
     else
         return {fs::absolute(directory_) / fs::path{filenameOrRegexp_}};
 }
@@ -41,9 +42,9 @@ std::vector<fs::path> FilenameGroup::pathList() const
         result = {fs::absolute(directory_) / fs::path{filenameOrRegexp_}};
 
     auto dirs = std::set<fs::path>{};
-    for (const auto& path : result){
+    for (const auto& path: result) {
         auto parentDir = path.parent_path();
-        while(!parentDir.empty() && parentDir != directory_){
+        while (!parentDir.empty() && parentDir != directory_) {
             dirs.insert(parentDir);
             parentDir = parentDir.parent_path();
         }
@@ -68,12 +69,13 @@ std::vector<FilenameGroup> readFilenames(const std::string& input, const fs::pat
     return result;
 }
 
-namespace{
-std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::regex& pathFilter, const std::function<bool(const fs::path&)>& pathMatchPredicate)
+namespace {
+std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::regex& pathFilter,
+                                       const std::function<bool(const fs::path&)>& pathMatchPredicate)
 {
     auto result = std::vector<fs::path>{};
     const auto paths = getDirectoryContent(directory);
-    for(const auto& path : paths){
+    for (const auto& path: paths) {
         if (!pathMatchPredicate(path))
             continue;
         auto match = std::smatch{};
@@ -83,4 +85,6 @@ std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::reg
     }
     return result;
 }
+}
+
 }

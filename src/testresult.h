@@ -2,6 +2,9 @@
 #include <string>
 #include <vector>
 
+
+namespace lunchtoast{
+
 enum class TestResultType{
     Success,
     Failure,
@@ -26,3 +29,5 @@ private:
     std::string errorInfo_;
     std::vector<std::string> failedActionsMessages_;
 };
+
+}

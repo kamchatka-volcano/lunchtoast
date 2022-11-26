@@ -3,12 +3,14 @@
 #include "alias_filesystem.h"
 #include <map>
 
+
+namespace lunchtoast{
+
 class Test;
 class TestResult;
 class TestReporter;
 
-class TestLauncher
-{
+class TestLauncher{
 public:
     TestLauncher(const fs::path& testPath,
                  const std::string& testFileExt,
@@ -26,3 +28,4 @@ private:
     const TestReporter& reporter_;
 };
 
+}

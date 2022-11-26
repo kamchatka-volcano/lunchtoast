@@ -3,11 +3,15 @@
 #include "utils.h"
 #include "test.h"
 #include <boost/algorithm/string.hpp>
+#include <range/v3/algorithm.hpp>
 #include <fmt/format.h>
 #include <fstream>
 
+
+namespace lunchtoast {
+
 namespace {
-void processTestConfig(const fs::path &cfgPath);
+void processTestConfig(const fs::path& cfgPath);
 }
 
 CleanupWhitelistGenerator::CleanupWhitelistGenerator(const fs::path& testPath,
@@ -18,7 +22,7 @@ CleanupWhitelistGenerator::CleanupWhitelistGenerator(const fs::path& testPath,
 
 void CleanupWhitelistGenerator::collectTestConfigs(const fs::path& testPath, const std::string& testFileExt)
 {
-    if (fs::is_directory(testPath)){
+    if (fs::is_directory(testPath)) {
         if (testFileExt.empty())
             throw std::runtime_error{"To launch all tests in the directory, test extension must be specified"};
 
@@ -26,37 +30,38 @@ void CleanupWhitelistGenerator::collectTestConfigs(const fs::path& testPath, con
         for (auto it = fs::directory_iterator{testPath}; it != end; ++it)
             if (fs::is_directory(it->status()))
                 collectTestConfigs(it->path(), testFileExt);
-            else if(it->path().extension().string() == testFileExt)
+            else if (it->path().extension().string() == testFileExt)
                 testConfigs_.push_back(fs::canonical(it->path()));
-    }
-    else
+    } else
         testConfigs_.push_back(fs::canonical(testPath));
 }
 
 bool CleanupWhitelistGenerator::process()
 {
-    if (testConfigs_.empty()){
+    if (testConfigs_.empty()) {
         fmt::print("No tests were found for generation of cleanup whitelist. Exiting.");
         return false;
     }
 
-    for (const auto& cfgPath : testConfigs_){
-        try{
+    for (const auto& cfgPath: testConfigs_) {
+        try {
             processTestConfig(cfgPath);
-        } catch(const TestConfigError& error){
-            fmt::print("Can't generate cleanup whitelist in config {}. Error: {}\n", homePathString(cfgPath), error.what());
+        } catch (const TestConfigError& error) {
+            fmt::print("Can't generate cleanup whitelist in config {}. Error: {}\n", homePathString(cfgPath),
+                       error.what());
         }
         fmt::print("Generating cleanup whitelist in test config {}\n", homePathString(cfgPath));
     }
     return true;
 }
 
-namespace{
-fs::path getTestDirectory(const fs::path &cfgPath, const std::vector<RestorableSection>& sections)
+namespace {
+fs::path getTestDirectory(const fs::path& cfgPath, const std::vector<Section>& sections)
 {
     auto testDir = cfgPath.parent_path();
     auto cfgDir = fs::path{};
-    const auto dirSectionIt = std::find_if(sections.cbegin(), sections.cend(), [](const Section& section){return section.name == "Directory";});
+    const auto dirSectionIt = ranges::find_if(sections,
+                                              [](const Section& section){ return section.name == "Directory"; });
     if (dirSectionIt != sections.end())
         cfgDir = boost::trim_copy(dirSectionIt->value);
     if (!cfgDir.empty())
@@ -70,17 +75,17 @@ std::string getDirectoryContentString(const fs::path& dir)
     auto testDirPathsStr = std::vector<std::string>{};
     std::transform(testDirPaths.begin(), testDirPaths.end(),
                    std::back_inserter(testDirPathsStr),
-                   [&dir](const fs::path& path) {return fs::relative(path, dir).string();});
+                   [&dir](const fs::path& path) { return fs::relative(path, dir).string(); });
     std::sort(testDirPathsStr.begin(), testDirPathsStr.end());
     return boost::join(testDirPathsStr, " ");
 }
 
-void writeSections(const std::vector<RestorableSection>& sections, const fs::path& outFilePath)
+void writeSections(const std::vector<Section>& sections, const fs::path& outFilePath)
 {
     auto stream = std::ofstream{};
     stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     stream.open(outFilePath.string());
-    for (const auto& section : sections)
+    for (const auto& section: sections)
         stream << section.originalText;
 }
 
@@ -88,35 +93,45 @@ void copyComments(const std::string& input, std::string& output)
 {
     auto stream = std::stringstream{input};
     auto line = std::string{};
-    while(std::getline(stream, line)){
+    auto sectionEncountered = false;
+    while (std::getline(stream, line)){
         if (boost::trim_copy(line).empty())
             output += "\n";
-        else if (boost::starts_with(line, "#"))
-            output += line + "\n";
+        else if (boost::starts_with(line, "#")){
+            if (!sectionEncountered)
+                output.insert(0, line + "\n");
+            else
+                output += line + "\n";
+        }
+        else if (boost::starts_with(line, "-"))
+            sectionEncountered = true;
     }
 }
 
-void processTestConfig(const fs::path &cfgPath)
+void processTestConfig(const fs::path& cfgPath)
 {
     auto stream = std::ifstream{cfgPath.string()};
     if (!stream.is_open())
         throw TestConfigError{fmt::format("Test config file {} doesn't exist", homePathString(cfgPath))};
 
-    auto sections = readRestorableSections(stream, {"Write", "Assert content of", "Expect content of"});
+    auto sections = readSections(stream);
     auto testDir = getTestDirectory(cfgPath, sections);
     const auto testDirContent = getDirectoryContentString(testDir);
-    auto newWhiteListSection = RestorableSection{"Cleanup whitelist", testDirContent, "-Cleanup whitelist: " + testDirContent + "\n"};
+    auto newWhiteListSection = Section{"Cleanup whitelist", testDirContent, "-Cleanup whitelist: " + testDirContent + "\n"};
 
-    const auto whitelistSectionIt = std::find_if(sections.cbegin(), sections.cend(), [](const Section& section){return section.name == "Cleanup whitelist";});
-    if (whitelistSectionIt != sections.cend()){
+    const auto whitelistSectionIt = std::find_if(sections.cbegin(), sections.cend(), [](const Section& section) {
+        return section.name == "Cleanup whitelist";
+    });
+    if (whitelistSectionIt != sections.cend()) {
         auto whitelistSectionPos = std::distance(sections.cbegin(), whitelistSectionIt);
         copyComments(whitelistSectionIt->originalText, newWhiteListSection.originalText);
         sections.erase(whitelistSectionIt);
         sections.insert(sections.begin() + whitelistSectionPos, newWhiteListSection);
-    }
-    else{
+    } else {
         sections.push_back(newWhiteListSection);
     }
     writeSections(sections, cfgPath);
 }
+}
+
 }

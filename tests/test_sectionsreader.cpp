@@ -1,67 +1,41 @@
 #include <sectionsreader.h>
+#include <errors.h>
 #include <gtest/gtest.h>
+#include <fmt/format.h>
 #include <sstream>
 #include <functional>
 
-bool operator==(const Section& lhs, const Section& rhs)
+namespace lunchtoast {
+bool operator==(const lunchtoast::Section& lhs, const lunchtoast::Section& rhs)
 {
     return lhs.name == rhs.name &&
            lhs.value == rhs.value &&
-           lhs.isVoid == rhs.isVoid;
+           lhs.originalText == rhs.originalText;
 }
 
-bool operator==(const RestorableSection& lhs, const RestorableSection& rhs)
+void PrintTo(const lunchtoast::Section& section, std::ostream* os)
 {
-    return lhs.name == rhs.name &&
-           lhs.value == rhs.value &&
-           lhs.isVoid == rhs.isVoid &&
-           lhs.originalText == rhs.originalText &&
-           lhs.isComment == rhs.isComment;
+    *os << fmt::format(
+R"([
+  .name = {}
+  .value = {}
+  .originalText = {}
+]
+)", section.name, section.value, section.originalText);
 }
 
-
-void PrintTo(const Section& section, std::ostream *os)
-{
-  *os << section.name << "=" << section.value << " (isVoid:" << section.isVoid << ")" <<std::endl;
-}
-
-void PrintTo(const RestorableSection& section, std::ostream *os)
-{
-  *os << section.name << "=" << section.value << "|"
-      << section.originalText << " (isComment" << section.isComment << ")" << std::endl;
 }
 
 void testSectionReader(const std::string& input,
-                       const std::vector<Section>& expectedSections,
-                       const std::vector<std::string>& rawSectionsList = {})
+                       const std::vector<lunchtoast::Section>& expectedSections)
 {
     auto stream = std::istringstream{input};
-    auto sections = readSections(stream, rawSectionsList);
+    auto sections = lunchtoast::readSections(stream);
     EXPECT_EQ(sections, expectedSections);
 }
-
-void testRestorableSectionReader(const std::string& input,
-                          const std::vector<RestorableSection>& expectedSections,
-                          const std::vector<std::string>& rawSectionsList = {})
-{
-    auto stream = std::istringstream{input};
-    auto sections = readRestorableSections(stream, rawSectionsList);
-    EXPECT_EQ(sections, expectedSections);
-}
-
-void testSectionValueReader(const std::string& input,
-                            const std::string& sectionName,
-                            const std::string& expectedValue,
-                            bool isRaw = false)
-{
-    auto stream = std::istringstream{input};
-    auto sectionValue = readSectionValue(stream, sectionName, isRaw);
-    EXPECT_EQ(sectionValue, expectedValue);
-}
-
 
 template<typename ExceptionType>
-void assert_exception(std::function<void()> throwingCode, std::function<void(const ExceptionType&)> exceptionContentChecker)
+void assert_exception(const std::function<void()>& throwingCode, const std::function<void(const ExceptionType&)>& exceptionContentChecker)
 {
     try{
         throwingCode();
@@ -75,405 +49,228 @@ void assert_exception(std::function<void()> throwingCode, std::function<void(con
     }
 }
 
-TEST(SectionsReader, RawSection)
-{
-    testSectionReader(
-        "-Write test.txt:foo\n"
-        "---\n"
-        "-Write test2.txt:foo\n"
-        "\n"
-        "---\n"
-        "-Write test3.txt:\n"
-        "foo",
-        {
-            {"Write test.txt", "foo\n"},
-            {"Write test2.txt", "foo\n\n"},
-            {"Write test3.txt", "foo"},
-        },
-        {"Write"});
-}
-
-TEST(SectionsReader, RawSection2)
-{
-    testSectionReader(
-        "-Write test.txt:\n"
-        "foo\n"
-        "\n",
-        {
-            {"Write test.txt", "foo\n\n"},
-        },
-        {"Write"});
-}
-
 TEST(SectionsReader, Basic)
 {
     testSectionReader(
         "-Name:foo\n"
-        "test\n"
-        "\n"
-        "-Value:\n"
-        "bar\n",
-        {
-            {"Name", "foo\ntest\n\n"},
-            {"Value", "bar\n"}
-        });
-}
-
-TEST(RestorableSectionsReader, Basic)
-{
-    testRestorableSectionReader(
-        "-Name:foo\n"
-        "test\n"
-        "\n"
-        "-Value:\n"
-        "bar\n",
-        {
-            {"Name", "foo\ntest\n\n", "-Name:foo\ntest\n\n"},
-            {"Value", "bar\n", "-Value:\nbar\n"}
-        });
-}
-
-TEST(SectionsReader, EmptySection)
-{
-    testSectionReader(
-        "-Name:foo\n"
-        "test\n"
-        "\n"
-        "-Empty:\n"
-        "-Value:\n"
-        "bar\n",
-        {
-            {"Name", "foo\ntest\n\n"},
-            {"Empty", ""},
-            {"Value", "bar\n"}
-        });
-}
-
-TEST(RestorableSectionsReader, EmptySection)
-{
-    testRestorableSectionReader(
-        "-Name:foo\n"
-        "test\n"
-        "\n"
-        "-Empty:\n"
-        "-Value:\n"
-        "bar\n",
-        {
-            {"Name", "foo\ntest\n\n", "-Name:foo\ntest\n\n"},
-            {"Empty", "", "-Empty:\n"},
-            {"Value", "bar\n", "-Value:\nbar\n"}
-        });
-}
-
-TEST(SectionsReader, SingleEmptySection)
-{
-    testSectionReader(
-        "-Empty:",
-        {
-            {"Empty", ""}
-        });
-}
-
-TEST(RestorableSectionsReader, SingleEmptySection)
-{
-    testRestorableSectionReader(
-        "-Empty:",
-        {
-            {"Empty", "", "-Empty:\n"}
-        });
-}
-
-TEST(SectionsReader, NoSections)
-{
-    testSectionReader(
-        "Empty:"
-        "Value",
-        {});
-}
-
-TEST(RestorableSectionsReader, NoSections)
-{
-    testRestorableSectionReader(
-        "Empty:"
-        "Value",
-        {});
-}
-
-TEST(SectionsReader, NamelessSection)
-{
-    assert_exception<std::runtime_error>([]{
-        auto input = std::string{"-Name: foo\n-:\n-Value:foo\n"};
-        auto stream = std::istringstream{input};
-        readSections(stream);
-    },
-    [](const std::runtime_error& e){
-        ASSERT_EQ(std::string{e.what()}, "line#2: Section must have a name");
-    });
-}
-
-TEST(RestorableSectionsReader, NamelessSection)
-{
-    assert_exception<std::runtime_error>([]{
-        auto input = std::string{"-Name: foo\n-:\n-Value:foo\n"};
-        auto stream = std::istringstream{input};
-        readRestorableSections(stream);
-    },
-    [](const std::runtime_error& e){
-        ASSERT_EQ(std::string{e.what()}, "line#2: Section must have a name");
-    });
-}
-
-TEST(SectionsReader, SectionWithoutDelimiter)
-{
-    assert_exception<std::runtime_error>([]{
-        auto input = std::string{"-Name: foo\n-\n-Value:foo\n"};
-        auto stream = std::istringstream{input};
-        readSections(stream);
-    },
-    [](const std::runtime_error& e){
-        ASSERT_EQ(std::string{e.what()}, "line#2: Section's first line must contain a name delimiter ':'");
-    });
-}
-
-TEST(RestorableSectionsReader, SectionWithoutDelimiter)
-{
-    assert_exception<std::runtime_error>([]{
-        auto input = std::string{"-Name: foo\n-\n-Value:foo\n"};
-        auto stream = std::istringstream{input};
-        readRestorableSections(stream);
-    },
-    [](const std::runtime_error& e){
-        ASSERT_EQ(std::string{e.what()}, "line#2: Section's first line must contain a name delimiter ':'");
-    });
-}
-
-
-TEST(SectionsReader, WithComment)
-{
-    testSectionReader(
-        "-Name:foo\n"
-        "#this is Name section\n"
-        "test\n"
-        "\n"
-        "-Value:\n"
-        "bar\n",
-        {
-            {"Name", "foo\ntest\n\n"},
-            {"Value", "bar\n"}
-        });
-}
-
-TEST(RestorableSectionsReader, WithComment)
-{
-    testRestorableSectionReader(
-        "-Name:foo\n"
-        "#this is Name section\n"
-        "test\n"
-        "\n"
-        "-Value:\n"
-        "bar\n",
-        {
-            {"Name", "foo\ntest\n\n",
-             "-Name:foo\n"
-             "#this is Name section\n"
-             "test\n"
-             "\n"},
-            {"Value", "bar\n",
-             "-Value:\n"
-             "bar\n"}
-        });
-}
-
-TEST(RestorableSectionsReader, WithComments)
-{
-    testRestorableSectionReader(
-        "#first comment\n"
-        "#line2\n"
-        "#line3\n"
-        "-Name:foo\n"
-        "#this is Name section\n"
-        "test\n"
-        "\n"
+        "#TEST COMMENT\n"
         "-Value:\n"
         "bar\n"
-        "#another comment",
+        "---\n",
         {
-            {"", "",
-             "#first comment\n"
-             "#line2\n"
-             "#line3\n", true},
-            {"Name", "foo\ntest\n\n",
-             "-Name:foo\n"
-             "#this is Name section\n"
-             "test\n"
-             "\n"},
-            {"Value", "bar\n",
-             "-Value:\n"
-             "bar\n"
-             "#another comment\n"}
+            {"Name", "foo", "-Name:foo\n#TEST COMMENT\n"},
+            {"Value", "bar", "-Value:\nbar\n---\n"}
         });
 }
 
-TEST(SectionsReader, RawSectionWithComment)
+TEST(SectionsReader, Comments)
 {
     testSectionReader(
-        "-Write test.txt:foo\n"
-        "#this line should be in test.txt\n"
-        "-this shoudln't be a new section:\n"
-        "\n"
-        "---\n"
+        "#COMMENT 1\n"
+        "-Name:foo\n"
+        "#COMMENT 2\n"
+        "#COMMENT 2-1\n"
         "-Value:\n"
-        "bar\n",
+        "#NOT A COMMENT\n"
+        "bar\n"
+        "---\n"
+        "#COMMENT 3\n",
         {
-            {"Write test.txt", "foo\n#this line should be in test.txt\n-this shoudln't be a new section:\n\n"},
-            {"Value", "bar\n"}
-        },
-        {"Write"});
+            {"Name", "foo", "#COMMENT 1\n-Name:foo\n#COMMENT 2\n#COMMENT 2-1\n"},
+            {"Value", "#NOT A COMMENT\nbar", "-Value:\n#NOT A COMMENT\nbar\n---\n#COMMENT 3\n"}
+        });
 }
 
-
-TEST(RestorableSectionsReader, RawSectionWithComment)
-{
-    testRestorableSectionReader(
-        "#Comment\n"
-        "\n"
-        "#Comment2\n"
-        "-Write test.txt:foo\n"
-        "#this line should be in test.txt\n"
-        "-this shoudln't be a new section:\n"
-        "\n"
-        "---\n"
-        "-Value:\n"
-        "bar\n",
-        {
-            {"","",
-             "#Comment\n"
-             "\n"
-             "#Comment2\n", true},
-            {"Write test.txt", "foo\n#this line should be in test.txt\n-this shoudln't be a new section:\n\n",
-             "-Write test.txt:foo\n"
-             "#this line should be in test.txt\n"
-             "-this shoudln't be a new section:\n"
-             "\n"},
-            {"", "", "---\n", true},
-            {"Value", "bar\n",
-             "-Value:\n"
-             "bar\n"}
-        },
-        {"Write"});
-}
-
-TEST(SectionsReader, TextBeforeSections)
+TEST(SectionsReader, MultilineSection)
 {
     testSectionReader(
-        "Loren ipsum\n"
-        "# some comment\n"
+        "-Write test.txt:\n"
+        "foo\n"
+        "---\n",
+        {{"Write test.txt", "foo", "-Write test.txt:\nfoo\n---\n"}}
+    );
+}
+
+TEST(SectionsReader, MultilineSection2)
+{
+    testSectionReader(
+        "-Write test.txt:\n"
+        "foo\n"
         "\n"
-        "-Name:foo\n"
-        "test\n"
-        "\n"
-        "-Value:\n"
-        "bar\n",
+        "---\n",
+        {{"Write test.txt", "foo\n", "-Write test.txt:\nfoo\n\n---\n"}}
+    );
+}
+
+TEST(SectionsReader, MultilineSectionCustomSeparator)
+{
+    testSectionReader(
+        "-Section separator: ---lunchtoast\n"
+        "-Write test.txt:\n"
+        "foo\n"
+        "---lunchtoast\n",
+        {{"Section separator", "---lunchtoast", "-Section separator: ---lunchtoast\n"},
+         {"Write test.txt", "foo", "-Write test.txt:\nfoo\n---lunchtoast\n"}}
+    );
+}
+
+TEST(SectionsReader, MultilineSectionEmpty)
+{
+    testSectionReader(
+        "-Write test.txt:\n"
+        "---\n",
+        {{"Write test.txt", "", "-Write test.txt:\n---\n"}}
+    );
+}
+
+TEST(SectionsReader, SingleLineSection)
+{
+    testSectionReader(
+        "-Name:foo",
         {
-            {"Name", "foo\ntest\n\n"},
-            {"Value", "bar\n"}
+            {"Name", "foo", "-Name:foo"}
         });
 }
 
-TEST(RestorableSectionsReader, TextBeforeSections)
+
+TEST(SectionsReader, ErrorTextOutsideOfSections)
 {
-    testRestorableSectionReader(
-        "Loren ipsum\n"
-        "# some comment\n"
-        "\n"
-        "-Name:foo\n"
-        "test\n"
-        "\n"
-        "-Value:\n"
-        "bar\n",
-        {
-            {"","", "# some comment\n\n", true},
-            {"Name", "foo\ntest\n\n",
-             "-Name:foo\n"
-             "test\n"
-             "\n"},
-            {"Value", "bar\n",
-             "-Value:\n"
-             "bar\n"}
-        });
+    assert_exception<lunchtoast::Error>([]{
+        testSectionReader(
+         "Empty:"
+         "Value",
+        {});
+    }, [](const lunchtoast::Error& e){
+        ASSERT_EQ(std::string{e.what()}, "line 1: Space outside of sections can only contain whitespace characters and comments");
+    });
+}
+
+TEST(SectionsReader, ErrorTextOutsideOfSections2)
+{
+    assert_exception<lunchtoast::Error>([]{
+        testSectionReader(
+         "-Test: value\n"
+         "Value",
+        {});
+    }, [](const lunchtoast::Error& e){
+        ASSERT_EQ(std::string{e.what()}, "line 2: Space outside of sections can only contain whitespace characters and comments");
+    });
 }
 
 
-TEST(SectionValueReader, Basic)
+TEST(SectionsReader, ErrorTextOutsideOfSections3)
 {
-    auto input = "-Name:foo\n"
-                 "test\n"
-                 "\n"
-                 "-Value:\n"
-                 "bar\n";
-    testSectionValueReader(
-        input, "Name", "foo\ntest\n\n");
-    testSectionValueReader(
-        input, "Value", "bar\n");
+    assert_exception<lunchtoast::Error>([]{
+        testSectionReader(
+         "-Test: \n"
+         "---\n"
+         "Value",
+        {});
+    }, [](const lunchtoast::Error& e){
+        ASSERT_EQ(std::string{e.what()}, "line 3: Space outside of sections can only contain whitespace characters and comments");
+    });
 }
 
-TEST(SectionsValueReader, EmptySection)
+TEST(SectionsReader, ErrorEmptySectionName)
 {
-    auto input = "-Name:foo\n"
-                 "test\n"
-                 "\n"
-                 "-Empty:\n"
-                 "-Value:\n"
-                 "bar\n";
-    testSectionValueReader(
-        input, "Name", "foo\ntest\n\n");
-    testSectionValueReader(
-        input, "Empty", "");
-    testSectionValueReader(
-        input, "Value", "bar\n");
+    assert_exception<lunchtoast::Error>([]{
+        testSectionReader(
+        "- :foo\n"
+        "-Value: bar", {});
+    },
+    [](const std::runtime_error& e){
+        ASSERT_EQ(std::string{e.what()}, "line 1: A section name can't be empty");
+    });
 }
 
-TEST(SectionsValueReader, SingleEmptySection)
+TEST(SectionsReader, ErrorSectionNameStartsWithWhitespace)
 {
-    testSectionValueReader(
-        "-Empty:",
-        "Empty", "");
-
+    assert_exception<lunchtoast::Error>([]{
+        testSectionReader(
+        "- Test:foo\n"
+        "-Value: bar", {});
+    },
+    [](const std::runtime_error& e){
+        ASSERT_EQ(std::string{e.what()}, "line 1: A section name can't start or end with whitespace characters");
+    });
 }
 
-TEST(SectionsValueReader, NoSections)
+TEST(SectionsReader, ErrorSectionNameEndsWithWhitespace)
 {
-    testSectionValueReader(
-        "Empty:"
-        "Value",
-        "Empty", "");
-    testSectionValueReader(
-        "Empty:"
-        "Value",
-        "Value", "");
+    assert_exception<lunchtoast::Error>([]{
+        testSectionReader(
+        "- Test:foo\n"
+        "-Value: bar", {});
+    },
+    [](const std::runtime_error& e){
+        ASSERT_EQ(std::string{e.what()}, "line 1: A section name can't start or end with whitespace characters");
+    });
 }
 
-TEST(SectionsValueReader, WithComment)
+TEST(SectionsReader, ErrorSectionWithoutColon)
 {
-    auto input = "-Name:foo\n"
-                 "#this is Name section\n"
-                 "test\n"
-                 "\n"
-                 "-Value:\n"
-                 "bar\n";
-    testSectionValueReader(input, "Name", "foo\ntest\n\n");
-    testSectionValueReader(input, "Value", "bar\n");
+    assert_exception<lunchtoast::Error>([]{
+        testSectionReader(
+        "-Test:foo\n"
+        "-Foo\n"
+        "-Value: bar", {});
+    },
+    [](const std::runtime_error& e){
+        ASSERT_EQ(std::string{e.what()}, "line 2: A section must contain ':' after its name");
+    });
 }
 
-TEST(SectionsValueReader, RawSectionWithComment)
+TEST(SectionsReader, ErrorMultilineSectionWithoutSeparator)
 {
-    auto input = "-Name:foo\n"
-                 "#this line should be in section\n"
-                 "\n"
-                 "-Value:\n"
-                 "bar\n";
-    testSectionValueReader(input, "Name", "foo\n#this line should be in section\n\n", true);
-    testSectionValueReader(input, "Value", "bar\n");
+    assert_exception<lunchtoast::Error>([]{
+        testSectionReader(
+        "-Test:\n"
+        "-Foo\n"
+        "-Value: bar", {});
+    },
+    [](const std::runtime_error& e){
+        ASSERT_EQ(std::string{e.what()}, "line 1: A multiline section must be closed with '---' separator");
+    });
 }
 
+TEST(SectionsReader, ErrorMultilineSectionWithoutSeparator2)
+{
+    assert_exception<lunchtoast::Error>([]{
+        testSectionReader(
+        "-Test: foo\n"
+        "-Foo:   \n"
+        "-Value: bar", {});
+    },
+    [](const std::runtime_error& e){
+        ASSERT_EQ(std::string{e.what()}, "line 2: A multiline section must be closed with '---' separator");
+    });
+}
+
+TEST(SectionsReader, ErrorMultilineSectionWithoutCustomSeparator)
+{
+    assert_exception<lunchtoast::Error>([]{
+        testSectionReader(
+        "-Section separator: ---lunchtoast\n"
+        "-Test:\n"
+        "-Foo\n"
+        "-Value: bar", {});
+    },
+    [](const std::runtime_error& e){
+        ASSERT_EQ(std::string{e.what()}, "line 2: A multiline section must be closed with '---lunchtoast' separator");
+    });
+}
+
+TEST(SectionsReader, ErrorMultilineSectionSeparatorStartsWithWhitespace)
+{
+    assert_exception<lunchtoast::Error>([]{
+        testSectionReader(
+        "-Test: foo\n"
+        "-Foo:   \n"
+        "  ---\n"
+        "-Value: bar", {});
+    },
+    [](const std::runtime_error& e){
+        ASSERT_EQ(std::string{e.what()}, "line 3: A multiline section separator must be placed at the start of a line");
+    });
+}
 

@@ -3,8 +3,10 @@
 #include "alias_filesystem.h"
 #include <string>
 
-class WriteFile : public TestAction
-{
+
+namespace lunchtoast{
+
+class WriteFile : public TestAction{
 public:
     WriteFile(fs::path fileName, std::string content);
     TestActionResult process() override;
@@ -14,4 +16,6 @@ private:
     fs::path filePath_;
     std::string content_;
 };
+
+}
 

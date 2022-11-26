@@ -1,5 +1,7 @@
 #include "testresult.h"
 
+namespace lunchtoast{
+
 TestResult TestResult::Success()
 {
     auto result = TestResult{};
@@ -37,4 +39,6 @@ const std::string& TestResult::errorInfo() const
 const std::vector<std::string>& TestResult::failedActionsMessages() const
 {
     return failedActionsMessages_;
+}
+
 }

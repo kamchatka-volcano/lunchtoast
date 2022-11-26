@@ -1,5 +1,7 @@
 #include "testactionresult.h"
 
+namespace lunchtoast{
+
 TestActionResult TestActionResult::Success()
 {
     auto result = TestActionResult{};
@@ -23,4 +25,6 @@ bool TestActionResult::isSuccessful() const
 const std::string& TestActionResult::errorInfo() const
 {
     return errorInfo_;
+}
+
 }
