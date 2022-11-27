@@ -8,15 +8,14 @@
 #include "errors.h"
 #include <sfun/string_utils.h>
 #include <fmt/format.h>
-#include <boost/algorithm/string.hpp>
 #include <sstream>
 #include <iomanip>
 #include <fstream>
 
 
 namespace lunchtoast{
-
 namespace str = sfun::string_utils;
+namespace fs = std::filesystem;
 
 Test::Test(const fs::path& configPath)
         : name_(configPath.stem().string()), directory_(configPath.parent_path()), shellCommand_("sh -c -e"),
@@ -76,19 +75,19 @@ bool Test::readParamFromSection(const Section& section)
 
 bool Test::readActionFromSection(const Section& section)
 {
-    if (boost::starts_with(section.name, "Launch")){
+    if (str::startsWith(section.name, "Launch")){
         createLaunchAction(section);
         return true;
     }
-    if (boost::starts_with(section.name, "Write")){
+    if (str::startsWith(section.name, "Write")){
         createWriteAction(section);
         return true;
     }
-    if (boost::starts_with(section.name, "Assert")){
+    if (str::startsWith(section.name, "Assert")){
         auto actionType = str::trim(str::after(section.name, "Assert"));
         return createComparisonAction(TestActionType::Assertion, std::string{actionType}, section);
     }
-    if (boost::starts_with(section.name, "Expect")){
+    if (str::startsWith(section.name, "Expect")){
         auto actionType = str::trim(str::after(section.name, "Expect"));
         return createComparisonAction(TestActionType::Expectation, std::string{actionType}, section);
     }
@@ -134,7 +133,7 @@ bool Test::createComparisonAction(TestActionType type, const std::string& encode
         createCompareFilesAction(type, section.value);
         return true;
     }
-    if (boost::starts_with(encodedActionType, "content of ")){
+    if (str::startsWith(encodedActionType, "content of ")){
         createCompareFileContentAction(type, encodedActionType, section.value);
         return true;
     }
@@ -147,7 +146,7 @@ void Test::createLaunchAction(const Section& section)
     auto uncheckedResult = std::find(parts.begin(), parts.end(), "unchecked") != parts.end();
     auto isShellCommand = std::find(parts.begin(), parts.end(), "command") != parts.end();
     auto silently = std::find(parts.begin(), parts.end(), "silently") != parts.end();
-    const auto command = boost::trim_copy(section.value);
+    const auto command = std::string{str::trim(section.value)};
     actions_.push_back(
             std::make_unique<LaunchProcess>(command, directory_, (isShellCommand ? shellCommand_ : ""), uncheckedResult,
                                             silently));
@@ -172,7 +171,7 @@ void Test::createCompareFilesAction(TestActionType type, const std::string& file
 void Test::createCompareFileContentAction(TestActionType type, const std::string& filenameStr,
                                           const std::string& expectedFileContent)
 {
-    const auto filename = boost::trim_copy(boost::replace_first_copy(filenameStr, "content of ", ""));
+    const auto filename = std::string{str::trim(str::replace(filenameStr, "content of ", ""))};
     actions_.push_back(
             std::make_unique<CompareFileContent>(fs::absolute(directory_) / filename, expectedFileContent, type));
 }
@@ -214,7 +213,7 @@ bool Test::readParam(std::string& param, const std::string& paramName, const Sec
 {
     if (section.name != paramName)
         return false;
-    param = boost::trim_copy(section.value);
+    param = str::trim(section.value);
     return true;
 }
 
@@ -222,7 +221,7 @@ bool Test::readParam(fs::path& param, const std::string& paramName, const Sectio
 {
     if (section.name != paramName)
         return false;
-    param = fs::absolute(directory_) / boost::trim_copy(section.value);
+    param = fs::absolute(directory_) / str::trim(section.value);
     return true;
 }
 
@@ -238,7 +237,7 @@ bool Test::readParam(bool& param, const std::string& paramName, const Section& s
 {
     if (section.name != paramName)
         return false;
-    auto paramStr = boost::to_lower_copy(boost::trim_copy(section.value));
+    auto paramStr = toLower(str::trim(section.value));
     param = (paramStr == "true");
     return true;
 }

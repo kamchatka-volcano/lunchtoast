@@ -3,15 +3,16 @@
 #include "testresult.h"
 #include "utils.h"
 #include <sfun/string_utils.h>
+#include <range/v3/view.hpp>
 #include <spdlog/spdlog.h>
 #include <spdlog/logger.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
-#include <boost/algorithm/string.hpp>
 
 
 namespace lunchtoast{
 namespace str = sfun::string_utils;
+namespace fs = std::filesystem;
 
 TestReporter::TestReporter(const fs::path& reportFilePath,
                            int reportWidth)
@@ -87,9 +88,9 @@ void TestReporter::reportResult(const Test& test, const TestResult& result,
         }
         if (!result.failedActionsMessages().empty()){
             if (result.failedActionsMessages().size() > 1)
-                print("Failure:\n{}", boost::join(result.failedActionsMessages(), "\n"));
+                print("Failure:\n{}", str::join(result.failedActionsMessages(), "\n"));
             else
-                print("Failure: {}", boost::join(result.failedActionsMessages(), "\n"));
+                print("Failure: {}", str::join(result.failedActionsMessages(), "\n"));
         }
     }
     if (result.type() == TestResultType::RuntimeError)
@@ -158,8 +159,7 @@ std::tuple<int, int, int> countTotals(const TestSuite& defaultSuite, const std::
     auto totalTests = defaultSuite.tests.size();
     auto totalPassed = defaultSuite.passedTestsCounter;
     auto totalDisabled = defaultSuite.disabledTestsCounter;
-    for (const auto& suitePair: suites){
-        const auto& suite = suitePair.second;
+    for (const auto& suite: suites | ranges::views::values){
         totalTests += suite.tests.size();
         totalPassed += suite.passedTestsCounter;
         totalDisabled += suite.disabledTestsCounter;
@@ -183,9 +183,8 @@ void TestReporter::reportSummary(const TestSuite& defaultSuite, const std::map<s
                       defaultSuite.passedTestsCounter,
                       static_cast<int>(defaultSuite.tests.size()),
                       defaultSuite.disabledTestsCounter);
-    for (const auto& suitePair: suites){
-        const auto& suite = suitePair.second;
-        reportSuiteResult(suitePair.first,
+    for (const auto& [suiteName, suite] : suites){
+        reportSuiteResult(suiteName,
                           suite.passedTestsCounter,
                           static_cast<int>(suite.tests.size()),
                           suite.disabledTestsCounter);

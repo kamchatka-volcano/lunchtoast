@@ -3,13 +3,17 @@
 #include "utils.h"
 #include "test.h"
 #include "errors.h"
-#include <boost/algorithm/string.hpp>
+#include <sfun/string_utils.h>
+#include <range/v3/action.hpp>
 #include <range/v3/algorithm.hpp>
+#include <range/v3/view.hpp>
 #include <fmt/format.h>
 #include <fstream>
 
 
 namespace lunchtoast {
+namespace str = sfun::string_utils;
+namespace fs = std::filesystem;
 
 namespace {
 void processTestConfig(const fs::path& cfgPath);
@@ -64,7 +68,7 @@ fs::path getTestDirectory(const fs::path& cfgPath, const std::vector<Section>& s
     const auto dirSectionIt = ranges::find_if(sections,
                                               [](const Section& section){ return section.name == "Directory"; });
     if (dirSectionIt != sections.end())
-        cfgDir = boost::trim_copy(dirSectionIt->value);
+        cfgDir = str::trim(dirSectionIt->value);
     if (!cfgDir.empty())
         testDir = fs::canonical(testDir) / cfgDir;
     return testDir;
@@ -73,12 +77,10 @@ fs::path getTestDirectory(const fs::path& cfgPath, const std::vector<Section>& s
 std::string getDirectoryContentString(const fs::path& dir)
 {
     auto testDirPaths = getDirectoryContent(dir);
-    auto testDirPathsStr = std::vector<std::string>{};
-    std::transform(testDirPaths.begin(), testDirPaths.end(),
-                   std::back_inserter(testDirPathsStr),
-                   [&dir](const fs::path& path) { return fs::relative(path, dir).string(); });
-    std::sort(testDirPathsStr.begin(), testDirPathsStr.end());
-    return boost::join(testDirPathsStr, " ");
+    auto pathRelativeToDir = [&dir](const fs::path& path) { return fs::relative(path, dir).string(); };
+    const auto testDirPathsStr = testDirPaths | ranges::views::transform(pathRelativeToDir)
+            | ranges::to<std::vector> | ranges::actions::sort;
+    return str::join(testDirPathsStr, " ");
 }
 
 void writeSections(const std::vector<Section>& sections, const fs::path& outFilePath)
@@ -96,15 +98,15 @@ void copyComments(const std::string& input, std::string& output)
     auto line = std::string{};
     auto sectionEncountered = false;
     while (std::getline(stream, line)){
-        if (boost::trim_copy(line).empty())
+        if (str::trim(line).empty())
             output += "\n";
-        else if (boost::starts_with(line, "#")){
+        else if (str::startsWith(line, "#")){
             if (!sectionEncountered)
                 output.insert(0, line + "\n");
             else
                 output += line + "\n";
         }
-        else if (boost::starts_with(line, "-"))
+        else if (str::startsWith(line, "-"))
             sectionEncountered = true;
     }
 }

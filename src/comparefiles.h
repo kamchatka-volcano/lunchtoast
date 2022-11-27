@@ -1,7 +1,7 @@
 #pragma once
 #include "testaction.h"
-#include "alias_filesystem.h"
 #include "filenamereader.h"
+#include <filesystem>
 #include <vector>
 #include <regex>
 
@@ -9,14 +9,15 @@ namespace lunchtoast {
 
 class CompareFiles : public TestAction {
 public:
-    CompareFiles(FilenameGroup lhs,
-                 FilenameGroup rhs,
-                 TestActionType actionType);
+    CompareFiles(FilenameGroup lhs, FilenameGroup rhs, TestActionType actionType);
     TestActionResult process() override;
     TestActionType type() const override;
 
 private:
-    bool compareFiles(const fs::path& lhs, const fs::path& rhs, std::string& failedComparisonInfo) const;
+    bool compareFiles(
+            const std::filesystem::path& lhs,
+            const std::filesystem::path& rhs,
+            std::string& failedComparisonInfo) const;
 
 private:
     FilenameGroup lhs_;

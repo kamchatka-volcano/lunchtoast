@@ -1,21 +1,26 @@
 #include "launchprocess.h"
-#include "alias_boost_process.h"
 #include <sfun/string_utils.h>
 #include <fmt/format.h>
+#include <boost/process.hpp>
 #include <utility>
 
 namespace lunchtoast{
 
 namespace proc = boost::process;
 namespace str = sfun::string_utils;
+namespace fs = std::filesystem;
 
-LaunchProcess::LaunchProcess(std::string command,
-                             fs::path workingDir,
-                             std::string shellCommand,
-                             bool uncheckedResult,
-                             bool silently)
-        : command_(std::move(command)), workingDir_(std::move(workingDir)), shellCommand_(std::move(shellCommand)),
-          uncheckedResult_(uncheckedResult), silently_(silently)
+LaunchProcess::LaunchProcess(
+        std::string command,
+        fs::path workingDir,
+        std::string shellCommand,
+        bool uncheckedResult,
+        bool silently)
+    : command_(std::move(command))
+    , workingDir_(std::move(workingDir))
+    , shellCommand_(std::move(shellCommand))
+    , uncheckedResult_(uncheckedResult)
+    , silently_(silently)
 {
 }
 

@@ -4,12 +4,12 @@
 #include "sectionsreader.h"
 #include "utils.h"
 #include "errors.h"
-#include <boost/algorithm/string.hpp>
 #include <range/v3/algorithm.hpp>
 #include <fstream>
 
 
 namespace lunchtoast{
+namespace fs = std::filesystem;
 
 TestLauncher::TestLauncher(const fs::path& testPath,
                            const std::string& testFileExt,
@@ -92,7 +92,7 @@ void TestLauncher::addTest(const fs::path& testFile)
     auto error = SectionReadingError{};
     auto sections = lunchtoast::readSections(stream, error);
 
-    auto enabledStr = boost::to_lower_copy(getSectionValue("Enabled", sections));
+    auto enabledStr = toLower(getSectionValue("Enabled", sections));
     auto isEnabled = (enabledStr.empty() || enabledStr == "true");
     stream.clear();
     stream.seekg(0, std::ios::beg);

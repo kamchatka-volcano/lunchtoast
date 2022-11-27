@@ -4,6 +4,9 @@
 #include "cleanupwhitelistgenerator.h"
 #include <fmt/format.h>
 #include <cmdlime/commandlinereader.h>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 struct EnsurePathExists{
     void operator()(const fs::path& path)

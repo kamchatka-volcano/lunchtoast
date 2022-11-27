@@ -1,26 +1,13 @@
 #include "utils.h"
 #include <sfun/string_utils.h>
-#include <boost/uuid/detail/md5.hpp>
-#include <boost/algorithm/hex.hpp>
-#include <boost/algorithm/string.hpp>
-#include <stdlib.h>
+#include <range/v3/view.hpp>
+#include <cstdlib>
 #include <fstream>
 
 
 namespace lunchtoast{
-
-using boost::uuids::detail::md5;
 namespace str = sfun::string_utils;
-
-namespace{
-std::string md5DigestToString(const md5::digest_type& digest)
-{
-    const auto charDigest = reinterpret_cast<const char*>(&digest);
-    std::string result;
-    boost::algorithm::hex(charDigest, charDigest + sizeof(md5::digest_type), std::back_inserter(result));
-    return result;
-}
-}
+namespace fs = std::filesystem;
 
 std::string readFile(const fs::path& filePath)
 {
@@ -32,26 +19,12 @@ std::string readFile(const fs::path& filePath)
     return buffer.str();
 }
 
-std::string calcMd5(const fs::path& filePath)
-{
-    return calcMd5(readFile(filePath));
-}
-
-std::string calcMd5(const std::string& data)
-{
-    auto hash = md5{};
-    md5::digest_type digest;
-    hash.process_bytes(data.data(), data.size());
-    hash.get_digest(digest);
-    return md5DigestToString(digest);
-}
-
 void processVariablesSubstitution(std::string& value,
                                   const std::string& varFileName,
                                   const std::string& varDirName)
 {
-    value = boost::replace_all_copy(value, "$filename$", varFileName);
-    value = boost::replace_all_copy(value, "$dir$", varDirName);
+    value = str::replace(value, "$filename$", varFileName);
+    value = str::replace(value, "$dir$", varDirName);
 }
 
 std::vector<fs::path> getDirectoryContent(const fs::path& dir)
@@ -86,6 +59,11 @@ std::string homePathString(const fs::path& path)
         return "~/";
     else
         return "~/" + resPath.string();
+}
+
+std::string toLower(std::string_view str)
+{
+    return str | ranges::views::transform([](char ch){return str::tolower(ch);}) | ranges::to<std::string>;
 }
 
 }

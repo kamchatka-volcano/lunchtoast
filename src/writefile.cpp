@@ -5,6 +5,7 @@
 
 
 namespace lunchtoast{
+namespace fs = std::filesystem;
 
 WriteFile::WriteFile(fs::path filePath, std::string content)
         : filePath_(std::move(filePath)), content_(std::move(content))

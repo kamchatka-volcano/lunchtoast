@@ -1,22 +1,20 @@
 #pragma once
-#include "alias_filesystem.h"
+#include <filesystem>
 #include <string>
 #include <vector>
 
 
 namespace lunchtoast{
 
-std::string readFile(const fs::path& filePath);
-std::string calcMd5(const fs::path& filePath);
-std::string calcMd5(const std::string& data);
+std::string readFile(const std::filesystem::path& filePath);
 void processVariablesSubstitution(std::string& value,
                                   const std::string& varFileName,
                                   const std::string& varDirName);
-std::vector<fs::path> getDirectoryContent(const fs::path& dir);
+std::vector<std::filesystem::path> getDirectoryContent(const std::filesystem::path& dir);
 
-fs::path homePath(const fs::path& path);
-std::string homePathString(const fs::path& path);
+std::filesystem::path homePath(const std::filesystem::path& path);
+std::string homePathString(const std::filesystem::path& path);
 
 std::string withoutLastNewLine(std::string value);
-
+std::string toLower(std::string_view str);
 }

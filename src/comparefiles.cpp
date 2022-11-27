@@ -1,16 +1,14 @@
 #include "comparefiles.h"
 #include "utils.h"
-#include "alias_filesystem.h"
-#include <boost/algorithm/string.hpp>
+#include <sfun/string_utils.h>
+#include <range/v3/view.hpp>
 #include <fmt/format.h>
 #include <string>
 #include <utility>
 
 namespace lunchtoast {
-
-namespace {
-std::string filenameListStr(const std::vector<fs::path>& pathList);
-}
+namespace str = sfun::string_utils;
+namespace fs = std::filesystem;
 
 CompareFiles::CompareFiles(FilenameGroup lhs,
                            FilenameGroup rhs,
@@ -22,6 +20,15 @@ CompareFiles::CompareFiles(FilenameGroup lhs,
 TestActionType CompareFiles::type() const
 {
     return actionType_;
+}
+
+namespace {
+std::string filenameListStr(const std::vector<fs::path>& pathList)
+{
+    auto pathToString = [](const fs::path& path) { return path.filename().string(); };
+    const auto filenameList = pathList | ranges::views::transform(pathToString) | ranges::to<std::vector>;
+    return str::join(filenameList, ",");
+}
 }
 
 TestActionResult CompareFiles::process()
@@ -48,7 +55,7 @@ TestActionResult CompareFiles::process()
     if (result)
         return TestActionResult::Success();
     else
-        return TestActionResult::Failure(boost::join(errorInfo, "\n"));
+        return TestActionResult::Failure(str::join(errorInfo, "\n"));
 }
 
 bool CompareFiles::compareFiles(const fs::path& lhs, const fs::path& rhs, std::string& failedComparisonInfo) const
@@ -66,25 +73,13 @@ bool CompareFiles::compareFiles(const fs::path& lhs, const fs::path& rhs, std::s
     if (!bothFilesExist)
         return false;
 
-    if (calcMd5(lhs) != calcMd5(rhs)) {
+    if (readFile(lhs) != readFile(rhs)) {
         failedComparisonInfo += fmt::format("Files {} and {} equality check has failed, files {} and {} are different",
                                             lhs_.string(), rhs_.string(), lhs.filename().string(),
                                             rhs.filename().string());
         return false;
     }
     return true;
-}
-
-namespace {
-
-std::string filenameListStr(const std::vector<fs::path>& pathList)
-{
-    auto filenameList = std::vector<std::string>{};
-    std::transform(pathList.begin(), pathList.end(), std::back_inserter(filenameList),
-                   [](const fs::path& path) { return path.filename().string(); });
-    return boost::join(filenameList, ",");
-}
-
 }
 
 }

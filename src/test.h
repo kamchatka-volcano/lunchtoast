@@ -3,7 +3,7 @@
 #include "testresult.h"
 #include "testaction.h"
 #include "filenamereader.h"
-#include "alias_filesystem.h"
+#include <filesystem>
 #include <vector>
 #include <memory>
 #include <set>
@@ -14,7 +14,7 @@ namespace lunchtoast{
 
 class Test{
 public:
-    explicit Test(const fs::path& configPath);
+    explicit Test(const std::filesystem::path& configPath);
     TestResult process();
 
     const std::string& suite() const;
@@ -22,7 +22,7 @@ public:
     const std::string& description() const;
 
 private:
-    void readConfig(const fs::path& path);
+    void readConfig(const std::filesystem::path& path);
     bool readParamFromSection(const Section& section);
     bool readActionFromSection(const Section& section);
     void createLaunchAction(const Section& section);
@@ -33,17 +33,17 @@ private:
     bool createComparisonAction(TestActionType type, const std::string& encodedActionType, const Section& section);
     void cleanTestFiles();
     bool readParam(std::string& param, const std::string& paramName, const Section& section);
-    bool readParam(fs::path& param, const std::string& paramName, const Section& section);
+    bool readParam(std::filesystem::path& param, const std::string& paramName, const Section& section);
     bool readParam(std::vector<FilenameGroup>& param, const std::string& paramName, const Section& section);
     bool readParam(bool& param, const std::string& paramName, const Section& section);
-    void postProcessCleanupConfig(const fs::path& configPath);
+    void postProcessCleanupConfig(const std::filesystem::path& configPath);
     void checkParams();
 
 private:
     std::vector<std::unique_ptr<TestAction>> actions_;
     std::string name_;
     std::string description_;
-    fs::path directory_;
+    std::filesystem::path directory_;
     std::string suite_;
     std::string shellCommand_;
     bool isEnabled_;

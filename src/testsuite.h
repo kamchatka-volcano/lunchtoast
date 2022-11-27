@@ -1,5 +1,5 @@
 #pragma once
-#include "alias_filesystem.h"
+#include <filesystem>
 #include <vector>
 
 
@@ -7,7 +7,7 @@ namespace lunchtoast{
 
 struct TestSuite{
     struct TestCfg{
-        fs::path path;
+        std::filesystem::path path;
         bool isEnabled;
     };
     std::vector<TestCfg> tests;
