@@ -5,6 +5,6 @@
 GIVEN a single file (file.txt)
 WHEN test assertion of file content with matching string
 THEN first assertion should pass, test should pass
-
+---
 -Launch silently: ../../build/lunchtoast ./test/lunchtoast.test --report report.res
 -Assert files equal: report.res report.ref

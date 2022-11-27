@@ -6,5 +6,6 @@
     GIVEN 2 equal files (lhs.txt and rhs.txt), set suite name
     WHEN test single assertion of files equality
     THEN test should pass, suite name should be in report
+---    
 -Launch silently: ../../build/lunchtoast ./test/lunchtoast.test --report report.res
 -Assert files equal: report.res report.ref

@@ -6,6 +6,7 @@
     GIVEN 2 equal files (lhs.txt and rhs.txt)
     WHEN launch lunchtoast with --save-state
     THEN test config should get a cleanup whitelist section with list of test files
+---    
 -Launch command: cp lunchtoast.test test/
 -Launch command: ../../build/lunchtoast test/lunchtoast.test --save-state > report.res
 -Assert files equal: report.res report.ref

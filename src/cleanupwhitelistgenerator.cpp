@@ -2,6 +2,7 @@
 #include "sectionsreader.h"
 #include "utils.h"
 #include "test.h"
+#include "errors.h"
 #include <boost/algorithm/string.hpp>
 #include <range/v3/algorithm.hpp>
 #include <fmt/format.h>

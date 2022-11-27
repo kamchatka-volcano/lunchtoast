@@ -51,9 +51,4 @@ private:
     std::vector<FilenameGroup> cleanupWhitelist_;
 };
 
-class TestConfigError : public std::runtime_error{
-public:
-    explicit TestConfigError(const std::string& msg);
-};
-
 }

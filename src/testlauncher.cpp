@@ -3,6 +3,7 @@
 #include "test.h"
 #include "sectionsreader.h"
 #include "utils.h"
+#include "errors.h"
 #include <boost/algorithm/string.hpp>
 #include <range/v3/algorithm.hpp>
 #include <fstream>
@@ -88,7 +89,8 @@ std::string getSectionValue(std::string_view sectionName, const std::vector<lunc
 void TestLauncher::addTest(const fs::path& testFile)
 {
     auto stream = std::ifstream{testFile.string()};
-    auto sections = lunchtoast::readSections(stream);
+    auto error = SectionReadingError{};
+    auto sections = lunchtoast::readSections(stream, error);
 
     auto enabledStr = boost::to_lower_copy(getSectionValue("Enabled", sections));
     auto isEnabled = (enabledStr.empty() || enabledStr == "true");

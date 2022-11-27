@@ -135,24 +135,24 @@ TEST(SectionsReader, SingleLineSection)
 
 TEST(SectionsReader, ErrorTextOutsideOfSections)
 {
-    assert_exception<lunchtoast::Error>([]{
+    assert_exception<lunchtoast::TestConfigError>([]{
         testSectionReader(
          "Empty:"
          "Value",
         {});
-    }, [](const lunchtoast::Error& e){
+    }, [](const auto& e){
         ASSERT_EQ(std::string{e.what()}, "line 1: Space outside of sections can only contain whitespace characters and comments");
     });
 }
 
 TEST(SectionsReader, ErrorTextOutsideOfSections2)
 {
-    assert_exception<lunchtoast::Error>([]{
+    assert_exception<lunchtoast::TestConfigError>([]{
         testSectionReader(
          "-Test: value\n"
          "Value",
         {});
-    }, [](const lunchtoast::Error& e){
+    }, [](const auto& e){
         ASSERT_EQ(std::string{e.what()}, "line 2: Space outside of sections can only contain whitespace characters and comments");
     });
 }
@@ -160,116 +160,116 @@ TEST(SectionsReader, ErrorTextOutsideOfSections2)
 
 TEST(SectionsReader, ErrorTextOutsideOfSections3)
 {
-    assert_exception<lunchtoast::Error>([]{
+    assert_exception<lunchtoast::TestConfigError>([]{
         testSectionReader(
          "-Test: \n"
          "---\n"
          "Value",
         {});
-    }, [](const lunchtoast::Error& e){
+    }, [](const auto& e){
         ASSERT_EQ(std::string{e.what()}, "line 3: Space outside of sections can only contain whitespace characters and comments");
     });
 }
 
 TEST(SectionsReader, ErrorEmptySectionName)
 {
-    assert_exception<lunchtoast::Error>([]{
+    assert_exception<lunchtoast::TestConfigError>([]{
         testSectionReader(
         "- :foo\n"
         "-Value: bar", {});
     },
-    [](const std::runtime_error& e){
+    [](const auto& e){
         ASSERT_EQ(std::string{e.what()}, "line 1: A section name can't be empty");
     });
 }
 
 TEST(SectionsReader, ErrorSectionNameStartsWithWhitespace)
 {
-    assert_exception<lunchtoast::Error>([]{
+    assert_exception<lunchtoast::TestConfigError>([]{
         testSectionReader(
         "- Test:foo\n"
         "-Value: bar", {});
     },
-    [](const std::runtime_error& e){
+    [](const auto& e){
         ASSERT_EQ(std::string{e.what()}, "line 1: A section name can't start or end with whitespace characters");
     });
 }
 
 TEST(SectionsReader, ErrorSectionNameEndsWithWhitespace)
 {
-    assert_exception<lunchtoast::Error>([]{
+    assert_exception<lunchtoast::TestConfigError>([]{
         testSectionReader(
         "- Test:foo\n"
         "-Value: bar", {});
     },
-    [](const std::runtime_error& e){
+    [](const auto& e){
         ASSERT_EQ(std::string{e.what()}, "line 1: A section name can't start or end with whitespace characters");
     });
 }
 
 TEST(SectionsReader, ErrorSectionWithoutColon)
 {
-    assert_exception<lunchtoast::Error>([]{
+    assert_exception<lunchtoast::TestConfigError>([]{
         testSectionReader(
         "-Test:foo\n"
         "-Foo\n"
         "-Value: bar", {});
     },
-    [](const std::runtime_error& e){
+    [](const auto& e){
         ASSERT_EQ(std::string{e.what()}, "line 2: A section must contain ':' after its name");
     });
 }
 
 TEST(SectionsReader, ErrorMultilineSectionWithoutSeparator)
 {
-    assert_exception<lunchtoast::Error>([]{
+    assert_exception<lunchtoast::TestConfigError>([]{
         testSectionReader(
         "-Test:\n"
         "-Foo\n"
         "-Value: bar", {});
     },
-    [](const std::runtime_error& e){
+    [](const auto& e){
         ASSERT_EQ(std::string{e.what()}, "line 1: A multiline section must be closed with '---' separator");
     });
 }
 
 TEST(SectionsReader, ErrorMultilineSectionWithoutSeparator2)
 {
-    assert_exception<lunchtoast::Error>([]{
+    assert_exception<lunchtoast::TestConfigError>([]{
         testSectionReader(
         "-Test: foo\n"
         "-Foo:   \n"
         "-Value: bar", {});
     },
-    [](const std::runtime_error& e){
+    [](const auto& e){
         ASSERT_EQ(std::string{e.what()}, "line 2: A multiline section must be closed with '---' separator");
     });
 }
 
 TEST(SectionsReader, ErrorMultilineSectionWithoutCustomSeparator)
 {
-    assert_exception<lunchtoast::Error>([]{
+    assert_exception<lunchtoast::TestConfigError>([]{
         testSectionReader(
         "-Section separator: ---lunchtoast\n"
         "-Test:\n"
         "-Foo\n"
         "-Value: bar", {});
     },
-    [](const std::runtime_error& e){
+    [](const auto& e){
         ASSERT_EQ(std::string{e.what()}, "line 2: A multiline section must be closed with '---lunchtoast' separator");
     });
 }
 
 TEST(SectionsReader, ErrorMultilineSectionSeparatorStartsWithWhitespace)
 {
-    assert_exception<lunchtoast::Error>([]{
+    assert_exception<lunchtoast::TestConfigError>([]{
         testSectionReader(
         "-Test: foo\n"
         "-Foo:   \n"
         "  ---\n"
         "-Value: bar", {});
     },
-    [](const std::runtime_error& e){
+    [](const auto& e){
         ASSERT_EQ(std::string{e.what()}, "line 3: A multiline section separator must be placed at the start of a line");
     });
 }

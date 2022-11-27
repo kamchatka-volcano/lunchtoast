@@ -22,14 +22,14 @@ void readMultilineSectionValue(Section& section, LineStream& stream, const std::
         section.originalText += line;
         if (str::trim(line) == separator) {
             if (!str::startsWith(line, separator))
-                throw Error{lineNumber, "A multiline section separator must be placed at the start of a line"};
+                throw TestConfigError{lineNumber, "A multiline section separator must be placed at the start of a line"};
             if (!section.value.empty())
                 section.value.pop_back();
             return;
         }
         section.value += line;
     }
-    throw Error{sectionStartLineNumber,
+    throw TestConfigError{sectionStartLineNumber,
                 fmt::format("A multiline section must be closed with '{}' separator", separator)};
 }
 
@@ -40,14 +40,14 @@ Section readSection(LineStream& stream, const std::string& multilineSectionSepar
     auto line = stream.readLine();
     Expects(str::startsWith(line, "-"));
     if (line.find(':') == std::string::npos)
-        throw Error{lineNumber, "A section must contain ':' after its name"};
+        throw TestConfigError{lineNumber, "A section must contain ':' after its name"};
 
     result.originalText = line;
     result.name = str::before(str::after(line, "-"), ":");
     if (str::trim(result.name).empty())
-        throw Error{lineNumber, "A section name can't be empty"};
+        throw TestConfigError{lineNumber, "A section name can't be empty"};
     if (str::trim(result.name) != result.name)
-        throw Error{lineNumber, "A section name can't start or end with whitespace characters"};
+        throw TestConfigError{lineNumber, "A section name can't start or end with whitespace characters"};
 
     result.value = str::trim(str::after(line, ":"));
     if (result.value.empty())
@@ -64,8 +64,16 @@ std::string getMultilineSectionSeparator(const std::vector<Section>& sections)
 }
 
 }
-
 std::vector<Section> readSections(std::istream& input)
+{
+    auto error = SectionReadingError{};
+    auto result = readSections(input, error);
+    if (error)
+        throw error.value();
+    return result;
+}
+
+std::vector<Section> readSections(std::istream& input, SectionReadingError& readingError)
 {
     auto result = std::vector<Section>{};
     auto sectionOuterWhitespace = std::string{};
@@ -73,20 +81,27 @@ std::vector<Section> readSections(std::istream& input)
     while(!stream.atEnd()){
         auto line = stream.peekLine();
         if (str::startsWith(line, "-")) {
-            auto section = readSection(stream, getMultilineSectionSeparator(result));
-            if (result.empty())
-                section.originalText.insert(0, sectionOuterWhitespace);
-            else
-                result.back().originalText += sectionOuterWhitespace;
-            sectionOuterWhitespace.clear();
-            result.emplace_back(std::move(section));
+            try{
+                auto section = readSection(stream, getMultilineSectionSeparator(result));
+                if (result.empty())
+                    section.originalText.insert(0, sectionOuterWhitespace);
+                else
+                    result.back().originalText += sectionOuterWhitespace;
+                sectionOuterWhitespace.clear();
+                result.emplace_back(std::move(section));
+            }
+            catch(const TestConfigError& error){
+                readingError = error;
+                return result;
+            }
         }
         else if (str::startsWith(line, "#") || str::trim(line).empty()){
             sectionOuterWhitespace += line;
             stream.skipLine();
         }
         else{
-            throw Error{stream.lineNumber(), "Space outside of sections can only contain whitespace characters and comments"};
+            readingError = TestConfigError{stream.lineNumber(), "Space outside of sections can only contain whitespace characters and comments"};
+            return result;
         }
     }
     if (!result.empty())

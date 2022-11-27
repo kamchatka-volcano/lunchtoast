@@ -6,5 +6,6 @@
     WHEN test assertion of files equality using regexp matching files 
          with extension .res and files with extension .ref
     THEN test should pass
+---    
 -Launch silently: ../../build/lunchtoast ./test/lunchtoast.test --report report.res
 -Assert files equal: report.res report.ref

@@ -5,6 +5,7 @@
 #include "comparefiles.h"
 #include "comparefilecontent.h"
 #include "utils.h"
+#include "errors.h"
 #include <sfun/string_utils.h>
 #include <fmt/format.h>
 #include <boost/algorithm/string.hpp>
@@ -23,11 +24,6 @@ Test::Test(const fs::path& configPath)
 {
     readConfig(configPath);
     postProcessCleanupConfig(configPath);
-}
-
-TestConfigError::TestConfigError(const std::string& msg)
-        : std::runtime_error(msg)
-{
 }
 
 TestResult Test::process()

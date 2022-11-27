@@ -4,9 +4,13 @@
 
 namespace lunchtoast{
 
-struct Error : public std::runtime_error
+struct TestConfigError : public std::runtime_error
 {
-    Error(int lineNumber, std::string_view errorMessage)
+    explicit TestConfigError(std::string_view errorMessage)
+        : std::runtime_error{std::string{errorMessage}}
+    {}
+
+    TestConfigError(int lineNumber, std::string_view errorMessage)
         : std::runtime_error{fmt::format("line {}: {}", lineNumber, errorMessage)}
     {}
 };
