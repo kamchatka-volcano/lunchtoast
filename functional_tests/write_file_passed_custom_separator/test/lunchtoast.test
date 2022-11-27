@@ -1,0 +1,13 @@
+-Section separator: ---lunchtoast
+
+-Write test.res:
+Hello world
+- Yes
+# No
+---lunchtoast
+
+#Write second file
+-Write test2.res:
+Hello world2
+
+---lunchtoast

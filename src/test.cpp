@@ -94,6 +94,16 @@ bool Test::readActionFromSection(const Section& section)
     return false;
 }
 
+namespace{
+bool isValidUnusedSection(const Section& section)
+{
+    if (section.name == "Section separator")
+        return true;
+
+    return false;
+}
+}
+
 void Test::readConfig(const fs::path& path)
 {
     auto fileStream = std::ifstream{path.string()};
@@ -108,6 +118,8 @@ void Test::readConfig(const fs::path& path)
             if (readParamFromSection(section))
                 continue;
             if (readActionFromSection(section))
+                continue;
+            if (isValidUnusedSection(section))
                 continue;
             throw TestConfigError{fmt::format("Unsupported section name: {}", section.name)};
         }
@@ -213,7 +225,7 @@ bool Test::readParam(std::string& param, const std::string& paramName, const Sec
 {
     if (section.name != paramName)
         return false;
-    param = str::trim(section.value);
+    param = section.value;
     return true;
 }
 
