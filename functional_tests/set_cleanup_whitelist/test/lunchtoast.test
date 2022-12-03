@@ -1,4 +1,3 @@
--Cleanup: true
 -Cleanup whitelist: data/lhs.txt rhs.txt {data2/.*}
 -Write test.txt:
 Hello world

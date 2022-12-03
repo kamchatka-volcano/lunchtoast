@@ -17,9 +17,12 @@ namespace lunchtoast{
 namespace str = sfun::string_utils;
 namespace fs = std::filesystem;
 
-Test::Test(const fs::path& configPath)
-        : name_(configPath.stem().string()), directory_(configPath.parent_path()), shellCommand_("sh -c -e"),
-          isEnabled_(true), requiresCleanup_(false)
+Test::Test(const fs::path& configPath, std::string shellCommand, bool cleanup)
+    : name_(configPath.stem().string())
+    , directory_(configPath.parent_path())
+    , shellCommand_(std::move(shellCommand))
+    , isEnabled_(true)
+    , cleanup_(cleanup)
 {
     readConfig(configPath);
     postProcessCleanupConfig(configPath);
@@ -27,7 +30,7 @@ Test::Test(const fs::path& configPath)
 
 TestResult Test::process()
 {
-    if (requiresCleanup_)
+    if (cleanup_)
         cleanTestFiles();
 
     auto failedActionsMessages = std::vector<std::string>{};
@@ -51,7 +54,7 @@ TestResult Test::process()
             break;
     }
 
-    if (ok && requiresCleanup_)
+    if (ok && cleanup_)
         cleanTestFiles();
 
     if (ok)
@@ -68,8 +71,6 @@ bool Test::readParamFromSection(const Section& section)
     if (readParam(directory_, "Directory", section)) return true;
     if (readParam(isEnabled_, "Enabled", section)) return true;
     if (readParam(cleanupWhitelist_, "Cleanup whitelist", section)) return true;
-    if (readParam(requiresCleanup_, "Cleanup", section)) return true;
-    if (readParam(shellCommand_, "Shell", section)) return true;
     return false;
 }
 
@@ -158,7 +159,7 @@ void Test::createLaunchAction(const Section& section)
     auto uncheckedResult = std::find(parts.begin(), parts.end(), "unchecked") != parts.end();
     auto isShellCommand = std::find(parts.begin(), parts.end(), "command") != parts.end();
     auto silently = std::find(parts.begin(), parts.end(), "silently") != parts.end();
-    const auto command = std::string{str::trim(section.value)};
+    const auto& command = section.value;
     actions_.push_back(
             std::make_unique<LaunchProcess>(command, directory_, (isShellCommand ? shellCommand_ : ""), uncheckedResult,
                                             silently));

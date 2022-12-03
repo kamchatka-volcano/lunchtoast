@@ -1,6 +1,5 @@
 -Name: $dir$
 -Suite: setting params
--Cleanup: true
 -Cleanup whitelist: test test/lunchtoast3.test test/lunchtoast2.test test/lhs.txt test/rhs2.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
 -Description: 
     GIVEN 2 equal files lhs.txt and rhs.txt and different file rhs2.txt 

@@ -13,8 +13,10 @@ check_pie_supported()
 
 set(SRC
         test_sectionsreader.cpp
+        test_utils.cpp
         ../src/sectionsreader.cpp
         ../src/linestream.cpp
+        ../src/utils.cpp
         )
 
 add_executable(test_lunchtoast ${SRC})

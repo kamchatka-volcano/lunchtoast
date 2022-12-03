@@ -1,6 +1,8 @@
 #include "launchprocess.h"
+#include "utils.h"
 #include <sfun/string_utils.h>
 #include <fmt/format.h>
+#include <range/v3/view.hpp>
 #include <boost/process.hpp>
 #include <utility>
 
@@ -36,23 +38,27 @@ TestActionResult LaunchProcess::process()
 
     auto result = 0;
     if (!shellCommand_.empty()) {
-        auto cmdParts = str::split(shellCommand_);
-        auto shellCmd = cmdParts[0];
-        cmdParts.erase(cmdParts.begin());
-        cmdParts.push_back(command_);
+        auto shellCmdParts = splitCommand(shellCommand_);
+        auto shellCmd = shellCmdParts[0];
+        shellCmdParts.erase(shellCmdParts.begin());
+        shellCmdParts.push_back(command_);
         auto shell = proc::search_path(std::string{shellCmd});
         if (silently_)
-            result = proc::system(shell, proc::args(cmdParts), env, proc::start_dir = workingDir_.string(),
+            result = proc::system(shell, proc::args(shellCmdParts), env, proc::start_dir = workingDir_.string(),
                                   proc::std_out > proc::null, proc::std_err > proc::null);
         else
-            result = proc::system(shell, proc::args(cmdParts), env, proc::start_dir = workingDir_.string(),
+            result = proc::system(shell, proc::args(shellCmdParts), env, proc::start_dir = workingDir_.string(),
                                   proc::std_err > stdout);
-    } else {
+    }
+    else {
+        auto cmdParts = splitCommand(command_);
+        auto cmd = cmdParts[0];
+        auto cmdArgs = cmdParts | ranges::views::drop(1) | ranges::to<std::vector>;
         if (silently_)
-            result = proc::system(proc::cmd(command_), env, proc::start_dir = workingDir_.string(),
+            result = proc::system(std::string{cmd}, proc::args(cmdArgs), env, proc::start_dir = workingDir_.string(),
                                   proc::std_out > proc::null, proc::std_err > proc::null);
         else
-            result = proc::system(proc::cmd(command_), env, proc::start_dir = workingDir_.string(),
+            result = proc::system(std::string{cmd}, proc::args(cmdArgs), env, proc::start_dir = workingDir_.string(),
                                   proc::std_err > stdout);
     }
 

@@ -11,12 +11,22 @@
 namespace lunchtoast{
 namespace fs = std::filesystem;
 
-TestLauncher::TestLauncher(const fs::path& testPath,
-                           const std::string& testFileExt,
-                           const TestReporter& reporter)
-        : reporter_(reporter)
+TestLauncher::TestLauncher(
+        const fs::path& testPath,
+        const std::string& testFileExt,
+        std::string shellCommand,
+        bool cleanup,
+        const TestReporter& reporter)
+    : reporter_{reporter}
+    , shellCommand_{std::move(shellCommand)}
+    , cleanup_{cleanup}
 {
     collectTests(testPath, testFileExt);
+}
+
+const TestReporter& TestLauncher::reporter()
+{
+    return reporter_;
 }
 
 bool TestLauncher::process()
@@ -25,7 +35,7 @@ bool TestLauncher::process()
     for (auto& suitePair: suites_)
         if (!processSuite(suitePair.first, suitePair.second))
             ok = false;
-    reporter_.reportSummary(defaultSuite_, suites_);
+    reporter().reportSummary(defaultSuite_, suites_);
     return ok;
 }
 
@@ -38,9 +48,9 @@ bool TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
     for (const auto& testCfg: tests){
         testNumber++;
         try{
-            auto test = Test{testCfg.path};
+            auto test = Test{testCfg.path, shellCommand_, cleanup_};
             if (!testCfg.isEnabled){
-                reporter_.reportDisabledTest(test, suiteName, testNumber, testsCount);
+                reporter().reportDisabledTest(test, suiteName, testNumber, testsCount);
                 continue;
             }
             auto result = test.process();
@@ -48,11 +58,11 @@ bool TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
                 suite.passedTestsCounter++;
             else
                 ok = false;
-            reporter_.reportResult(test, result, suiteName, testNumber, testsCount);
+            reporter().reportResult(test, result, suiteName, testNumber, testsCount);
 
         }
         catch (const TestConfigError& error){
-            reporter_.reportBrokenTest(testCfg.path, error.what(), suiteName, testNumber, testsCount);
+            reporter().reportBrokenTest(testCfg.path, error.what(), suiteName, testNumber, testsCount);
             ok = false;
         }
     }

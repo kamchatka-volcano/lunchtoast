@@ -1,6 +1,5 @@
 -Name: $dir$
 -Suite: errors
--Cleanup: true
 -Cleanup whitelist: test test/test.ref test/dir test/dir/tmp test/lunchtoast.test test.toast report.ref
 -Description: 
     GIVEN file test.ref and directory dir

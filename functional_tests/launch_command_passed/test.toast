@@ -1,5 +1,4 @@
 -Name: $dir$
--Cleanup: true
 -Cleanup whitelist: test test/test.ref test/lunchtoast.test test.toast report.ref
 -Description: 
     GIVEN file test.ref

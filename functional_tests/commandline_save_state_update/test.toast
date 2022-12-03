@@ -1,6 +1,5 @@
 -Name: $dir$
 -Suite: command line
--Cleanup: true
 -Cleanup whitelist: test test/file_to_preserve.txt test/lhs.txt test/lunchtoast.test test/rhs.txt lunchtoast_test.ref lunchtoast.test test.toast report.ref
 -Description: 
     GIVEN 2 equal files (lhs.txt and rhs.txt) and empty file file_to_preserve.txt, 

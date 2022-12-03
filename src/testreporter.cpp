@@ -14,9 +14,8 @@ namespace lunchtoast{
 namespace str = sfun::string_utils;
 namespace fs = std::filesystem;
 
-TestReporter::TestReporter(const fs::path& reportFilePath,
-                           int reportWidth)
-        : reportWidth_(reportWidth)
+TestReporter::TestReporter(const fs::path& reportFilePath, int reportWidth)
+    : reportWidth_(reportWidth)
 {
     initReporter(reportFilePath);
 }

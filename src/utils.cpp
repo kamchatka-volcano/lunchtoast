@@ -66,4 +66,42 @@ std::string toLower(std::string_view str)
     return str | ranges::views::transform([](char ch){return str::tolower(ch);}) | ranges::to<std::string>;
 }
 
+std::vector<std::string_view> splitCommand(std::string_view str)
+{
+    if (str.empty())
+        return std::vector<std::string_view>{str};
+
+    auto result = std::vector<std::string_view>{};
+    auto pos = std::size_t{0};
+    auto partPos = std::string_view::npos;
+    auto addCommandPart = [&](){
+        result.emplace_back(std::string_view{std::next(str.data(), partPos), pos - partPos});
+        partPos = std::string_view::npos;
+    };
+
+    auto insideString = false;
+    for (; pos < str.size(); ++pos){
+        if (!insideString && str::isspace(str.at(pos))){
+            if (partPos != std::string_view::npos)
+                addCommandPart();
+            continue;
+        }
+        if (str.at(pos) == '"'){
+            if (insideString)
+                addCommandPart();
+            insideString = !insideString;
+            continue;
+        }
+        if (!str::isspace(str.at(pos)) && partPos == std::string_view::npos)
+            partPos = pos;
+    }
+    if (insideString)
+        return {};
+
+    if (partPos != std::string_view::npos)
+        addCommandPart();
+
+    return result;
+}
+
 }

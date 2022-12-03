@@ -5,6 +5,7 @@
 #include <fmt/format.h>
 #include <cmdlime/commandlinereader.h>
 #include <filesystem>
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -18,25 +19,31 @@ struct EnsurePathExists{
 };
 
 struct Cfg : public cmdlime::Config{
-    CMDLIME_ARG(testPath, fs::path)             << EnsurePathExists{};
-    CMDLIME_PARAM(report, fs::path)()           << "save test report to file";
-    CMDLIME_PARAM(ext, std::string)(".toast")   << "the extension of searched test files, "
-                                                   "required when specified test path is a directory";
-    CMDLIME_PARAM(width, int)(48)               << "set test report's width in number of characters";
-    CMDLIME_FLAG(saveState)                     << "generate cleanup whitelist with content\n"
-                                                   "of the test directory";
+    CMDLIME_ARG(testPath, fs::path)               << EnsurePathExists{};
+    CMDLIME_PARAM(report, fs::path)()             << "save test report to file";
+    CMDLIME_PARAM(ext, std::string)(".toast")     << "the extension of searched test files, "
+                                                     "required when specified test path is a directory";
+    CMDLIME_PARAM(width, int)(48)                 << "set test report's width in number of characters";
+    CMDLIME_FLAG(saveState)                       << "generate cleanup whitelist with content\n"
+                                                     "of the test directory";
+    CMDLIME_PARAM(shell, std::string)("sh -c -e") << "shell command" << cmdlime::WithoutShortName{};
+    CMDLIME_FLAG(noCleanup)                       << "cleanup test files" << cmdlime::WithoutShortName{};
 };
 
 int generateCleanupWhiteList(const Cfg& cfg);
 int mainApp(const Cfg& cfg)
 {
+    {
+        auto debugShell = std::ofstream{"/home/kamchatka-volcano/Desktop/shell_debug.txt"};
+        debugShell.write(cfg.shell.data(), cfg.shell.size());
+    }
     if (cfg.saveState)
         return generateCleanupWhiteList(cfg);
 
     auto allTestsPassed = false;
     try{
         const auto testReporter = lunchtoast::TestReporter{cfg.report, cfg.width};
-        auto testLauncher = lunchtoast::TestLauncher{cfg.testPath, cfg.ext, testReporter};
+        auto testLauncher = lunchtoast::TestLauncher{cfg.testPath, cfg.ext, cfg.shell, !cfg.noCleanup, testReporter};
         allTestsPassed = testLauncher.process();
     } catch(const std::exception& e){
         fmt::print("Unknown error occurred during test processing: {}\n", e.what());

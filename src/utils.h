@@ -1,10 +1,12 @@
 #pragma once
+#include <sfun/string_utils.h>
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <vector>
 
-
 namespace lunchtoast{
+namespace str = sfun::string_utils;
 
 std::string readFile(const std::filesystem::path& filePath);
 void processVariablesSubstitution(std::string& value,
@@ -17,4 +19,7 @@ std::string homePathString(const std::filesystem::path& path);
 
 std::string withoutLastNewLine(std::string value);
 std::string toLower(std::string_view str);
+
+std::vector<std::string_view> splitCommand(std::string_view str);
+
 }

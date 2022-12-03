@@ -1,5 +1,4 @@
 -Name: $dir$
--Cleanup: true
 -Cleanup whitelist: test test/rhs2.ref test/rhs.ref test/lhs.res test/lunchtoast.test test/lhs2.res test.toast report.ref
 -Description: 
     GIVEN 2 equal files (lhs.res and rhs.ref) and 2 equal files (lhs2.res and rhs2.ref)

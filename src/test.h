@@ -14,7 +14,7 @@ namespace lunchtoast{
 
 class Test{
 public:
-    explicit Test(const std::filesystem::path& configPath);
+    explicit Test(const std::filesystem::path& configPath, std::string shellCommand, bool cleanup);
     TestResult process();
 
     const std::string& suite() const;
@@ -47,7 +47,7 @@ private:
     std::string suite_;
     std::string shellCommand_;
     bool isEnabled_;
-    bool requiresCleanup_;
+    bool cleanup_;
     std::vector<FilenameGroup> cleanupWhitelist_;
 };
 
