@@ -11,7 +11,6 @@
 
 
 namespace lunchtoast{
-namespace str = sfun::string_utils;
 namespace fs = std::filesystem;
 
 TestReporter::TestReporter(const fs::path& reportFilePath, int reportWidth)
@@ -79,7 +78,7 @@ void TestReporter::reportResult(const Test& test, const TestResult& result,
     print("Name: {}", test.name());
     if (result.type() != TestResultType::Success){
         if (!test.description().empty()){
-            auto descriptionHasMultipleLines = !str::after(test.description(), "\n").empty();
+            auto descriptionHasMultipleLines = !sfun::after(test.description(), "\n").empty();
             if (descriptionHasMultipleLines)
                 print("Description:\n{}", test.description());
             else
@@ -87,9 +86,9 @@ void TestReporter::reportResult(const Test& test, const TestResult& result,
         }
         if (!result.failedActionsMessages().empty()){
             if (result.failedActionsMessages().size() > 1)
-                print("Failure:\n{}", str::join(result.failedActionsMessages(), "\n"));
+                print("Failure:\n{}", sfun::join(result.failedActionsMessages(), "\n"));
             else
-                print("Failure: {}", str::join(result.failedActionsMessages(), "\n"));
+                print("Failure: {}", sfun::join(result.failedActionsMessages(), "\n"));
         }
     }
     if (result.type() == TestResultType::RuntimeError)
@@ -122,7 +121,7 @@ void TestReporter::reportDisabledTest(const Test& test,
     print("Name: {}", test.name());
 
     if (!test.description().empty()){
-        auto descriptionHasMultipleLines = !str::after(test.description(), "\n").empty();
+        auto descriptionHasMultipleLines = !sfun::after(test.description(), "\n").empty();
         if (descriptionHasMultipleLines)
             print("Description:\n{}", test.description());
         else

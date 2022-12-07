@@ -7,7 +7,7 @@ include(external/seal_lake)
 
 SealLake_Import(sfun 2.4.0
         GIT_REPOSITORY https://github.com/kamchatka-volcano/sfun
-        GIT_TAG v2.4.0
+        GIT_TAG v3
 )
 SealLake_Import(cmdlime 2.1.0
         GIT_REPOSITORY https://github.com/kamchatka-volcano/cmdlime

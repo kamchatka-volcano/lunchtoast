@@ -1,5 +1,5 @@
 #pragma once
-#include "testaction.h"
+#include "itestaction.h"
 #include "filenamereader.h"
 #include <filesystem>
 #include <vector>
@@ -7,7 +7,7 @@
 
 namespace lunchtoast {
 
-class CompareFiles : public TestAction {
+class CompareFiles : public ITestAction {
 public:
     CompareFiles(FilenameGroup lhs, FilenameGroup rhs, TestActionType actionType);
     TestActionResult process() override;

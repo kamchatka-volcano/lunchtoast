@@ -1,11 +1,11 @@
 #pragma once
-#include "testaction.h"
+#include "itestaction.h"
 #include <filesystem>
 
 
 namespace lunchtoast {
 
-class CompareFileContent : public TestAction {
+class CompareFileContent : public ITestAction {
 public:
     CompareFileContent(std::filesystem::path filePath,
                        std::string expectedFileContent,

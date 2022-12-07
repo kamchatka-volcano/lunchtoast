@@ -14,7 +14,6 @@
 
 
 namespace lunchtoast{
-namespace str = sfun::string_utils;
 namespace fs = std::filesystem;
 
 Test::Test(const fs::path& configPath, std::string shellCommand, bool cleanup)
@@ -76,20 +75,20 @@ bool Test::readParamFromSection(const Section& section)
 
 bool Test::readActionFromSection(const Section& section)
 {
-    if (str::startsWith(section.name, "Launch")){
+    if (sfun::startsWith(section.name, "Launch")){
         createLaunchAction(section);
         return true;
     }
-    if (str::startsWith(section.name, "Write")){
+    if (sfun::startsWith(section.name, "Write")){
         createWriteAction(section);
         return true;
     }
-    if (str::startsWith(section.name, "Assert")){
-        auto actionType = str::trim(str::after(section.name, "Assert"));
+    if (sfun::startsWith(section.name, "Assert")){
+        auto actionType = sfun::trim(sfun::after(section.name, "Assert"));
         return createComparisonAction(TestActionType::Assertion, std::string{actionType}, section);
     }
-    if (str::startsWith(section.name, "Expect")){
-        auto actionType = str::trim(str::after(section.name, "Expect"));
+    if (sfun::startsWith(section.name, "Expect")){
+        auto actionType = sfun::trim(sfun::after(section.name, "Expect"));
         return createComparisonAction(TestActionType::Expectation, std::string{actionType}, section);
     }
     return false;
@@ -146,7 +145,7 @@ bool Test::createComparisonAction(TestActionType type, const std::string& encode
         createCompareFilesAction(type, section.value);
         return true;
     }
-    if (str::startsWith(encodedActionType, "content of ")){
+    if (sfun::startsWith(encodedActionType, "content of ")){
         createCompareFileContentAction(type, encodedActionType, section.value);
         return true;
     }
@@ -155,7 +154,7 @@ bool Test::createComparisonAction(TestActionType type, const std::string& encode
 
 void Test::createLaunchAction(const Section& section)
 {
-    const auto parts = str::split(section.name);
+    const auto parts = sfun::split(section.name);
     auto uncheckedResult = std::find(parts.begin(), parts.end(), "unchecked") != parts.end();
     auto isShellCommand = std::find(parts.begin(), parts.end(), "command") != parts.end();
     auto silently = std::find(parts.begin(), parts.end(), "silently") != parts.end();
@@ -167,7 +166,7 @@ void Test::createLaunchAction(const Section& section)
 
 void Test::createWriteAction(const Section& section)
 {
-    const auto fileName = str::trim(str::after(section.name, "Write"));
+    const auto fileName = sfun::trim(sfun::after(section.name, "Write"));
     const auto path = fs::absolute(directory_) / fileName;
     actions_.push_back(std::make_unique<WriteFile>(path.string(), section.value));
 }
@@ -184,7 +183,7 @@ void Test::createCompareFilesAction(TestActionType type, const std::string& file
 void Test::createCompareFileContentAction(TestActionType type, const std::string& filenameStr,
                                           const std::string& expectedFileContent)
 {
-    const auto filename = std::string{str::trim(str::replace(filenameStr, "content of ", ""))};
+    const auto filename = std::string{sfun::trim(sfun::replace(filenameStr, "content of ", ""))};
     actions_.push_back(
             std::make_unique<CompareFileContent>(fs::absolute(directory_) / filename, expectedFileContent, type));
 }
@@ -234,7 +233,7 @@ bool Test::readParam(fs::path& param, const std::string& paramName, const Sectio
 {
     if (section.name != paramName)
         return false;
-    param = fs::absolute(directory_) / str::trim(section.value);
+    param = fs::absolute(directory_) / sfun::trim(section.value);
     return true;
 }
 
@@ -250,7 +249,7 @@ bool Test::readParam(bool& param, const std::string& paramName, const Section& s
 {
     if (section.name != paramName)
         return false;
-    auto paramStr = toLower(str::trim(section.value));
+    auto paramStr = toLower(sfun::trim(section.value));
     param = (paramStr == "true");
     return true;
 }

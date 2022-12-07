@@ -1,12 +1,12 @@
 #pragma once
-#include "testaction.h"
+#include "itestaction.h"
 #include <filesystem>
 #include <string>
 
 
 namespace lunchtoast{
 
-class WriteFile : public TestAction{
+class WriteFile : public ITestAction{
 public:
     WriteFile(std::filesystem::path fileName, std::string content);
     TestActionResult process() override;

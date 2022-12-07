@@ -9,7 +9,6 @@
 namespace lunchtoast{
 
 namespace proc = boost::process;
-namespace str = sfun::string_utils;
 namespace fs = std::filesystem;
 
 LaunchProcess::LaunchProcess(

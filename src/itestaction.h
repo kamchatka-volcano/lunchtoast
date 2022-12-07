@@ -1,6 +1,6 @@
 #pragma once
 #include "testactionresult.h"
-
+#include <sfun/interface.h>
 
 namespace lunchtoast{
 
@@ -10,9 +10,8 @@ enum class TestActionType{
     Assertion
 };
 
-class TestAction{
+class ITestAction : private sfun::Interface<ITestAction>{
 public:
-    virtual ~TestAction() = default;
     virtual TestActionResult process() = 0;
     virtual TestActionType type() const = 0;
 };

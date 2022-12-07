@@ -1,7 +1,7 @@
 #pragma once
 #include "section.h"
 #include "testresult.h"
-#include "testaction.h"
+#include "itestaction.h"
 #include "filenamereader.h"
 #include <filesystem>
 #include <vector>
@@ -40,7 +40,7 @@ private:
     void checkParams();
 
 private:
-    std::vector<std::unique_ptr<TestAction>> actions_;
+    std::vector<std::unique_ptr<ITestAction>> actions_;
     std::string name_;
     std::string description_;
     std::filesystem::path directory_;

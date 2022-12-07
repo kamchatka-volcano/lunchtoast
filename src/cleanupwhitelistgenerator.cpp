@@ -12,7 +12,6 @@
 
 
 namespace lunchtoast {
-namespace str = sfun::string_utils;
 namespace fs = std::filesystem;
 
 namespace {
@@ -68,7 +67,7 @@ fs::path getTestDirectory(const fs::path& cfgPath, const std::vector<Section>& s
     const auto dirSectionIt = ranges::find_if(sections,
                                               [](const Section& section){ return section.name == "Directory"; });
     if (dirSectionIt != sections.end())
-        cfgDir = str::trim(dirSectionIt->value);
+        cfgDir = sfun::trim(dirSectionIt->value);
     if (!cfgDir.empty())
         testDir = fs::canonical(testDir) / cfgDir;
     return testDir;
@@ -80,7 +79,7 @@ std::string getDirectoryContentString(const fs::path& dir)
     auto pathRelativeToDir = [&dir](const fs::path& path) { return fs::relative(path, dir).string(); };
     const auto testDirPathsStr = testDirPaths | ranges::views::transform(pathRelativeToDir)
             | ranges::to<std::vector> | ranges::actions::sort;
-    return str::join(testDirPathsStr, " ");
+    return sfun::join(testDirPathsStr, " ");
 }
 
 void writeSections(const std::vector<Section>& sections, const fs::path& outFilePath)
@@ -98,15 +97,15 @@ void copyComments(const std::string& input, std::string& output)
     auto line = std::string{};
     auto sectionEncountered = false;
     while (std::getline(stream, line)){
-        if (str::trim(line).empty())
+        if (sfun::trim(line).empty())
             output += "\n";
-        else if (str::startsWith(line, "#")){
+        else if (sfun::startsWith(line, "#")){
             if (!sectionEncountered)
                 output.insert(0, line + "\n");
             else
                 output += line + "\n";
         }
-        else if (str::startsWith(line, "-"))
+        else if (sfun::startsWith(line, "-"))
             sectionEncountered = true;
     }
 }

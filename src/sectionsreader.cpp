@@ -9,8 +9,6 @@
 
 namespace lunchtoast{
 
-namespace str = sfun::string_utils;
-
 namespace {
 
 void readMultilineSectionValue(Section& section, LineStream& stream, const std::string& separator)
@@ -20,8 +18,8 @@ void readMultilineSectionValue(Section& section, LineStream& stream, const std::
         auto lineNumber = stream.lineNumber();
         auto line = stream.readLine();
         section.originalText += line;
-        if (str::trim(line) == separator) {
-            if (!str::startsWith(line, separator))
+        if (sfun::trim(line) == separator) {
+            if (!sfun::startsWith(line, separator))
                 throw TestConfigError{lineNumber, "A multiline section separator must be placed at the start of a line"};
             if (!section.value.empty())
                 section.value.pop_back();
@@ -38,18 +36,18 @@ Section readSection(LineStream& stream, const std::string& multilineSectionSepar
     auto result = Section{};
     auto lineNumber = stream.lineNumber();
     auto line = stream.readLine();
-    Expects(str::startsWith(line, "-"));
+    Expects(sfun::startsWith(line, "-"));
     if (line.find(':') == std::string::npos)
         throw TestConfigError{lineNumber, "A section must contain ':' after its name"};
 
     result.originalText = line;
-    result.name = str::before(str::after(line, "-"), ":");
-    if (str::trim(result.name).empty())
+    result.name = sfun::before(sfun::after(line, "-"), ":");
+    if (sfun::trim(result.name).empty())
         throw TestConfigError{lineNumber, "A section name can't be empty"};
-    if (str::trim(result.name) != result.name)
+    if (sfun::trim(result.name) != result.name)
         throw TestConfigError{lineNumber, "A section name can't start or end with whitespace characters"};
 
-    result.value = str::trim(str::after(line, ":"));
+    result.value = sfun::trim(sfun::after(line, ":"));
     if (result.value.empty())
         readMultilineSectionValue(result, stream, multilineSectionSeparator);
     return result;
@@ -80,7 +78,7 @@ std::vector<Section> readSections(std::istream& input, SectionReadingError& read
     auto stream = LineStream{input};
     while(!stream.atEnd()){
         auto line = stream.peekLine();
-        if (str::startsWith(line, "-")) {
+        if (sfun::startsWith(line, "-")) {
             try{
                 auto section = readSection(stream, getMultilineSectionSeparator(result));
                 if (result.empty())
@@ -95,7 +93,7 @@ std::vector<Section> readSections(std::istream& input, SectionReadingError& read
                 return result;
             }
         }
-        else if (str::startsWith(line, "#") || str::trim(line).empty()){
+        else if (sfun::startsWith(line, "#") || sfun::trim(line).empty()){
             sectionOuterWhitespace += line;
             stream.skipLine();
         }

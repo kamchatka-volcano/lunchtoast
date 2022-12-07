@@ -7,7 +7,6 @@
 #include <utility>
 
 namespace lunchtoast {
-namespace str = sfun::string_utils;
 namespace fs = std::filesystem;
 
 CompareFiles::CompareFiles(FilenameGroup lhs,
@@ -27,7 +26,7 @@ std::string filenameListStr(const std::vector<fs::path>& pathList)
 {
     auto pathToString = [](const fs::path& path) { return path.filename().string(); };
     const auto filenameList = pathList | ranges::views::transform(pathToString) | ranges::to<std::vector>;
-    return str::join(filenameList, ",");
+    return sfun::join(filenameList, ",");
 }
 }
 
@@ -55,7 +54,7 @@ TestActionResult CompareFiles::process()
     if (result)
         return TestActionResult::Success();
     else
-        return TestActionResult::Failure(str::join(errorInfo, "\n"));
+        return TestActionResult::Failure(sfun::join(errorInfo, "\n"));
 }
 
 bool CompareFiles::compareFiles(const fs::path& lhs, const fs::path& rhs, std::string& failedComparisonInfo) const

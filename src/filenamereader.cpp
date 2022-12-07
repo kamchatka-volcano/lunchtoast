@@ -8,7 +8,6 @@
 #include <utility>
 
 namespace lunchtoast {
-namespace str = sfun::string_utils;
 namespace fs = std::filesystem;
 
 namespace {
@@ -20,7 +19,7 @@ std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::reg
 FilenameGroup::FilenameGroup(std::string filenameOrRegexp, fs::path directory)
         : filenameOrRegexp_(std::move(filenameOrRegexp)), directory_(std::move(directory)), isRegexp_(false)
 {
-    if (str::startsWith(filenameOrRegexp_, "{") && str::endsWith(filenameOrRegexp_, "}")) {
+    if (sfun::startsWith(filenameOrRegexp_, "{") && sfun::endsWith(filenameOrRegexp_, "}")) {
         fileMatchingRegexp_ = std::regex{filenameOrRegexp_.substr(1, filenameOrRegexp_.size() - 2)};
         isRegexp_ = true;
     }

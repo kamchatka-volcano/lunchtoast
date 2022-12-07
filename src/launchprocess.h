@@ -1,11 +1,11 @@
 #pragma once
-#include "testaction.h"
+#include "itestaction.h"
 #include <filesystem>
 #include <string>
 
 namespace lunchtoast {
 
-class LaunchProcess : public TestAction {
+class LaunchProcess : public ITestAction {
 public:
     LaunchProcess(std::string command,
                   std::filesystem::path workingDir,

@@ -6,7 +6,6 @@
 
 
 namespace lunchtoast{
-namespace str = sfun::string_utils;
 namespace fs = std::filesystem;
 
 std::string readFile(const fs::path& filePath)
@@ -23,8 +22,8 @@ void processVariablesSubstitution(std::string& value,
                                   const std::string& varFileName,
                                   const std::string& varDirName)
 {
-    value = str::replace(value, "$filename$", varFileName);
-    value = str::replace(value, "$dir$", varDirName);
+    value = sfun::replace(value, "$filename$", varFileName);
+    value = sfun::replace(value, "$dir$", varDirName);
 }
 
 std::vector<fs::path> getDirectoryContent(const fs::path& dir)
@@ -63,7 +62,7 @@ std::string homePathString(const fs::path& path)
 
 std::string toLower(std::string_view str)
 {
-    return str | ranges::views::transform([](char ch){return str::tolower(ch);}) | ranges::to<std::string>;
+    return str | ranges::views::transform([](char ch){return sfun::tolower(ch);}) | ranges::to<std::string>;
 }
 
 std::vector<std::string_view> splitCommand(std::string_view str)
@@ -81,7 +80,7 @@ std::vector<std::string_view> splitCommand(std::string_view str)
 
     auto insideString = false;
     for (; pos < str.size(); ++pos){
-        if (!insideString && str::isspace(str.at(pos))){
+        if (!insideString && sfun::isspace(str.at(pos))){
             if (partPos != std::string_view::npos)
                 addCommandPart();
             continue;
@@ -92,7 +91,7 @@ std::vector<std::string_view> splitCommand(std::string_view str)
             insideString = !insideString;
             continue;
         }
-        if (!str::isspace(str.at(pos)) && partPos == std::string_view::npos)
+        if (!sfun::isspace(str.at(pos)) && partPos == std::string_view::npos)
             partPos = pos;
     }
     if (insideString)
