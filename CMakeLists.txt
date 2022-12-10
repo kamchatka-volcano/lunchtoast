@@ -39,7 +39,7 @@ SealLake_Bundle(
 #)
 
 set(SRC
-    src/cleanupwhitelistgenerator.cpp
+        src/testcontentsgenerator.cpp
     src/comparefilecontent.cpp
     src/comparefiles.cpp
     src/filenamereader.cpp

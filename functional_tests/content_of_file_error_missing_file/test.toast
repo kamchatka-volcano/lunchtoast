@@ -1,6 +1,6 @@
 -Name: $dir$
 -Suite: errors
--Cleanup whitelist: test test/lunchtoast.test test.toast report.ref
+-Contents: test test/lunchtoast.test test.toast report.ref
 -Description:
 GIVEN tested file is missing (file.txt)
 WHEN test assertion of unexistent file content with matching string

@@ -1,6 +1,6 @@
 -Name: $dir$
 -Suite: errors
--Cleanup whitelist: test test/lhs.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
+-Contents: test test/lhs.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
 -Description: 
     GIVEN 2 equal files (lhs.txt and rhs.txt)
     WHEN launch lunchtoast without command line parameters

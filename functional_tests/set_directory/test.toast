@@ -1,5 +1,5 @@
 -Name: $dir$
--Cleanup whitelist: test test/testdata test/testdata/test.txt test/testdata/lhs.txt test/testdata/rhs.txt test/lunchtoast.test test.toast report.ref
+-Contents: test test/testdata test/testdata/test.txt test/testdata/lhs.txt test/testdata/rhs.txt test/lunchtoast.test test.toast report.ref
 -Description:
     GIVEN 2 equal files (lhs.txt and rhs.txt) inside directory testdata
     WHEN set test directory to testdata, test single assertion of files equality,

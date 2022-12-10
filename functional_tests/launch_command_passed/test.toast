@@ -1,5 +1,5 @@
 -Name: $dir$
--Cleanup whitelist: test test/test.ref test/lunchtoast.test test.toast report.ref
+-Contents: test test/test.ref test/lunchtoast.test test.toast report.ref
 -Description: 
     GIVEN file test.ref
     WHEN launching shell command that outputs content of test.ref to file test.res and assert that files are equal

@@ -1,6 +1,6 @@
 -Name: $dir$
 -Suite: setting params
--Cleanup whitelist: test test/lhs.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
+-Contents: test test/lhs.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
 -Description: 
     GIVEN 2 equal files (lhs.txt and rhs.txt), set test name using built-in variables $filename$ and $dir$
     WHEN test single assertion of files equality

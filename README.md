@@ -32,7 +32,7 @@ Command line options:
  * **--ext** **`<file extension>`** the extension of searched test files, required when specified test path is a directory, default value: **.toast**
  * **--report** **`<file path>`**  save test report to file
  * **--width** **`<number>`**   set test report's width in a number of characters
- * **--save-state** generate cleanup whitelist with content of the test directory
+ * **--save-contents** generate a section with contents of the test directory
  * **--help** show usage info
 
 
@@ -89,11 +89,11 @@ Test case configuration syntax in 3 minutes:
 # The default value is false; To enable, set it to "true", any other value is treated as false.
 -Cleanup: true
 
-#Cleanup whitelist, if present and not empty, modifies behaviour of the cleanup parameter. All files present in the test directory, 
-# but not specified in whitelist are deleted before the test is started and after it finished successfuly.
+#Test contents, if present and not empty, modifies behaviour of the cleanup parameter. All files present in the test directory, 
+# but not specified in contents are deleted before the test is started and after it finished successfuly.
 # The parameter's value should be a list of files, directories and file-matching regular expression (surround with braces).
-# The test case file is put on whitelist by default and can be omitted.
--Cleanup whitelist: {.*\.ref} readme_proc.sh
+# The contents contain the by default so it can be omitted.
+-Contents: {.*\.ref} readme_proc.sh
 
 #Shell, sets the shell command that is used for launching commands (will be described lately)
 #The default value is "sh -c -e"

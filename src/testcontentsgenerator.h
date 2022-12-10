@@ -6,10 +6,10 @@
 
 namespace lunchtoast {
 
-class CleanupWhitelistGenerator {
+class TestContentsGenerator{
 public:
-    CleanupWhitelistGenerator(const std::filesystem::path& testPath,
-                              const std::string& testFileExt);
+    TestContentsGenerator(const std::filesystem::path& testPath,
+                          const std::string& testFileExt);
     bool process();
 
 private:

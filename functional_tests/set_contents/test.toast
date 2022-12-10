@@ -1,5 +1,5 @@
 -Name: $dir$
--Cleanup whitelist: test test/data2 test/data2/inner test/data2/inner/preserved.txt test/data2/lhs.txt test/data2/rhs.txt test/lunchtoast.test test/data test/data/lhs.txt test/rhs.txt test.toast report.ref
+-Contents: test test/data2 test/data2/inner test/data2/inner/preserved.txt test/data2/lhs.txt test/data2/rhs.txt test/lunchtoast.test test/data test/data/lhs.txt test/rhs.txt test.toast report.ref
 -Description: 
     GIVEN 2 equal files (lhs.txt (inside folder data) and rhs.txt), and 2 equal files inside folder data2, and text file data2/inner/preserved.txt
     WHEN enable cleanup of files created during testing, test single assertion of files equality, write file test.txt, make directory tmp and write file tmp/test.txt

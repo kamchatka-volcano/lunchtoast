@@ -1,5 +1,5 @@
 -Name: $dir$
--Cleanup whitelist: test test/process.sh test/lunchtoast.test test.toast report.ref
+-Contents: test test/process.sh test/lunchtoast.test test.toast report.ref
 -Description: 
     GIVEN file test.ref
     WHEN launching script process.sh that outputs content of unexistent file test.res

@@ -1,7 +1,7 @@
 #include "test.h"
 #include "testlauncher.h"
 #include "testreporter.h"
-#include "cleanupwhitelistgenerator.h"
+#include "testcontentsgenerator.h"
 #include <fmt/format.h>
 #include <cmdlime/commandlinereader.h>
 #include <filesystem>
@@ -24,21 +24,20 @@ struct Cfg : public cmdlime::Config{
     CMDLIME_PARAM(ext, std::string)(".toast")     << "the extension of searched test files, "
                                                      "required when specified test path is a directory";
     CMDLIME_PARAM(width, int)(48)                 << "set test report's width in number of characters";
-    CMDLIME_FLAG(saveState)                       << "generate cleanup whitelist with content\n"
-                                                     "of the test directory";
+    CMDLIME_FLAG(saveContents)                    << "save the current contents of of the test directory";
     CMDLIME_PARAM(shell, std::string)("sh -c -e") << "shell command" << cmdlime::WithoutShortName{};
     CMDLIME_FLAG(noCleanup)                       << "cleanup test files" << cmdlime::WithoutShortName{};
 };
 
-int generateCleanupWhiteList(const Cfg& cfg);
+int generateTestContens(const Cfg& cfg);
 int mainApp(const Cfg& cfg)
 {
     {
         auto debugShell = std::ofstream{"/home/kamchatka-volcano/Desktop/shell_debug.txt"};
         debugShell.write(cfg.shell.data(), cfg.shell.size());
     }
-    if (cfg.saveState)
-        return generateCleanupWhiteList(cfg);
+    if (cfg.saveContents)
+        return generateTestContens(cfg);
 
     auto allTestsPassed = false;
     try{
@@ -63,11 +62,11 @@ int main(int argc, char **argv)
     return cmdlineReader.exec<Cfg>(argc, argv, mainApp);
 }
 
-int generateCleanupWhiteList(const Cfg& cfg)
+int generateTestContens(const Cfg& cfg)
 {
     try{
-        auto whiteListGenerator = lunchtoast::CleanupWhitelistGenerator{cfg.testPath, cfg.ext};
-        if (whiteListGenerator.process())
+        auto testContentsGenerator = lunchtoast::TestContentsGenerator{cfg.testPath, cfg.ext};
+        if (testContentsGenerator.process())
             return 0;
         else
             return -1;

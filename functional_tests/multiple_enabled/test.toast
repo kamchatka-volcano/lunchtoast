@@ -1,6 +1,6 @@
 -Name: $dir$
 -Suite: setting params
--Cleanup whitelist: test test/lunchtoast3.test test/lunchtoast2.test test/lhs.txt test/rhs2.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
+-Contents: test test/lunchtoast3.test test/lunchtoast2.test test/lhs.txt test/rhs2.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
 -Description: 
     GIVEN 2 equal files lhs.txt and rhs.txt and different file rhs2.txt 
     WHEN 2 tests in the suite "valid assertions" check equality of lhs.txt and rhs.txt, one of them is disabled

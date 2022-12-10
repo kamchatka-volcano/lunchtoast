@@ -7,6 +7,9 @@
 #include "utils.h"
 #include "errors.h"
 #include <sfun/string_utils.h>
+#include <range/v3/view.hpp>
+#include <range/v3/iterator.hpp>
+#include <range/v3/algorithm.hpp>
 #include <fmt/format.h>
 #include <sstream>
 #include <iomanip>
@@ -69,7 +72,7 @@ bool Test::readParamFromSection(const Section& section)
     if (readParam(description_, "Description", section)) return true;
     if (readParam(directory_, "Directory", section)) return true;
     if (readParam(isEnabled_, "Enabled", section)) return true;
-    if (readParam(cleanupWhitelist_, "Cleanup whitelist", section)) return true;
+    if (readParam(contents_, "Contents", section)) return true;
     return false;
 }
 
@@ -190,19 +193,18 @@ void Test::createCompareFileContentAction(TestActionType type, const std::string
 
 void Test::cleanTestFiles()
 {
-    if (cleanupWhitelist_.empty())
+    if (contents_.empty())
         return;
-    auto whiteListPaths = std::set<fs::path>{};
-    for (const auto& filenameGroup: cleanupWhitelist_){
-        const auto paths = filenameGroup.pathList();
-        std::copy(paths.begin(), paths.end(), std::inserter(whiteListPaths, whiteListPaths.end()));
-    }
+    auto filenameGroupToPaths = [](const auto& fileNameGroup){ return fileNameGroup.pathList();};
+    const auto contentsPaths = contents_ |
+                               ranges::views::transform(filenameGroupToPaths) |
+                               ranges::views::join | ranges::to<std::set<fs::path>>();
 
     auto paths = getDirectoryContent(directory_);
-    std::sort(paths.begin(), paths.end(), std::greater<>{});
+    ranges::sort(paths, std::greater<>{});
 
-    for (const auto& path: paths)
-        if (!whiteListPaths.count(path))
+    for (const auto& path : paths)
+        if (!contentsPaths.count(path))
             fs::remove(path);
 }
 
@@ -256,15 +258,15 @@ bool Test::readParam(bool& param, const std::string& paramName, const Section& s
 
 void Test::postProcessCleanupConfig(const fs::path& configPath)
 {
-    if (cleanupWhitelist_.empty()){
+    if (contents_.empty()){
         auto pathList = getDirectoryContent(directory_);
-        std::transform(pathList.begin(), pathList.end(), std::back_inserter(cleanupWhitelist_),
+        ranges::transform(pathList, ranges::back_inserter(contents_),
                        [this](const fs::path& path){
                            return FilenameGroup{fs::relative(path, directory_).string(), directory_};
                        });
         return;
     }
-    cleanupWhitelist_.emplace_back(fs::relative(configPath, directory_).string(), directory_);
+    contents_.emplace_back(fs::relative(configPath, directory_).string(), directory_);
 }
 
 }

@@ -1,4 +1,4 @@
-#include "cleanupwhitelistgenerator.h"
+#include "testcontentsgenerator.h"
 #include "sectionsreader.h"
 #include "utils.h"
 #include "test.h"
@@ -18,13 +18,13 @@ namespace {
 void processTestConfig(const fs::path& cfgPath);
 }
 
-CleanupWhitelistGenerator::CleanupWhitelistGenerator(const fs::path& testPath,
-                                                     const std::string& testFileExt)
+TestContentsGenerator::TestContentsGenerator(const fs::path& testPath,
+                                             const std::string& testFileExt)
 {
     collectTestConfigs(testPath, testFileExt);
 }
 
-void CleanupWhitelistGenerator::collectTestConfigs(const fs::path& testPath, const std::string& testFileExt)
+void TestContentsGenerator::collectTestConfigs(const fs::path& testPath, const std::string& testFileExt)
 {
     if (fs::is_directory(testPath)) {
         if (testFileExt.empty())
@@ -40,10 +40,10 @@ void CleanupWhitelistGenerator::collectTestConfigs(const fs::path& testPath, con
         testConfigs_.push_back(fs::canonical(testPath));
 }
 
-bool CleanupWhitelistGenerator::process()
+bool TestContentsGenerator::process()
 {
     if (testConfigs_.empty()) {
-        fmt::print("No tests were found for generation of cleanup whitelist. Exiting.");
+        fmt::print("No tests were found for generation of test contents. Exiting.");
         return false;
     }
 
@@ -51,10 +51,10 @@ bool CleanupWhitelistGenerator::process()
         try {
             processTestConfig(cfgPath);
         } catch (const TestConfigError& error) {
-            fmt::print("Can't generate cleanup whitelist in config {}. Error: {}\n", homePathString(cfgPath),
+            fmt::print("Can't generate test contents in config {}. Error: {}\n", homePathString(cfgPath),
                        error.what());
         }
-        fmt::print("Generating cleanup whitelist in test config {}\n", homePathString(cfgPath));
+        fmt::print("Generating test contents in test config {}\n", homePathString(cfgPath));
     }
     return true;
 }
@@ -119,10 +119,10 @@ void processTestConfig(const fs::path& cfgPath)
     auto sections = readSections(stream);
     auto testDir = getTestDirectory(cfgPath, sections);
     const auto testDirContent = getDirectoryContentString(testDir);
-    auto newWhiteListSection = Section{"Cleanup whitelist", testDirContent, "-Cleanup whitelist: " + testDirContent + "\n"};
+    auto newWhiteListSection = Section{"Contents", testDirContent, "-Contents: " + testDirContent + "\n"};
 
     const auto whitelistSectionIt = std::find_if(sections.cbegin(), sections.cend(), [](const Section& section) {
-        return section.name == "Cleanup whitelist";
+        return section.name == "Contents";
     });
     if (whitelistSectionIt != sections.cend()) {
         auto whitelistSectionPos = std::distance(sections.cbegin(), whitelistSectionIt);

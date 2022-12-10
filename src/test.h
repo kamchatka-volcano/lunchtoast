@@ -48,7 +48,7 @@ private:
     std::string shellCommand_;
     bool isEnabled_;
     bool cleanup_;
-    std::vector<FilenameGroup> cleanupWhitelist_;
+    std::vector<FilenameGroup> contents_;
 };
 
 }

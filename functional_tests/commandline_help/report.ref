@@ -12,8 +12,7 @@ Parameters:
        --shell <string>     shell command
                               (optional, default: sh -c -e)
 Flags:
-   -s, --save-state         generate cleanup whitelist with content
-                              of the test directory
+   -s, --save-contents      save the current contents of of the test directory
        --no-cleanup         cleanup test files
        --help               show usage info and exit
 

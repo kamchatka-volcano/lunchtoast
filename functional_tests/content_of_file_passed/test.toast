@@ -1,5 +1,5 @@
 -Name: $dir$
--Cleanup whitelist: test test/lunchtoast.test test/file.txt test/file2.txt test.toast report.ref
+-Contents: test test/lunchtoast.test test/file.txt test/file2.txt test.toast report.ref
 -Description:
 GIVEN a single file (file.txt)
 WHEN test assertion of file content with matching string

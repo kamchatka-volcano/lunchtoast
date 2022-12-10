@@ -1,0 +1,12 @@
+-Name: $dir$
+-Suite: command line
+-Contents: test test/lhs.txt test/lunchtoast.test test/rhs.txt lunchtoast_test.ref lunchtoast.test test.toast report.ref
+-Description: 
+    GIVEN 2 equal files (lhs.txt and rhs.txt)
+    WHEN launch lunchtoast with --save-contents
+    THEN test config should get a contents section with list of test files
+---    
+-Launch command: cp lunchtoast.test test/
+-Launch command: ../../build/lunchtoast test/lunchtoast.test --save-contents > report.res
+-Assert files equal: report.res report.ref
+-Assert files equal: test/lunchtoast.test lunchtoast_test.ref

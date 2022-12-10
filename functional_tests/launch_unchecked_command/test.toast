@@ -1,5 +1,5 @@
 -Name: $dir$
--Cleanup whitelist: test test/lunchtoast.test test.toast report.ref
+-Contents: test test/lunchtoast.test test.toast report.ref
 -Description: 
     GIVEN file test.ref
     WHEN launching unchecked shell command that outputs content of unexistent file test.res,
