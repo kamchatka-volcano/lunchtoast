@@ -3,7 +3,7 @@
 #include "testresult.h"
 #include "utils.h"
 #include <sfun/string_utils.h>
-#include <range/v3/view.hpp>
+#include <sfun/utility.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/logger.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -154,15 +154,17 @@ void TestReporter::reportSuiteResult(std::string suiteName, int passedNumber, in
 namespace{
 std::tuple<int, int, int> countTotals(const TestSuite& defaultSuite, const std::map<std::string, TestSuite>& suites)
 {
-    auto totalTests = defaultSuite.tests.size();
+    auto totalTests = sfun::ssize(defaultSuite.tests);
     auto totalPassed = defaultSuite.passedTestsCounter;
     auto totalDisabled = defaultSuite.disabledTestsCounter;
-    for (const auto& suite: suites | ranges::views::values){
-        totalTests += suite.tests.size();
+    for (const auto& [suiteName, suite] : suites){
+        [[maybe_unused]] const auto& unused = suite;
+
+        totalTests += sfun::ssize(suite.tests);
         totalPassed += suite.passedTestsCounter;
         totalDisabled += suite.disabledTestsCounter;
     }
-    return std::make_tuple(totalTests, totalPassed, totalDisabled);
+    return std::make_tuple(static_cast<int>(totalTests), totalPassed, totalDisabled);
 }
 }
 
@@ -196,7 +198,7 @@ void TestReporter::initReporter(const fs::path& reportFilePath)
     auto makeConsoleSink = []{
         auto sink = std::make_shared<spdlog::sinks::stdout_color_sink_st>();
         sink->set_level(spdlog::level::trace);
-        sink->set_color(spdlog::level::trace, "");
+        //sink->set_color(spdlog::level::trace, 0);
         sink->set_pattern("%^%v%$");
         return sink;
     };

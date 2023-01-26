@@ -4,11 +4,9 @@
 #include "test.h"
 #include "errors.h"
 #include <sfun/string_utils.h>
-#include <range/v3/action.hpp>
-#include <range/v3/algorithm.hpp>
-#include <range/v3/view.hpp>
 #include <fmt/format.h>
 #include <fstream>
+#include <sstream>
 
 
 namespace lunchtoast {
@@ -64,8 +62,13 @@ fs::path getTestDirectory(const fs::path& cfgPath, const std::vector<Section>& s
 {
     auto testDir = cfgPath.parent_path();
     auto cfgDir = fs::path{};
-    const auto dirSectionIt = ranges::find_if(sections,
-                                              [](const Section& section){ return section.name == "Directory"; });
+    const auto dirSectionIt = std::find_if(
+            sections.begin(),
+            sections.end(),
+            [](const Section& section)
+            {
+                return section.name == "Directory";
+            });
     if (dirSectionIt != sections.end())
         cfgDir = sfun::trim(dirSectionIt->value);
     if (!cfgDir.empty())
@@ -76,9 +79,10 @@ fs::path getTestDirectory(const fs::path& cfgPath, const std::vector<Section>& s
 std::string getDirectoryContentString(const fs::path& dir)
 {
     auto testDirPaths = getDirectoryContent(dir);
+    auto testDirPathsStr = std::vector<std::string>{};
     auto pathRelativeToDir = [&dir](const fs::path& path) { return fs::relative(path, dir).string(); };
-    const auto testDirPathsStr = testDirPaths | ranges::views::transform(pathRelativeToDir)
-            | ranges::to<std::vector> | ranges::actions::sort;
+    std::transform(testDirPaths.begin(), testDirPaths.end(), std::back_inserter(testDirPaths), pathRelativeToDir);
+    std::sort(testDirPathsStr.begin(), testDirPathsStr.end());
     return sfun::join(testDirPathsStr, " ");
 }
 

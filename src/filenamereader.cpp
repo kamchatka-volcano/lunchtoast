@@ -6,6 +6,7 @@
 #include <set>
 #include <algorithm>
 #include <utility>
+#include <functional>
 
 namespace lunchtoast {
 namespace fs = std::filesystem;

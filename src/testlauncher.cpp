@@ -4,9 +4,8 @@
 #include "sectionsreader.h"
 #include "utils.h"
 #include "errors.h"
-#include <range/v3/algorithm.hpp>
 #include <fstream>
-
+#include <algorithm>
 
 namespace lunchtoast{
 namespace fs = std::filesystem;
@@ -88,7 +87,7 @@ void TestLauncher::collectTests(const fs::path& testPath, const std::string& tes
 namespace{
 std::string getSectionValue(std::string_view sectionName, const std::vector<lunchtoast::Section>& sections)
 {
-    auto it = ranges::find_if(sections, [&](const auto& section){ return section.name == sectionName; });
+    auto it = std::find_if(sections.begin(), sections.end(), [&](const auto& section){ return section.name == sectionName; });
     if (it != sections.end())
         return it->value;
     return {};

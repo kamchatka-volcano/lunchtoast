@@ -3,9 +3,8 @@
 #include "linestream.h"
 #include <sfun/string_utils.h>
 #include <fmt/format.h>
-#include <range/v3/algorithm.hpp>
 #include <gsl/util>
-
+#include <algorithm>
 
 namespace lunchtoast{
 
@@ -55,7 +54,7 @@ Section readSection(LineStream& stream, const std::string& multilineSectionSepar
 
 std::string getMultilineSectionSeparator(const std::vector<Section>& sections)
 {
-    auto sectionIt = ranges::find_if(sections, [](const auto& section) { return section.name == "Section separator"; });
+    auto sectionIt = std::find_if(sections.begin(), sections.end(), [](const auto& section) { return section.name == "Section separator"; });
     if (sectionIt == sections.end())
         return "---";
     return sectionIt->value;

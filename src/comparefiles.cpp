@@ -1,10 +1,11 @@
 #include "comparefiles.h"
 #include "utils.h"
 #include <sfun/string_utils.h>
-#include <range/v3/view.hpp>
 #include <fmt/format.h>
 #include <string>
 #include <utility>
+#include <algorithm>
+#include <iterator>
 
 namespace lunchtoast {
 namespace fs = std::filesystem;
@@ -25,7 +26,8 @@ namespace {
 std::string filenameListStr(const std::vector<fs::path>& pathList)
 {
     auto pathToString = [](const fs::path& path) { return path.filename().string(); };
-    const auto filenameList = pathList | ranges::views::transform(pathToString) | ranges::to<std::vector>;
+    auto filenameList = std::vector<std::string>{};
+    std::transform(pathList.begin(), pathList.end(), std::back_inserter(filenameList), pathToString);
     return sfun::join(filenameList, ",");
 }
 }

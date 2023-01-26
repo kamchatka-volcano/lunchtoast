@@ -1,12 +1,12 @@
 #include "launchprocess.h"
 #include "utils.h"
-#include <sfun/string_utils.h>
 #include <fmt/format.h>
-#include <range/v3/view.hpp>
+#include <sfun/string_utils.h>
 #include <boost/process.hpp>
+#include <filesystem>
 #include <utility>
 
-namespace lunchtoast{
+namespace lunchtoast {
 
 namespace proc = boost::process;
 namespace fs = std::filesystem;
@@ -23,6 +23,7 @@ LaunchProcess::LaunchProcess(
     , uncheckedResult_(uncheckedResult)
     , silently_(silently)
 {
+    auto paths = boost::this_process::path();
 }
 
 TestActionType LaunchProcess::type() const
@@ -30,37 +31,51 @@ TestActionType LaunchProcess::type() const
     return TestActionType::RequiredOperation;
 }
 
+namespace {
+
+auto pathToString(const std::filesystem::path& path)
+{
+#ifndef _WIN32
+    return path.string();
+#else
+    return path.wstring();
+#endif
+}
+
+} //namespace
+
 TestActionResult LaunchProcess::process()
 {
-    auto env = boost::this_process::environment();
-    env["PATH"] += workingDir_.string();
-
     auto result = 0;
-    if (!shellCommand_.empty()) {
-        auto shellCmdParts = splitCommand(shellCommand_);
-        auto shellCmd = shellCmdParts[0];
-        shellCmdParts.erase(shellCmdParts.begin());
-        shellCmdParts.push_back(command_);
-        auto shell = proc::search_path(std::string{shellCmd});
-        if (silently_)
-            result = proc::system(shell, proc::args(shellCmdParts), env, proc::start_dir = workingDir_.string(),
-                                  proc::std_out > proc::null, proc::std_err > proc::null);
-        else
-            result = proc::system(shell, proc::args(shellCmdParts), env, proc::start_dir = workingDir_.string(),
-                                  proc::std_err > stdout);
-    }
-    else {
-        auto cmdParts = splitCommand(command_);
-        auto cmd = cmdParts[0];
-        auto cmdArgs = cmdParts | ranges::views::drop(1) | ranges::to<std::vector>;
-        if (silently_)
-            result = proc::system(std::string{cmd}, proc::args(cmdArgs), env, proc::start_dir = workingDir_.string(),
-                                  proc::std_out > proc::null, proc::std_err > proc::null);
-        else
-            result = proc::system(std::string{cmd}, proc::args(cmdArgs), env, proc::start_dir = workingDir_.string(),
-                                  proc::std_err > stdout);
-    }
+    auto cmdParts = !shellCommand_.empty() ? splitCommand(shellCommand_)
+                                            : splitCommand(command_);
 
+    auto paths = boost::this_process::path();
+    paths.emplace_back(workingDir_);
+    auto cmd = proc::search_path(std::string{cmdParts[0]}, paths);
+    if (cmd.empty())
+        return TestActionResult::Failure(fmt::format("Couldn't find the executable of a command '{}'", cmdParts[0]));
+
+    cmdParts.erase(cmdParts.begin());
+    if (!shellCommand_.empty())
+        cmdParts.push_back(command_);
+
+    if (silently_)
+        result = proc::system(
+                cmd,
+                proc::args(cmdParts),
+                proc::start_dir = pathToString(workingDir_),
+                proc::std_out > proc::null,
+                proc::std_err > proc::null);
+    else
+        result = proc::system(
+                cmd,
+                proc::args(cmdParts),
+                proc::start_dir = pathToString(workingDir_),
+                proc::std_err > stdout);
+
+
+    auto paths2 = boost::this_process::path();
     if (uncheckedResult_)
         return TestActionResult::Success();
 
@@ -70,4 +85,4 @@ TestActionResult LaunchProcess::process()
         return TestActionResult::Success();
 }
 
-}
+} //namespace lunchtoast

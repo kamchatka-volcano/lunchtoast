@@ -32,10 +32,6 @@ struct Cfg : public cmdlime::Config{
 int generateTestContens(const Cfg& cfg);
 int mainApp(const Cfg& cfg)
 {
-    {
-        auto debugShell = std::ofstream{"/home/kamchatka-volcano/Desktop/shell_debug.txt"};
-        debugShell.write(cfg.shell.data(), cfg.shell.size());
-    }
     if (cfg.saveContents)
         return generateTestContens(cfg);
 

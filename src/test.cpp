@@ -7,14 +7,12 @@
 #include "utils.h"
 #include "errors.h"
 #include <sfun/string_utils.h>
-#include <range/v3/view.hpp>
-#include <range/v3/iterator.hpp>
-#include <range/v3/algorithm.hpp>
 #include <fmt/format.h>
 #include <sstream>
 #include <iomanip>
 #include <fstream>
 
+#include <boost/process.hpp>
 
 namespace lunchtoast{
 namespace fs = std::filesystem;
@@ -48,6 +46,7 @@ TestResult Test::process()
                 failedActionsMessages.push_back(result.errorInfo());
             }
         } catch (const std::exception& e){
+            auto paths = boost::this_process::path();
             return TestResult::RuntimeError(e.what(), failedActionsMessages);
         }
         auto stopOnFailure = (action->type() == TestActionType::Assertion ||
@@ -196,12 +195,14 @@ void Test::cleanTestFiles()
     if (contents_.empty())
         return;
     auto filenameGroupToPaths = [](const auto& fileNameGroup){ return fileNameGroup.pathList();};
-    const auto contentsPaths = contents_ |
-                               ranges::views::transform(filenameGroupToPaths) |
-                               ranges::views::join | ranges::to<std::set<fs::path>>();
+    auto contentsPaths = std::set<fs::path>{};
+    for (const auto& fileNameGroup : contents_){
+        for (const auto& path : fileNameGroup.pathList())
+            contentsPaths.insert(path);
+    }
 
     auto paths = getDirectoryContent(directory_);
-    ranges::sort(paths, std::greater<>{});
+    std::sort(paths.begin(), paths.end(), std::greater<>{});
 
     for (const auto& path : paths)
         if (!contentsPaths.count(path))
@@ -260,7 +261,7 @@ void Test::postProcessCleanupConfig(const fs::path& configPath)
 {
     if (contents_.empty()){
         auto pathList = getDirectoryContent(directory_);
-        ranges::transform(pathList, ranges::back_inserter(contents_),
+        std::transform(pathList.begin(), pathList.end(), std::back_inserter(contents_),
                        [this](const fs::path& path){
                            return FilenameGroup{fs::relative(path, directory_).string(), directory_};
                        });

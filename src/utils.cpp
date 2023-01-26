@@ -1,11 +1,11 @@
 #include "utils.h"
 #include <sfun/string_utils.h>
-#include <range/v3/view.hpp>
+#include <boost/process/env.hpp>
 #include <cstdlib>
 #include <fstream>
+#include <sstream>
 
-
-namespace lunchtoast{
+namespace lunchtoast {
 namespace fs = std::filesystem;
 
 std::string readFile(const fs::path& filePath)
@@ -18,9 +18,7 @@ std::string readFile(const fs::path& filePath)
     return buffer.str();
 }
 
-void processVariablesSubstitution(std::string& value,
-                                  const std::string& varFileName,
-                                  const std::string& varDirName)
+void processVariablesSubstitution(std::string& value, const std::string& varFileName, const std::string& varDirName)
 {
     value = sfun::replace(value, "$filename$", varFileName);
     value = sfun::replace(value, "$dir$", varDirName);
@@ -30,9 +28,9 @@ std::vector<fs::path> getDirectoryContent(const fs::path& dir)
 {
     auto result = std::vector<fs::path>{};
     auto end = fs::directory_iterator{};
-    for (auto it = fs::directory_iterator{dir}; it != end; ++it){
+    for (auto it = fs::directory_iterator{dir}; it != end; ++it) {
         result.push_back(it->path());
-        if (fs::is_directory(it->status())){
+        if (fs::is_directory(it->status())) {
             auto subdirResult = getDirectoryContent(it->path());
             std::copy(subdirResult.begin(), subdirResult.end(), std::back_inserter(result));
         }
@@ -42,11 +40,13 @@ std::vector<fs::path> getDirectoryContent(const fs::path& dir)
 
 fs::path homePath(const fs::path& path)
 {
-    auto homePath = fs::path{getenv("HOME")};
+
+    //auto homePath = fs::path{getenv("HOME")};
+    auto homePath = boost::process::environment()["HOME"];
     if (homePath.empty())
         return path;
     else
-        return fs::relative(path, homePath);
+        return fs::relative(path, homePath.to_string());
 }
 
 std::string homePathString(const fs::path& path)
@@ -62,7 +62,16 @@ std::string homePathString(const fs::path& path)
 
 std::string toLower(std::string_view str)
 {
-    return str | ranges::views::transform([](char ch){return sfun::tolower(ch);}) | ranges::to<std::string>;
+    auto result = std::string{};
+    std::transform(
+            str.begin(),
+            str.end(),
+            std::back_inserter(result),
+            [](char ch)
+            {
+                return sfun::tolower(ch);
+            });
+    return result;
 }
 
 std::vector<std::string_view> splitCommand(std::string_view str)
@@ -73,19 +82,20 @@ std::vector<std::string_view> splitCommand(std::string_view str)
     auto result = std::vector<std::string_view>{};
     auto pos = std::size_t{0};
     auto partPos = std::string_view::npos;
-    auto addCommandPart = [&](){
+    auto addCommandPart = [&]()
+    {
         result.emplace_back(std::string_view{std::next(str.data(), partPos), pos - partPos});
         partPos = std::string_view::npos;
     };
 
     auto insideString = false;
-    for (; pos < str.size(); ++pos){
-        if (!insideString && sfun::isspace(str.at(pos))){
+    for (; pos < str.size(); ++pos) {
+        if (!insideString && sfun::isspace(str.at(pos))) {
             if (partPos != std::string_view::npos)
                 addCommandPart();
             continue;
         }
-        if (str.at(pos) == '"'){
+        if (str.at(pos) == '"') {
             if (insideString)
                 addCommandPart();
             insideString = !insideString;
@@ -103,4 +113,4 @@ std::vector<std::string_view> splitCommand(std::string_view str)
     return result;
 }
 
-}
+} //namespace lunchtoast
