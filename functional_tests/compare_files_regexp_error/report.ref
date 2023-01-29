@@ -1,5 +1,5 @@
-################## [ 1 / 1 ] ###################
-Test can't be started. Config file ~/syncbox/src/c++/lunchtoast/functional_tests/compare_files_regexp_error/test/lunchtoast.test error:
+################## [ 1  1 ] ###################
+Test can't be started. Config file  error:
 regex_error
 
  

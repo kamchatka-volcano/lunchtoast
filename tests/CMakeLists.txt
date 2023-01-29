@@ -17,7 +17,6 @@ SealLake_GoogleTest(
             CXX_EXTENSIONS OFF
         INCLUDES
             ../src
-            ${SEAL_LAKE_SOURCE_range-v3}/include
         LIBRARIES
-            sfun::sfun fmt::fmt Microsoft.GSL::GSL
+            sfun::sfun fmt::fmt Microsoft.GSL::GSL sago::platform_folders
 )

@@ -1,6 +1,6 @@
-################## [ 1 / 1 ] ###################
-Test can't be started. Config file ~/syncbox/src/c++/lunchtoast/functional_tests/set_directory_unexistant_error/test/lunchtoast.test error:
-Specified directory '~/syncbox/src/c++/lunchtoast/functional_tests/set_directory_unexistant_error/test/testdata' doesn't exist
+################## [ 1  1 ] ###################
+Test can't be started. Config file  error:
+Specified directory ' doesn't exist
 
  
 ##################  SUMMARY  ###################

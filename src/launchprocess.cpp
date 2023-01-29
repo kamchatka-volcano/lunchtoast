@@ -1,5 +1,6 @@
 #include "launchprocess.h"
 #include "utils.h"
+#include "errors.h"
 #include <fmt/format.h>
 #include <sfun/string_utils.h>
 #include <boost/process.hpp>
@@ -54,7 +55,7 @@ TestActionResult LaunchProcess::process()
     paths.emplace_back(workingDir_);
     auto cmd = proc::search_path(std::string{cmdParts[0]}, paths);
     if (cmd.empty())
-        return TestActionResult::Failure(fmt::format("Couldn't find the executable of a command '{}'", cmdParts[0]));
+        throw TestConfigError{fmt::format("Couldn't find the executable of a command '{}'", cmdParts[0])};
 
     cmdParts.erase(cmdParts.begin());
     if (!shellCommand_.empty())

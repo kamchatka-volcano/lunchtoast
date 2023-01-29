@@ -1,6 +1,6 @@
 #include "utils.h"
 #include <sfun/string_utils.h>
-#include <boost/process/env.hpp>
+#include <platform_folders.h>
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
@@ -38,20 +38,16 @@ std::vector<fs::path> getDirectoryContent(const fs::path& dir)
     return result;
 }
 
-fs::path homePath(const fs::path& path)
+namespace {
+std::filesystem::path homePath()
 {
-
-    //auto homePath = fs::path{getenv("HOME")};
-    auto homePath = boost::process::environment()["HOME"];
-    if (homePath.empty())
-        return path;
-    else
-        return fs::relative(path, homePath.to_string());
+    return std::filesystem::path{sago::getDesktopFolder()}.parent_path();
+}
 }
 
 std::string homePathString(const fs::path& path)
 {
-    auto resPath = homePath(path);
+    auto resPath = fs::relative(path, homePath().string());
     if (resPath == path)
         return resPath.string();
     else if (resPath.string() == ".")

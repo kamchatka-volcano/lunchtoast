@@ -12,7 +12,6 @@ void processVariablesSubstitution(std::string& value,
                                   const std::string& varDirName);
 std::vector<std::filesystem::path> getDirectoryContent(const std::filesystem::path& dir);
 
-std::filesystem::path homePath(const std::filesystem::path& path);
 std::string homePathString(const std::filesystem::path& path);
 
 std::string withoutLastNewLine(std::string value);

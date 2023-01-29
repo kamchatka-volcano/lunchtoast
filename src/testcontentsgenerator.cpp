@@ -81,7 +81,7 @@ std::string getDirectoryContentString(const fs::path& dir)
     auto testDirPaths = getDirectoryContent(dir);
     auto testDirPathsStr = std::vector<std::string>{};
     auto pathRelativeToDir = [&dir](const fs::path& path) { return fs::relative(path, dir).string(); };
-    std::transform(testDirPaths.begin(), testDirPaths.end(), std::back_inserter(testDirPaths), pathRelativeToDir);
+    std::transform(testDirPaths.begin(), testDirPaths.end(), std::back_inserter(testDirPathsStr), pathRelativeToDir);
     std::sort(testDirPathsStr.begin(), testDirPathsStr.end());
     return sfun::join(testDirPathsStr, " ");
 }

@@ -9,9 +9,9 @@ SealLake_Import(sfun 2.4.0
         GIT_REPOSITORY https://github.com/kamchatka-volcano/sfun
         GIT_TAG v3
 )
-SealLake_Import(cmdlime 2.1.1
+SealLake_Import(cmdlime 2.3.1
         GIT_REPOSITORY https://github.com/kamchatka-volcano/cmdlime
-        GIT_TAG v2.1.1
+        GIT_TAG v2.3.1
 )
 SealLake_Import(fmt 9.1.0
         GIT_REPOSITORY https://github.com/fmtlib/fmt
@@ -26,6 +26,11 @@ SealLake_Import(spdlog 1.11.0
 SealLake_Import(GSL 4.0.0
         GIT_REPOSITORY https://github.com/microsoft/GSL.git
         GIT_TAG        v4.0.0
+)
+
+SealLake_Import(platform_folders 4.2.0
+        GIT_REPOSITORY https://github.com/sago007/PlatformFolders.git
+        GIT_TAG        4.2.0
 )
 
 set(SRC
@@ -59,6 +64,6 @@ SealLake_Executable(
             cmdlime::cmdlime
             fmt::fmt
             Microsoft.GSL::GSL
+            sago::platform_folders
 )
-
-#SealLake_OptionalBuildSteps(tests)
+SealLake_OptionalBuildSteps(tests)

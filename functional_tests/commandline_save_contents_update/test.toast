@@ -8,6 +8,6 @@
     THEN test config should get file_to_preserve.txt in a contents section
 ---    
 -Launch command: cp lunchtoast.test test/
--Launch command: ../../build/lunchtoast test/lunchtoast.test --save-contents > report.res
+-Launch command: ../../build/lunchtoast test/lunchtoast.test --save-contents | sed 's/~\|\/[^ ]*//g' > report.res
 -Assert files equal: report.res report.ref
 -Assert files equal: test/lunchtoast.test lunchtoast_test.ref

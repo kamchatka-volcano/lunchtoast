@@ -194,7 +194,6 @@ void Test::cleanTestFiles()
 {
     if (contents_.empty())
         return;
-    auto filenameGroupToPaths = [](const auto& fileNameGroup){ return fileNameGroup.pathList();};
     auto contentsPaths = std::set<fs::path>{};
     for (const auto& fileNameGroup : contents_){
         for (const auto& path : fileNameGroup.pathList())
