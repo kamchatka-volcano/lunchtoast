@@ -6,5 +6,5 @@
     WHEN test single assertion of files equality, launch test by specifying directory and extension of config file
     THEN test should pass
 ---
--Launch silently: ../../build/lunchtoast test/ --ext .test --report report.res
+-Launch: ../../build/lunchtoast test/ --ext .test --report report.res
 -Assert files equal: report.res report.ref

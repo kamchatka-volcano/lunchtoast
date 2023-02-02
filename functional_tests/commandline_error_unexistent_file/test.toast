@@ -6,5 +6,5 @@
     WHEN launch lunchtoast with passing path to unexistent test config
     THEN lunchtoast should print error message with usage info and exit
 ---    
--Launch command unchecked and silently: ../../build/lunchtoast test.cfg > report.res
+-Launch unchecked: ../../build/lunchtoast test.cfg > report.res
 -Assert files equal: report.res report.ref

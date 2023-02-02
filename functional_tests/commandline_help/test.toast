@@ -6,5 +6,5 @@
     WHEN launch lunchtoast with --help command line argument
     THEN lunchtoast should print usage info and exit
 ---
--Launch command unchecked and silently: ../../build/lunchtoast --help > report.res
+-Launch unchecked: ../../build/lunchtoast --help > report.res
 -Assert files equal: report.res report.ref

@@ -6,7 +6,7 @@
     WHEN launch lunchtoast with --save-contents
     THEN test config should get a contents section with list of test files
 ---    
--Launch command: cp lunchtoast.test test/
--Launch command: ../../build/lunchtoast test/lunchtoast.test --save-contents | sed 's/~\|\/[^ ]*//g' > report.res
+-Launch: cp lunchtoast.test test/
+-Launch: ../../build/lunchtoast test/lunchtoast.test --save-contents | sed 's/~\|\/[^ ]*//g' > report.res
 -Assert files equal: report.res report.ref
 -Assert files equal: test/lunchtoast.test lunchtoast_test.ref

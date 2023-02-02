@@ -9,5 +9,5 @@
          other tests shouldn't run because they are disabled
          disabled  tests counters should be in the report
 ---         
--Launch silently unchecked: ../../build/lunchtoast ./test --ext .test --report report.res
+-Launch unchecked: ../../build/lunchtoast ./test --ext .test --report report.res
 -Assert files equal: report.res report.ref

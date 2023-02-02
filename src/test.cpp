@@ -1,20 +1,20 @@
 #include "test.h"
-#include "sectionsreader.h"
-#include "launchprocess.h"
-#include "writefile.h"
-#include "comparefiles.h"
 #include "comparefilecontent.h"
-#include "utils.h"
+#include "comparefiles.h"
 #include "errors.h"
-#include <sfun/string_utils.h>
+#include "launchprocess.h"
+#include "sectionsreader.h"
+#include "utils.h"
+#include "writefile.h"
 #include <fmt/format.h>
-#include <sstream>
-#include <iomanip>
+#include <sfun/string_utils.h>
 #include <fstream>
+#include <iomanip>
+#include <sstream>
 
 #include <boost/process.hpp>
 
-namespace lunchtoast{
+namespace lunchtoast {
 namespace fs = std::filesystem;
 
 Test::Test(const fs::path& configPath, std::string shellCommand, bool cleanup)
@@ -38,19 +38,20 @@ TestResult Test::process()
         return TestResult::RuntimeError("Test has nothing to check", failedActionsMessages);
 
     auto ok = true;
-    for (auto& action: actions_){
-        try{
+    for (auto& action : actions_) {
+        try {
             auto result = action->process();
-            if (!result.isSuccessful()){
+            if (!result.isSuccessful()) {
                 ok = false;
                 failedActionsMessages.push_back(result.errorInfo());
             }
-        } catch (const std::exception& e){
+        }
+        catch (const std::exception& e) {
             auto paths = boost::this_process::path();
             return TestResult::RuntimeError(e.what(), failedActionsMessages);
         }
-        auto stopOnFailure = (action->type() == TestActionType::Assertion ||
-                              action->type() == TestActionType::RequiredOperation);
+        auto stopOnFailure =
+                (action->type() == TestActionType::Assertion || action->type() == TestActionType::RequiredOperation);
         if (!ok && stopOnFailure)
             break;
     }
@@ -66,37 +67,43 @@ TestResult Test::process()
 
 bool Test::readParamFromSection(const Section& section)
 {
-    if (readParam(name_, "Name", section)) return true;
-    if (readParam(suite_, "Suite", section)) return true;
-    if (readParam(description_, "Description", section)) return true;
-    if (readParam(directory_, "Directory", section)) return true;
-    if (readParam(isEnabled_, "Enabled", section)) return true;
-    if (readParam(contents_, "Contents", section)) return true;
+    if (readParam(name_, "Name", section))
+        return true;
+    if (readParam(suite_, "Suite", section))
+        return true;
+    if (readParam(description_, "Description", section))
+        return true;
+    if (readParam(directory_, "Directory", section))
+        return true;
+    if (readParam(isEnabled_, "Enabled", section))
+        return true;
+    if (readParam(contents_, "Contents", section))
+        return true;
     return false;
 }
 
 bool Test::readActionFromSection(const Section& section)
 {
-    if (sfun::startsWith(section.name, "Launch")){
+    if (sfun::startsWith(section.name, "Launch")) {
         createLaunchAction(section);
         return true;
     }
-    if (sfun::startsWith(section.name, "Write")){
+    if (sfun::startsWith(section.name, "Write")) {
         createWriteAction(section);
         return true;
     }
-    if (sfun::startsWith(section.name, "Assert")){
+    if (sfun::startsWith(section.name, "Assert")) {
         auto actionType = sfun::trim(sfun::after(section.name, "Assert"));
         return createComparisonAction(TestActionType::Assertion, std::string{actionType}, section);
     }
-    if (sfun::startsWith(section.name, "Expect")){
+    if (sfun::startsWith(section.name, "Expect")) {
         auto actionType = sfun::trim(sfun::after(section.name, "Expect"));
         return createComparisonAction(TestActionType::Expectation, std::string{actionType}, section);
     }
     return false;
 }
 
-namespace{
+namespace {
 bool isValidUnusedSection(const Section& section)
 {
     if (section.name == "Section separator")
@@ -104,7 +111,7 @@ bool isValidUnusedSection(const Section& section)
 
     return false;
 }
-}
+} //namespace
 
 void Test::readConfig(const fs::path& path)
 {
@@ -112,11 +119,11 @@ void Test::readConfig(const fs::path& path)
     if (!fileStream.is_open())
         throw TestConfigError{fmt::format("Test config file {} doesn't exist", homePathString(path))};
 
-    try{
+    try {
         const auto sections = readSections(fileStream);
         if (sections.empty())
             throw TestConfigError{fmt::format("Test config file {} is empty or invalid", homePathString(path))};
-        for (const auto& section: sections){
+        for (const auto& section : sections) {
             if (readParamFromSection(section))
                 continue;
             if (readActionFromSection(section))
@@ -125,7 +132,8 @@ void Test::readConfig(const fs::path& path)
                 continue;
             throw TestConfigError{fmt::format("Unsupported section name: {}", section.name)};
         }
-    } catch (const std::exception& e){
+    }
+    catch (const std::exception& e) {
         throw TestConfigError{e.what()};
     }
 
@@ -143,11 +151,11 @@ void Test::checkParams()
 
 bool Test::createComparisonAction(TestActionType type, const std::string& encodedActionType, const Section& section)
 {
-    if (encodedActionType == "files equal"){
+    if (encodedActionType == "files equal") {
         createCompareFilesAction(type, section.value);
         return true;
     }
-    if (sfun::startsWith(encodedActionType, "content of ")){
+    if (sfun::startsWith(encodedActionType, "content of ")) {
         createCompareFileContentAction(type, encodedActionType, section.value);
         return true;
     }
@@ -158,12 +166,16 @@ void Test::createLaunchAction(const Section& section)
 {
     const auto parts = sfun::split(section.name);
     auto uncheckedResult = std::find(parts.begin(), parts.end(), "unchecked") != parts.end();
-    auto isShellCommand = std::find(parts.begin(), parts.end(), "command") != parts.end();
-    auto silently = std::find(parts.begin(), parts.end(), "silently") != parts.end();
+    auto isShellCommand = std::find(parts.begin(), parts.end(), "process") == parts.end();
+
     const auto& command = section.value;
-    actions_.push_back(
-            std::make_unique<LaunchProcess>(command, directory_, (isShellCommand ? shellCommand_ : ""), uncheckedResult,
-                                            silently));
+    auto shellCommand = [&]() -> std::optional<std::string>
+    {
+        if (isShellCommand)
+            return shellCommand_;
+        return std::nullopt;
+    };
+    actions_.push_back(std::make_unique<LaunchProcess>(command, directory_, shellCommand(), uncheckedResult));
 }
 
 void Test::createWriteAction(const Section& section)
@@ -177,13 +189,15 @@ void Test::createCompareFilesAction(TestActionType type, const std::string& file
 {
     const auto filenameGroups = readFilenames(filenamesStr, directory_);
     if (filenameGroups.size() != 2)
-        throw TestConfigError{
-                "Comparison of files require exactly two filenames or filename matching regular expressions to be specified"};
+        throw TestConfigError{"Comparison of files require exactly two filenames or filename matching regular "
+                              "expressions to be specified"};
     actions_.push_back(std::make_unique<CompareFiles>(filenameGroups[0], filenameGroups[1], type));
 }
 
-void Test::createCompareFileContentAction(TestActionType type, const std::string& filenameStr,
-                                          const std::string& expectedFileContent)
+void Test::createCompareFileContentAction(
+        TestActionType type,
+        const std::string& filenameStr,
+        const std::string& expectedFileContent)
 {
     const auto filename = std::string{sfun::trim(sfun::replace(filenameStr, "content of ", ""))};
     actions_.push_back(
@@ -195,7 +209,7 @@ void Test::cleanTestFiles()
     if (contents_.empty())
         return;
     auto contentsPaths = std::set<fs::path>{};
-    for (const auto& fileNameGroup : contents_){
+    for (const auto& fileNameGroup : contents_) {
         for (const auto& path : fileNameGroup.pathList())
             contentsPaths.insert(path);
     }
@@ -258,15 +272,19 @@ bool Test::readParam(bool& param, const std::string& paramName, const Section& s
 
 void Test::postProcessCleanupConfig(const fs::path& configPath)
 {
-    if (contents_.empty()){
+    if (contents_.empty()) {
         auto pathList = getDirectoryContent(directory_);
-        std::transform(pathList.begin(), pathList.end(), std::back_inserter(contents_),
-                       [this](const fs::path& path){
-                           return FilenameGroup{fs::relative(path, directory_).string(), directory_};
-                       });
+        std::transform(
+                pathList.begin(),
+                pathList.end(),
+                std::back_inserter(contents_),
+                [this](const fs::path& path)
+                {
+                    return FilenameGroup{fs::relative(path, directory_).string(), directory_};
+                });
         return;
     }
     contents_.emplace_back(fs::relative(configPath, directory_).string(), directory_);
 }
 
-}
+} //namespace lunchtoast
