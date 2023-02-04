@@ -3,23 +3,16 @@
 #include <fmt/format.h>
 #include <utility>
 
-
 namespace lunchtoast {
 namespace fs = std::filesystem;
 
-CompareFileContent::CompareFileContent(fs::path filePath,
-                                       std::string expectedFileContent,
-                                       TestActionType actionType)
-        : filePath_(std::move(filePath)), expectedFileContent_(std::move(expectedFileContent)), actionType_(actionType)
+CompareFileContent::CompareFileContent(fs::path filePath, std::string expectedFileContent)
+    : filePath_(std::move(filePath))
+    , expectedFileContent_(std::move(expectedFileContent))
 {
 }
 
-TestActionType CompareFileContent::type() const
-{
-    return actionType_;
-}
-
-TestActionResult CompareFileContent::process()
+TestActionResult CompareFileContent::operator()()
 {
     if (!fs::exists(filePath_))
         return TestActionResult::Failure(
@@ -31,4 +24,5 @@ TestActionResult CompareFileContent::process()
     return TestActionResult::Success();
 }
 
-}
+} //namespace lunchtoast
+

@@ -34,14 +34,17 @@ SealLake_Import(platform_folders 4.2.0
 )
 
 set(SRC
-        src/testcontentsgenerator.cpp
+    src/testcontentsgenerator.cpp
+    src/compareoutput.cpp
+    src/compareerroroutput.cpp
     src/comparefilecontent.cpp
     src/comparefiles.cpp
+    src/compareexitcode.cpp
     src/filenamereader.cpp
     src/launchprocess.cpp
     src/linestream.cpp
     src/main.cpp
-        src/sectionsreader.cpp
+    src/sectionsreader.cpp
     src/testactionresult.cpp
     src/test.cpp
     src/testlauncher.cpp

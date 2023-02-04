@@ -1,12 +1,16 @@
 #include "test.h"
+#include "compareerroroutput.h"
+#include "compareexitcode.h"
 #include "comparefilecontent.h"
 #include "comparefiles.h"
+#include "compareoutput.h"
 #include "errors.h"
 #include "launchprocess.h"
 #include "sectionsreader.h"
 #include "utils.h"
 #include "writefile.h"
 #include <fmt/format.h>
+#include <sfun/functional.h>
 #include <sfun/string_utils.h>
 #include <fstream>
 #include <iomanip>
@@ -37,21 +41,44 @@ TestResult Test::process()
     if (actions_.empty())
         return TestResult::RuntimeError("Test has nothing to check", failedActionsMessages);
 
+    auto onActionSuccessful = sfun::overloaded{
+            [](auto&) {},
+            [&](LaunchProcess& launchAction)
+            {
+                launchActionResult_ = launchAction.result();
+            }};
+
     auto ok = true;
-    for (auto& action : actions_) {
-        try {
-            auto result = action->process();
-            if (!result.isSuccessful()) {
-                ok = false;
-                failedActionsMessages.push_back(result.errorInfo());
-            }
-        }
-        catch (const std::exception& e) {
-            auto paths = boost::this_process::path();
-            return TestResult::RuntimeError(e.what(), failedActionsMessages);
-        }
+    auto onActionFailed = [&](auto&, const std::string& errorInfo)
+    {
+        ok = false;
+        failedActionsMessages.push_back(errorInfo);
+    };
+
+    auto runtimeError = std::optional<std::string>{};
+    auto onActionError = [&](auto&, const std::string& errorInfo)
+    {
+        runtimeError = errorInfo;
+    };
+
+    for (auto actionIt = actions_.begin(); actionIt != actions_.end(); ++actionIt) {
+        nextAction_ = [&]() -> std::optional<TestAction>
+        {
+            auto nextActionIt = std::next(actionIt);
+            if (nextActionIt == actions_.end())
+                return std::nullopt;
+            return *nextActionIt;
+        }();
+
+        actionIt->process(onActionSuccessful, onActionFailed, onActionError);
+
+        if (runtimeError)
+            return TestResult::RuntimeError(runtimeError.value(), failedActionsMessages);
+
         auto stopOnFailure =
-                (action->type() == TestActionType::Assertion || action->type() == TestActionType::RequiredOperation);
+                (actionIt->type() == TestActionType::Assertion ||
+                 actionIt->type() == TestActionType::RequiredOperation);
+
         if (!ok && stopOnFailure)
             break;
     }
@@ -149,14 +176,29 @@ void Test::checkParams()
         throw TestConfigError{fmt::format("Specified directory '{}' doesn't exist", homePathString(directory_))};
 }
 
-bool Test::createComparisonAction(TestActionType type, const std::string& encodedActionType, const Section& section)
+bool Test::createComparisonAction(
+        TestActionType actionType,
+        const std::string& encodedActionType,
+        const Section& section)
 {
     if (encodedActionType == "files equal") {
-        createCompareFilesAction(type, section.value);
+        createCompareFilesAction(actionType, section.value);
         return true;
     }
     if (sfun::startsWith(encodedActionType, "content of ")) {
-        createCompareFileContentAction(type, encodedActionType, section.value);
+        createCompareFileContentAction(actionType, encodedActionType, section.value);
+        return true;
+    }
+    if (encodedActionType == "exit code") {
+        createCompareExitCodeAction(actionType, section.value);
+        return true;
+    }
+    if (encodedActionType == "output") {
+        actions_.push_back({CompareOutput{launchActionResult_, section.value}, actionType});
+        return true;
+    }
+    if (encodedActionType == "error output") {
+        actions_.push_back({CompareErrorOutput{launchActionResult_, section.value}, actionType});
         return true;
     }
     return false;
@@ -175,33 +217,46 @@ void Test::createLaunchAction(const Section& section)
             return shellCommand_;
         return std::nullopt;
     };
-    actions_.push_back(std::make_unique<LaunchProcess>(command, directory_, shellCommand(), uncheckedResult));
+    actions_.push_back(
+            {LaunchProcess{command, directory_, shellCommand(), uncheckedResult, nextAction_},
+             TestActionType::RequiredOperation});
 }
 
 void Test::createWriteAction(const Section& section)
 {
     const auto fileName = sfun::trim(sfun::after(section.name, "Write"));
     const auto path = fs::absolute(directory_) / fileName;
-    actions_.push_back(std::make_unique<WriteFile>(path.string(), section.value));
+    actions_.push_back({WriteFile{path.string(), section.value}, TestActionType::RequiredOperation});
 }
 
-void Test::createCompareFilesAction(TestActionType type, const std::string& filenamesStr)
+void Test::createCompareFilesAction(TestActionType actionType, const std::string& filenamesStr)
 {
     const auto filenameGroups = readFilenames(filenamesStr, directory_);
     if (filenameGroups.size() != 2)
         throw TestConfigError{"Comparison of files require exactly two filenames or filename matching regular "
                               "expressions to be specified"};
-    actions_.push_back(std::make_unique<CompareFiles>(filenameGroups[0], filenameGroups[1], type));
+    actions_.push_back({CompareFiles{filenameGroups[0], filenameGroups[1]}, actionType});
 }
 
 void Test::createCompareFileContentAction(
-        TestActionType type,
+        TestActionType actionType,
         const std::string& filenameStr,
         const std::string& expectedFileContent)
 {
     const auto filename = std::string{sfun::trim(sfun::replace(filenameStr, "content of ", ""))};
-    actions_.push_back(
-            std::make_unique<CompareFileContent>(fs::absolute(directory_) / filename, expectedFileContent, type));
+    actions_.push_back({CompareFileContent{fs::absolute(directory_) / filename, expectedFileContent}, actionType});
+}
+
+void Test::createCompareExitCodeAction(TestActionType actionType, const std::string& expectedExitCodeStr)
+{
+    auto expectedExitCode = 0;
+    try {
+        expectedExitCode = std::stoi(expectedExitCodeStr);
+    }
+    catch (...) {
+        throw TestConfigError{"Process exit code must be an integer"};
+    }
+    actions_.push_back({CompareExitCode{launchActionResult_, expectedExitCode}, actionType});
 }
 
 void Test::cleanTestFiles()

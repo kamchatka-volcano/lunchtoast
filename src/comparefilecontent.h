@@ -1,22 +1,18 @@
 #pragma once
-#include "itestaction.h"
+#include "testactionresult.h"
 #include <filesystem>
-
 
 namespace lunchtoast {
 
-class CompareFileContent : public ITestAction {
+class CompareFileContent{
 public:
     CompareFileContent(std::filesystem::path filePath,
-                       std::string expectedFileContent,
-                       TestActionType actionType);
-    TestActionResult process() override;
-    TestActionType type() const override;
+                       std::string expectedFileContent);
+    TestActionResult operator()();
 
 private:
     std::filesystem::path filePath_;
     std::string expectedFileContent_;
-    TestActionType actionType_;
 };
 
 }

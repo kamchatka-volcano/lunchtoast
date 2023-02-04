@@ -1,25 +1,33 @@
 #pragma once
-#include "itestaction.h"
+#include "launchprocessresult.h"
+#include "testactionresult.h"
+#include <gsl/pointers>
 #include <filesystem>
-#include <string>
 #include <optional>
+#include <string>
 
 namespace lunchtoast {
 
-class LaunchProcess : public ITestAction {
+class TestAction;
+
+class LaunchProcess {
 public:
-    LaunchProcess(std::string command,
-                  std::filesystem::path workingDir,
-                  std::optional<std::string> shellCommand,
-                  bool uncheckedResult);
-    TestActionResult process() override;
-    TestActionType type() const override;
+    LaunchProcess(
+            std::string command,
+            std::filesystem::path workingDir,
+            std::optional<std::string> shellCommand,
+            bool uncheckedResult,
+            std::optional<TestAction>& nextAction);
+    TestActionResult operator()();
+    LaunchProcessResult result() const;
 
 private:
     std::string command_;
     std::filesystem::path workingDir_;
     std::optional<std::string> shellCommand_;
     bool uncheckedResult_;
+    LaunchProcessResult result_;
+    gsl::not_null<std::optional<TestAction>*> nextAction_;
 };
 
 }

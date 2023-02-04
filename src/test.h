@@ -1,18 +1,18 @@
 #pragma once
-#include "section.h"
-#include "testresult.h"
-#include "itestaction.h"
 #include "filenamereader.h"
+#include "launchprocessresult.h"
+#include "section.h"
+#include "testaction.h"
+#include "testresult.h"
 #include <filesystem>
-#include <vector>
 #include <memory>
 #include <set>
 #include <string>
+#include <vector>
 
+namespace lunchtoast {
 
-namespace lunchtoast{
-
-class Test{
+class Test {
 public:
     explicit Test(const std::filesystem::path& configPath, std::string shellCommand, bool cleanup);
     TestResult process();
@@ -27,10 +27,16 @@ private:
     bool readActionFromSection(const Section& section);
     void createLaunchAction(const Section& section);
     void createWriteAction(const Section& section);
-    void createCompareFilesAction(TestActionType type, const std::string& filenamesStr);
-    void createCompareFileContentAction(TestActionType type, const std::string& filenameStr,
-                                        const std::string& expectedFileContent);
-    bool createComparisonAction(TestActionType type, const std::string& encodedActionType, const Section& section);
+    void createCompareFilesAction(TestActionType actionType, const std::string& filenamesStr);
+    void createCompareFileContentAction(
+            TestActionType actionType,
+            const std::string& filenameStr,
+            const std::string& expectedFileContent);
+    bool createComparisonAction(
+            TestActionType actionType,
+            const std::string& encodedActionType,
+            const Section& section);
+    void createCompareExitCodeAction(TestActionType actionType, const std::string& expectedExitCodeStr);
     void cleanTestFiles();
     bool readParam(std::string& param, const std::string& paramName, const Section& section);
     bool readParam(std::filesystem::path& param, const std::string& paramName, const Section& section);
@@ -40,7 +46,7 @@ private:
     void checkParams();
 
 private:
-    std::vector<std::unique_ptr<ITestAction>> actions_;
+    std::vector<TestAction> actions_;
     std::string name_;
     std::string description_;
     std::filesystem::path directory_;
@@ -49,6 +55,8 @@ private:
     bool isEnabled_;
     bool cleanup_;
     std::vector<FilenameGroup> contents_;
+    std::optional<LaunchProcessResult> launchActionResult_;
+    std::optional<TestAction> nextAction_;
 };
 
-}
+} //namespace lunchtoast

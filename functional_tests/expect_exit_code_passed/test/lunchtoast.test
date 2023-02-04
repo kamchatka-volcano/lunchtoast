@@ -1,0 +1,3 @@
+-Launch: echo "Hello world"
+-Expect exit code: 0
+-Expect output: Hello world

@@ -12,12 +12,7 @@ WriteFile::WriteFile(fs::path filePath, std::string content)
 {
 }
 
-TestActionType WriteFile::type() const
-{
-    return TestActionType::RequiredOperation;
-}
-
-TestActionResult WriteFile::process()
+TestActionResult WriteFile::operator()()
 {
     auto fileStream = std::ofstream(filePath_.string());
     fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
