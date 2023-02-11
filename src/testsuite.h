@@ -1,12 +1,13 @@
 #pragma once
 #include <filesystem>
+#include <set>
+#include <string>
 #include <vector>
 
+namespace lunchtoast {
 
-namespace lunchtoast{
-
-struct TestSuite{
-    struct TestCfg{
+struct TestSuite {
+    struct TestCfg {
         std::filesystem::path path;
         bool isEnabled;
     };

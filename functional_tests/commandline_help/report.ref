@@ -11,6 +11,8 @@ Parameters:
                               (optional, default: 48)
        --shell <string>     shell command
                               (optional, default: sh -c -e)
+       --select <string>    multi-value, optional, default: {}
+       --skip <string>      multi-value, optional, default: {}
 Flags:
    -s, --save-contents      save the current contents of of the test directory
        --no-cleanup         cleanup test files

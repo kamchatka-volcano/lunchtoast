@@ -135,6 +135,8 @@ bool isValidUnusedSection(const Section& section)
 {
     if (section.name == "Section separator")
         return true;
+    if (section.name == "Tags")
+        return true;
 
     return false;
 }

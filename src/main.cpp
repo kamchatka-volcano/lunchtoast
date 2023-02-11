@@ -1,23 +1,36 @@
 #include "test.h"
+#include "testcontentsgenerator.h"
 #include "testlauncher.h"
 #include "testreporter.h"
-#include "testcontentsgenerator.h"
-#include <fmt/format.h>
 #include <cmdlime/commandlinereader.h>
+#include <fmt/format.h>
 #include <filesystem>
 #include <fstream>
+#include <set>
 
 namespace fs = std::filesystem;
 
-struct EnsurePathExists{
+struct EnsurePathExists {
     void operator()(const fs::path& path)
     {
         if (!fs::exists(path))
-            throw cmdlime::ValidationError{fmt::format("specified test directory "
-               "or file path '{}' doesn't exist.\n", path.string())};
+            throw cmdlime::ValidationError{fmt::format(
+                    "specified test directory "
+                    "or file path '{}' doesn't exist.\n",
+                    path.string())};
     }
 };
 
+struct EnsureContainsUniqueElements {
+    void operator()(const std::vector<std::string>& list)
+    {
+        auto set = std::set<std::string>{list.begin(), list.end()};
+        if (list.size() != set.size())
+            throw cmdlime::ValidationError{"must contain unique elements"};
+    }
+};
+
+// clang-format off
 struct Cfg : public cmdlime::Config{
     CMDLIME_ARG(testPath, fs::path)               << EnsurePathExists{};
     CMDLIME_PARAM(report, fs::path)()             << "save test report to file";
@@ -27,7 +40,10 @@ struct Cfg : public cmdlime::Config{
     CMDLIME_FLAG(saveContents)                    << "save the current contents of of the test directory";
     CMDLIME_PARAM(shell, std::string)("sh -c -e") << "shell command" << cmdlime::WithoutShortName{};
     CMDLIME_FLAG(noCleanup)                       << "cleanup test files" << cmdlime::WithoutShortName{};
+    CMDLIME_PARAMLIST(select, std::vector<std::string>)() << EnsureContainsUniqueElements{} << cmdlime::WithoutShortName{};
+    CMDLIME_PARAMLIST(skip, std::vector<std::string>)()   << EnsureContainsUniqueElements{} << cmdlime::WithoutShortName{};
 };
+// clang-format on
 
 int generateTestContens(const Cfg& cfg);
 int mainApp(const Cfg& cfg)
@@ -36,11 +52,19 @@ int mainApp(const Cfg& cfg)
         return generateTestContens(cfg);
 
     auto allTestsPassed = false;
-    try{
+    try {
         const auto testReporter = lunchtoast::TestReporter{cfg.report, cfg.width};
-        auto testLauncher = lunchtoast::TestLauncher{cfg.testPath, cfg.ext, cfg.shell, !cfg.noCleanup, testReporter};
+        auto testLauncher = lunchtoast::TestLauncher{
+                cfg.testPath,
+                cfg.ext,
+                cfg.shell,
+                !cfg.noCleanup,
+                testReporter,
+                cfg.select,
+                cfg.skip};
         allTestsPassed = testLauncher.process();
-    } catch(const std::exception& e){
+    }
+    catch (const std::exception& e) {
         fmt::print("Unknown error occurred during test processing: {}\n", e.what());
         return -1;
     }
@@ -51,7 +75,7 @@ int mainApp(const Cfg& cfg)
         return 1;
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     auto cmdlineReader = cmdlime::CommandLineReader{"lunchtoast"};
     cmdlineReader.setErrorOutputStream(std::cout);
@@ -60,14 +84,14 @@ int main(int argc, char **argv)
 
 int generateTestContens(const Cfg& cfg)
 {
-    try{
+    try {
         auto testContentsGenerator = lunchtoast::TestContentsGenerator{cfg.testPath, cfg.ext};
         if (testContentsGenerator.process())
             return 0;
         else
             return -1;
     }
-    catch(const std::exception& e){
+    catch (const std::exception& e) {
         fmt::print("Unknown error occurred during creation of test cleanup whitelist: {}\n", e.what());
         return -1;
     }

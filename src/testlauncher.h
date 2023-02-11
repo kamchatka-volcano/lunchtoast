@@ -4,21 +4,22 @@
 #include <functional>
 #include <map>
 
-
-namespace lunchtoast{
+namespace lunchtoast {
 
 class Test;
 class TestResult;
 class TestReporter;
 
-class TestLauncher{
+class TestLauncher {
 public:
     TestLauncher(
             const std::filesystem::path& testPath,
             const std::string& testFileExt,
             std::string shellCommand,
             bool cleanup,
-            const TestReporter& reporter);
+            const TestReporter& reporter,
+            std::vector<std::string> selectedTags,
+            std::vector<std::string> skippedTags);
     bool process();
 
 private:
@@ -33,6 +34,8 @@ private:
     std::reference_wrapper<const TestReporter> reporter_;
     std::string shellCommand_;
     bool cleanup_;
+    std::vector<std::string> selectedTags_;
+    std::vector<std::string> skippedTags_;
 };
 
-}
+} //namespace lunchtoast

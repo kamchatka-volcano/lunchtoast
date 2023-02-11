@@ -1,13 +1,15 @@
 #include "testlauncher.h"
-#include "testreporter.h"
-#include "test.h"
-#include "sectionsreader.h"
-#include "utils.h"
 #include "errors.h"
-#include <fstream>
+#include "sectionsreader.h"
+#include "test.h"
+#include "testreporter.h"
+#include "utils.h"
+#include <sfun/string_utils.h>
 #include <algorithm>
+#include <fstream>
+#include <iterator>
 
-namespace lunchtoast{
+namespace lunchtoast {
 namespace fs = std::filesystem;
 
 TestLauncher::TestLauncher(
@@ -15,10 +17,14 @@ TestLauncher::TestLauncher(
         const std::string& testFileExt,
         std::string shellCommand,
         bool cleanup,
-        const TestReporter& reporter)
+        const TestReporter& reporter,
+        std::vector<std::string> selectedTags,
+        std::vector<std::string> skippedTags)
     : reporter_{reporter}
     , shellCommand_{std::move(shellCommand)}
     , cleanup_{cleanup}
+    , selectedTags_{std::move(selectedTags)}
+    , skippedTags_{std::move(skippedTags)}
 {
     collectTests(testPath, testFileExt);
 }
@@ -31,7 +37,7 @@ const TestReporter& TestLauncher::reporter()
 bool TestLauncher::process()
 {
     auto ok = processSuite("", defaultSuite_);
-    for (auto& suitePair: suites_)
+    for (auto& suitePair : suites_)
         if (!processSuite(suitePair.first, suitePair.second))
             ok = false;
     reporter().reportSummary(defaultSuite_, suites_);
@@ -44,11 +50,11 @@ bool TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
     const auto testsCount = static_cast<int>(tests.size());
     auto testNumber = 0;
     bool ok = true;
-    for (const auto& testCfg: tests){
+    for (const auto& testCfg : tests) {
         testNumber++;
-        try{
+        try {
             auto test = Test{testCfg.path, shellCommand_, cleanup_};
-            if (!testCfg.isEnabled){
+            if (!testCfg.isEnabled) {
                 reporter().reportDisabledTest(test, suiteName, testNumber, testsCount);
                 continue;
             }
@@ -58,9 +64,8 @@ bool TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
             else
                 ok = false;
             reporter().reportResult(test, result, suiteName, testNumber, testsCount);
-
         }
-        catch (const TestConfigError& error){
+        catch (const TestConfigError& error) {
             reporter().reportBrokenTest(testCfg.path, error.what(), suiteName, testNumber, testsCount);
             ok = false;
         }
@@ -70,7 +75,7 @@ bool TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
 
 void TestLauncher::collectTests(const fs::path& testPath, const std::string& testFileExt)
 {
-    if (fs::is_directory(testPath)){
+    if (fs::is_directory(testPath)) {
         if (testFileExt.empty())
             throw std::runtime_error{"To launch all tests in the directory, test extension must be specified"};
 
@@ -80,20 +85,42 @@ void TestLauncher::collectTests(const fs::path& testPath, const std::string& tes
                 collectTests(it->path(), testFileExt);
             else if (it->path().extension().string() == testFileExt)
                 addTest(fs::canonical(it->path()));
-    } else
+    }
+    else
         addTest(fs::canonical(testPath));
 }
 
-namespace{
+namespace {
 std::string getSectionValue(std::string_view sectionName, const std::vector<lunchtoast::Section>& sections)
 {
-    auto it = std::find_if(sections.begin(), sections.end(), [&](const auto& section){ return section.name == sectionName; });
+    auto it = std::find_if(
+            sections.begin(),
+            sections.end(),
+            [&](const auto& section)
+            {
+                return section.name == sectionName;
+            });
     if (it != sections.end())
         return it->value;
     return {};
 }
 
+bool isTestSelected(
+        const std::set<std::string>& testTags,
+        const std::vector<std::string>& selectedTags,
+        const std::vector<std::string>& skippedTags)
+{
+    auto isTestTaggedWith = [&](const std::string& tag)
+    {
+        return testTags.count(tag);
+    };
+    if (!selectedTags.empty())
+        if (std::none_of(selectedTags.begin(), selectedTags.end(), isTestTaggedWith))
+            return false;
+    return std::none_of(skippedTags.begin(), skippedTags.end(), isTestTaggedWith);
 }
+
+} //namespace
 
 void TestLauncher::addTest(const fs::path& testFile)
 {
@@ -108,15 +135,23 @@ void TestLauncher::addTest(const fs::path& testFile)
     auto suiteName = getSectionValue("Suite", sections);
     processVariablesSubstitution(suiteName, testFile.stem().string(), testFile.parent_path().stem().string());
 
-    if (suiteName.empty()){
+    auto tagsStr = getSectionValue("Tags", sections);
+    auto tags = sfun::split(tagsStr, ",");
+    auto tagsSet = std::set<std::string>{tags.begin(), tags.end()};
+
+    if (!isTestSelected(tagsSet, selectedTags_, skippedTags_))
+        return;
+
+    if (suiteName.empty()) {
         defaultSuite_.tests.push_back({testFile, isEnabled});
         if (!isEnabled)
             defaultSuite_.disabledTestsCounter++;
-    } else{
+    }
+    else {
         suites_[suiteName].tests.push_back({testFile, isEnabled});
         if (!isEnabled)
             suites_[suiteName].disabledTestsCounter++;
     }
 }
 
-}
+} //namespace lunchtoast

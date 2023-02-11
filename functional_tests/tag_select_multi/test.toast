@@ -1,0 +1,10 @@
+-Name: $dir$
+-Suite: setting params
+-Contents: test test/lhs.txt test/test_first.toast test/test_second.toast test/test_third.toast test/rhs.txt test.toast report.ref
+-Description: 
+    GIVEN 2 equal files (lhs.txt and rhs.txt), set enabled false
+    WHEN test single assertion of files equality
+    THEN test shouldn't start because it's disabled, disabled test counter should be in report
+---
+-Launch: ../../build/lunchtoast ./test --report report.res --select world,moon
+-Assert files equal: report.res report.ref
