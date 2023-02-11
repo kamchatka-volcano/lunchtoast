@@ -1,6 +1,7 @@
 -Name: $dir$
 -Suite: setting params
 -Contents: test test/test.ref test/lunchtoast.test test.toast report.ref
+-Tags: linux
 -Description:
     GIVEN file test.ref
     WHEN specify shell command as "bash -c", launch shell command that outputs content of test.ref to file test.res and assert that files are equal

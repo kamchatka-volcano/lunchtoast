@@ -5,7 +5,7 @@
     WHEN enable cleanup of files created during testing, test single assertion of files equality, write file test.txt, make directory tmp and write file tmp/test.txt
     THEN test should pass, file test.txt should be removed, directory tmp should be removed
 ---    
--Launch: ../../build/lunchtoast ./test/lunchtoast.test --report report.res
+-Launch: ../../build/lunchtoast ./test/lunchtoast.test --report report.res --shell 'wsl.exe sh -c -e'
 -Launch: find test | sort > dir.res
 -Assert content of dir.res:
 test

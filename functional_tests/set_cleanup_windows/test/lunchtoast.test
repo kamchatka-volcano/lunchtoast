@@ -1,0 +1,13 @@
+-Write test.txt:
+Hello world
+---
+-Assert content of test.txt:
+Hello world
+---
+-Launch command: mkdir tmp
+-Launch command: echo "Hello world" > tmp/test.txt
+-Assert content of tmp/test.txt:
+Hello world
+
+---
+-Assert files equal: data/lhs.txt rhs.txt

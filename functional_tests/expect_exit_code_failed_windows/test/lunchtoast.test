@@ -1,0 +1,2 @@
+-Launch: ls --dummy
+-Expect exit code: 0

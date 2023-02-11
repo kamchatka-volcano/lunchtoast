@@ -1,5 +1,6 @@
 -Name: $dir$
 -Contents: test test/lunchtoast.test test/data test/data/lhs.txt test/rhs.txt test.toast report.ref
+-Tags: linux
 -Description: 
     GIVEN 2 equal files (lhs.txt (inside folder data) and rhs.txt)
     WHEN don't disable cleanup of files created during testing, test single assertion of files equality, write file test.txt, make directory tmp and write file tmp/test.txt

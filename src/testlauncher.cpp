@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iterator>
+#include <set>
 
 namespace lunchtoast {
 namespace fs = std::filesystem;
@@ -80,11 +81,18 @@ void TestLauncher::collectTests(const fs::path& testPath, const std::string& tes
             throw std::runtime_error{"To launch all tests in the directory, test extension must be specified"};
 
         auto end = fs::directory_iterator{};
+        auto dirSet = std::set<fs::path>{};
+        auto fileSet = std::set<fs::path>{};
         for (auto it = fs::directory_iterator{testPath}; it != end; ++it)
             if (fs::is_directory(it->status()))
-                collectTests(it->path(), testFileExt);
+                dirSet.insert(it->path());
             else if (it->path().extension().string() == testFileExt)
-                addTest(fs::canonical(it->path()));
+                fileSet.insert(it->path());
+
+        for (const auto& dirPath : dirSet)
+            collectTests(dirPath, testFileExt);
+        for (const auto& filePath : fileSet)
+            addTest(fs::canonical(filePath));
     }
     else
         addTest(fs::canonical(testPath));

@@ -82,7 +82,9 @@ std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::reg
             continue;
         auto match = std::smatch{};
         auto fileEntry = fs::relative(path, directory).string();
-        if (std::regex_match(fileEntry, match, pathFilter))
+        auto unixFileEntry = sfun::replace(fileEntry, "/", "\\");
+        auto windowsFileEntry = sfun::replace(fileEntry, "\\", "/");
+        if (std::regex_match(unixFileEntry, match, pathFilter) || std::regex_match(windowsFileEntry, match, pathFilter))
             result.push_back(fs::absolute(directory) / fileEntry);
     }
     return result;

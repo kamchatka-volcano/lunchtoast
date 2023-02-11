@@ -1,0 +1,2 @@
+-Launch process: process.bat
+-Assert files equal: test.res test.ref

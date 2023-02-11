@@ -2,11 +2,11 @@
 Name: lunchtoast3
                               Result:   DISABLED
 ########## valid assertions [ 1 / 2 ] ##########
-Name: lunchtoast2
-                              Result:   DISABLED
-########## valid assertions [ 2 / 2 ] ##########
 Name: lunchtoast
                               Result:     PASSED
+########## valid assertions [ 2 / 2 ] ##########
+Name: lunchtoast2
+                              Result:   DISABLED
  
 ##################  SUMMARY  ###################
 invalid assertions:          0 out of 1 passed, 0 failed, 1 disabled

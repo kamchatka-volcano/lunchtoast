@@ -7,5 +7,5 @@
     THEN file writing should fail because directory with the same name exist
 ---    
 -Launch unchecked: mkdir ./test/dir
--Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test --report report.res
+-Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test | sed '/iostream/d' > report.res
 -Assert files equal: report.res report.ref

@@ -1,5 +1,6 @@
 -Name: $dir$
 -Contents: test test/process.sh test/lunchtoast.test test.toast report.ref
+-Tags: linux
 -Description: 
     GIVEN file test.ref
     WHEN launching script process.sh that outputs content of unexistent file test.res

@@ -3,10 +3,10 @@ Name: lunchtoast3
 Failure: Files lhs.txt and rhs2.txt equality check has failed, files lhs.txt and rhs2.txt are different
                               Result:     FAILED
 ########## valid assertions [ 1 / 2 ] ##########
-Name: lunchtoast2
+Name: lunchtoast
                               Result:     PASSED
 ########## valid assertions [ 2 / 2 ] ##########
-Name: lunchtoast
+Name: lunchtoast2
                               Result:     PASSED
  
 ##################  SUMMARY  ###################

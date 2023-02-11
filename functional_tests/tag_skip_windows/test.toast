@@ -1,0 +1,11 @@
+-Name: $dir$
+-Suite: setting params
+-Contents: test/test_first.test test/test_second.test test.toast report.ref
+-Tags: windows
+-Description: 
+    GIVEN 2 equal files (lhs.txt and rhs.txt), set enabled false
+    WHEN test single assertion of files equality
+    THEN test shouldn't start because it's disabled, disabled test counter should be in report
+---
+-Launch: ../../build/lunchtoast ./test --ext .test --report report.res --skip world --shell 'wsl.exe sh -c -e'
+-Assert files equal: report.res report.ref
