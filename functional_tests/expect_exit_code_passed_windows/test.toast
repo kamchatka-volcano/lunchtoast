@@ -6,5 +6,5 @@
     WHEN launching a shell command outputting "Hello world" to stdout
     THEN the test should pass
 ---    
--Launch: ../../build/lunchtoast ./test/lunchtoast.test --report report.res --shell 'wsl.exe sh -c -e'
+-Launch: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res -shell='wsl.exe sh -c -e'
 -Expect files equal: report.res report.ref

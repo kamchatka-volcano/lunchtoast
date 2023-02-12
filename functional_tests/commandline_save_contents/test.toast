@@ -3,10 +3,10 @@
 -Contents: test test/lhs.txt test/lunchtoast.test test/rhs.txt lunchtoast_test.ref lunchtoast.test test.toast report.ref
 -Description: 
     GIVEN 2 equal files (lhs.txt and rhs.txt)
-    WHEN launch lunchtoast with --save-contents
+    WHEN launch lunchtoast with --saveContents
     THEN test config should get a contents section with list of test files
 ---    
 -Launch: cp lunchtoast.test test/
--Launch: ../../build/lunchtoast test/lunchtoast.test --save-contents | sed 's/~\|\/[^ ]*//g' > report.res
+-Launch: ../../build/lunchtoast test/lunchtoast.test --saveContents | sed 's/~\|\/[^ ]*//g' > report.res
 -Assert files equal: report.res report.ref
 -Assert files equal: test/lunchtoast.test lunchtoast_test.ref

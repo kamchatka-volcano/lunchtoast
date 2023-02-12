@@ -6,5 +6,5 @@
     WHEN launching unexistent script process.sh
     THEN test should fail
 ---    
--Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test --report report.res
+-Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res
 -Assert files equal: report.res report.ref

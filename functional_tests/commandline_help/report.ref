@@ -1,20 +1,22 @@
-Usage: lunchtoast <test-path> [params] [flags] 
+Usage: lunchtoast <testPath> [params] [flags] 
 Arguments:
-    <test-path> (path)      
+    <testPath> (path)     a test file or a directory containing tests
 Parameters:
-   -r, --report <path>      save test report to file
-                              (optional, default: "")
-   -e, --ext <string>       the extension of searched test files, required 
-                              when specified test path is a directory
-                              (optional, default: .toast)
-   -w, --width <int>        set test report's width in number of characters
-                              (optional, default: 48)
-       --shell <string>     shell command
-                              (optional, default: sh -c -e)
-       --select <string>    multi-value, optional, default: {}
-       --skip <string>      multi-value, optional, default: {}
+   -report=<path>         save test report to file
+                            (optional, default: "")
+   -ext=<string>          the extension of searched test files, required when 
+                            specified test path is a directory
+                            (optional, default: .toast)
+   -width=<int>           set test report's width in number of characters
+                            (optional, default: 48)
+   -shell=<string>        shell command
+                            (optional, default: sh -c -e)
+   -select=<string>       select tests by tag names
+                            (multi-value, optional, default: {})
+   -skip=<string>         skip tests by tag names
+                            (multi-value, optional, default: {})
 Flags:
-   -s, --save-contents      save the current contents of of the test directory
-       --no-cleanup         cleanup test files
-       --help               show usage info and exit
+  --saveContents          save the current contents of of the test directory
+  --noCleanup             disables cleanup of test files
+  --help                  show usage info and exit
 

@@ -6,5 +6,5 @@
     WHEN launching script process.sh that outputs content of unexistent file test.res
     THEN test should fail
 ---    
--Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test --report report.res --shell 'wsl.exe sh -c -e'
+-Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res -shell='wsl.exe sh -c -e'
 -Assert files equal: report.res report.ref

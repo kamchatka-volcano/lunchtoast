@@ -32,16 +32,16 @@ struct EnsureContainsUniqueElements {
 
 // clang-format off
 struct Cfg : public cmdlime::Config{
-    CMDLIME_ARG(testPath, fs::path)               << EnsurePathExists{};
+    CMDLIME_ARG(testPath, fs::path)               << "a test file or a directory containing tests" << EnsurePathExists{};
     CMDLIME_PARAM(report, fs::path)()             << "save test report to file";
     CMDLIME_PARAM(ext, std::string)(".toast")     << "the extension of searched test files, "
                                                      "required when specified test path is a directory";
     CMDLIME_PARAM(width, int)(48)                 << "set test report's width in number of characters";
     CMDLIME_FLAG(saveContents)                    << "save the current contents of of the test directory";
-    CMDLIME_PARAM(shell, std::string)("sh -c -e") << "shell command" << cmdlime::WithoutShortName{};
-    CMDLIME_FLAG(noCleanup)                       << "cleanup test files" << cmdlime::WithoutShortName{};
-    CMDLIME_PARAMLIST(select, std::vector<std::string>)() << EnsureContainsUniqueElements{} << cmdlime::WithoutShortName{};
-    CMDLIME_PARAMLIST(skip, std::vector<std::string>)()   << EnsureContainsUniqueElements{} << cmdlime::WithoutShortName{};
+    CMDLIME_PARAM(shell, std::string)("sh -c -e") << "shell command";
+    CMDLIME_FLAG(noCleanup)                       << "disables cleanup of test files";
+    CMDLIME_PARAMLIST(select, std::vector<std::string>)() << "select tests by tag names" << EnsureContainsUniqueElements{};
+    CMDLIME_PARAMLIST(skip, std::vector<std::string>)()   << "skip tests by tag names" << EnsureContainsUniqueElements{};
 };
 // clang-format on
 
@@ -77,7 +77,7 @@ int mainApp(const Cfg& cfg)
 
 int main(int argc, char** argv)
 {
-    auto cmdlineReader = cmdlime::CommandLineReader{"lunchtoast"};
+    auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast"};
     cmdlineReader.setErrorOutputStream(std::cout);
     return cmdlineReader.exec<Cfg>(argc, argv, mainApp);
 }

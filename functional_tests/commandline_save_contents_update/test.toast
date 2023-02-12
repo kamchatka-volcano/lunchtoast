@@ -4,10 +4,10 @@
 -Description: 
     GIVEN 2 equal files (lhs.txt and rhs.txt) and empty file file_to_preserve.txt, 
     test config has a cleanup whitelist, listing all test files except file_to_preserve.txt
-    WHEN launch lunchtoast with --save-contents
+    WHEN launch lunchtoast with --saveContents
     THEN test config should get file_to_preserve.txt in a contents section
 ---    
 -Launch: cp lunchtoast.test test/
--Launch: ../../build/lunchtoast test/lunchtoast.test --save-contents | sed 's/~\|\/[^ ]*//g' > report.res
+-Launch: ../../build/lunchtoast test/lunchtoast.test --saveContents | sed 's/~\|\/[^ ]*//g' > report.res
 -Assert files equal: report.res report.ref
 -Assert files equal: test/lunchtoast.test lunchtoast_test.ref

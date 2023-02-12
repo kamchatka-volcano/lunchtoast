@@ -5,5 +5,5 @@
     WHEN test two expectations of files equality
     THEN first expectation should fail, second expectation should fail, after that the test should fail
 ---
--Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test --report report.res
+-Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res
 -Assert files equal: report.res report.ref

@@ -29,11 +29,13 @@ Total:                               1 out of 1 passed, 0 failed
 
 
 Command line options:
- * **--ext** **`<file extension>`** the extension of searched test files, required when specified test path is a directory, default value: **.toast**
- * **--report** **`<file path>`**  save test report to file
- * **--width** **`<number>`**   set test report's width in a number of characters
- * **--save-contents** generate a section with contents of the test directory
- * **--help** show usage info
+
+* **--ext=`<file extension>`** the extension of searched test files, required when specified test path is a directory,
+  default value: **.toast**
+* **--report=`<file path>`**  save test report to file
+* **--width=`<number>`**   set test report's width in a number of characters
+* **--saveContents** generate a section with contents of the test directory
+* **--help** show usage info
 
 
 Test case configuration syntax in 3 minutes:
