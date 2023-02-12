@@ -1,0 +1,62 @@
+name: build & test (clang, gcc, MSVC)
+
+on:
+  push:
+    branches: [ "master", "dev" ]
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches: [ "master", "dev" ]
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        use_nameof: [ "ON", "OFF" ]
+        config:
+          - {
+            name: "Ubuntu Latest gcc",
+            os: ubuntu-latest,
+            cc: "gcc",
+            cxx: "g++",
+            cmake_vars: "-DBoost_USE_STATIC_LIBS=ON -DBoost_USE_STATIC_RUNTIME=ON -DCMAKE_TOOLCHAIN_FILE=/usr/local/share/vcpkg/scripts/buildsystems/vcpkg.cmake",
+            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused"
+          }
+          - {
+            name: "Ubuntu Latest clang",
+            os: ubuntu-latest,
+            cc: "clang",
+            cxx: "clang++",
+            cmake_vars: "-DBoost_USE_STATIC_LIBS=ON -DBoost_USE_STATIC_RUNTIME=ON -DCMAKE_TOOLCHAIN_FILE=/usr/local/share/vcpkg/scripts/buildsystems/vcpkg.cmake",
+            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused"
+          }
+          - {
+            name: "Windows Latest MSVC",
+            os: windows-latest,
+            cc: "cl",
+            cxx: "cl",
+            cmake_vars: "-DCMAKE_GENERATOR_PLATFORM=x64 -DVCPKG_TARGET_TRIPLET=x64-windows-static-md -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake",
+            flags: "/EHsc /W4 /WX"
+          }
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build ${{ matrix.config.cmake_vars }} -DENABLE_TESTS=ON -DCMAKE_CXX_FLAGS="${{ matrix.config.flags }}"
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build
+
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        run: ctest
+
