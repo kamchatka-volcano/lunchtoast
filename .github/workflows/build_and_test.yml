@@ -21,7 +21,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        use_nameof: [ "ON", "OFF" ]
         config:
           - {
             name: "Ubuntu Latest gcc",
@@ -29,7 +28,8 @@ jobs:
             cc: "gcc",
             cxx: "g++",
             cmake_vars: "-DBoost_USE_STATIC_LIBS=ON -DBoost_USE_STATIC_RUNTIME=ON -DCMAKE_TOOLCHAIN_FILE=/usr/local/share/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused"
+            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
+            artifacts: "build/lunchtoast"
           }
           - {
             name: "Ubuntu Latest clang",
@@ -37,7 +37,8 @@ jobs:
             cc: "clang",
             cxx: "clang++",
             cmake_vars: "-DBoost_USE_STATIC_LIBS=ON -DBoost_USE_STATIC_RUNTIME=ON -DCMAKE_TOOLCHAIN_FILE=/usr/local/share/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused"
+            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
+            artifacts: "build/lunchtoast"
           }
           - {
             name: "Windows Latest MSVC",
@@ -45,18 +46,86 @@ jobs:
             cc: "cl",
             cxx: "cl",
             cmake_vars: "-DCMAKE_GENERATOR_PLATFORM=x64 -DVCPKG_TARGET_TRIPLET=x64-windows-static-md -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            flags: "/EHsc /W4 /WX"
+            flags: "/EHsc /W4 /WX",
+            artifacts: "build/Release/lunchtoast.exe"
           }
     steps:
       - uses: actions/checkout@v3
-
       - name: Configure CMake
         run: cmake -B ${{github.workspace}}/build ${{ matrix.config.cmake_vars }} -DENABLE_TESTS=ON -DCMAKE_CXX_FLAGS="${{ matrix.config.flags }}"
 
       - name: Build
-        run: cmake --build ${{github.workspace}}/build
+        run: cmake --build ${{github.workspace}}/build --config Release
 
       - name: Test
         working-directory: ${{github.workspace}}/build
         run: ctest
 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: lunchtoast-build-${{ matrix.config.os }}
+          path: ${{ matrix.config.artifacts }}
+
+  functional_test_windows:
+    name: Functional testing (Windows)
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: Vampire/setup-wsl@v2
+      - uses: robinraju/release-downloader@v1.7
+        with:
+          repository: "kamchatka-volcano/lunchtoast"
+          tag: "v0.1.0-beta"
+          filename: "lunchtoast.exe"
+          out-file-path: "master"
+      - name: Download lunchtoast build
+        uses: actions/download-artifact@v3
+        with:
+          name: lunchtoast-build-windows-latest
+          path: build
+      - name: Make symlink
+        shell: cmd
+        working-directory: '${{github.workspace}}\build'
+        run: mklink lunchtoast lunchtoast.exe
+      - name: Launch tests
+        working-directory: ${{github.workspace}}
+        run: master/lunchtoast.exe functional_tests -skip=linux
+
+  functional_test_linux:
+    name: Functional testing (Ubuntu)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: robinraju/release-downloader@v1.7
+        with:
+          repository: "kamchatka-volcano/lunchtoast"
+          tag: "v0.1.0-beta"
+          filename: "lunchtoast"
+          out-file-path: "master"
+      - name: Set master lunchtoast execute permissions
+        shell: sh
+        working-directory: ${{github.workspace}}/master
+        run: chmod +x lunchtoast
+      - name: Download lunchtoast build
+        uses: actions/download-artifact@v3
+        with:
+          name: lunchtoast-build-ubuntu-latest
+          path: build
+      - name: Set lunchtoast build execute permissions
+        shell: sh
+        working-directory: ${{github.workspace}}/build
+        run: chmod +x lunchtoast
+      - name: Launch tests
+        working-directory: ${{github.workspace}}/
+        run: master/lunchtoast functional_tests/ -skip=windows
+
+      - name: Upload failing tests as artifact (debug)
+        uses: actions/upload-artifact@v3
+        with:
+          name: lunchtoast-failing-tests
+          path: |
+            functional_tests/set_contents
+            functional_tests/compare_files_regexp_error
