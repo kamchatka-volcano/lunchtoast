@@ -1,2 +1,2 @@
--Launch command: echo "Hello world" > test.res
+-Launch command: echo 'Hello world' > test.res
 -Assert files equal: test.res test.ref
