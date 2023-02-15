@@ -7,5 +7,5 @@
     WHEN test single assertion of files equality
     THEN test shouldn't start because it's disabled, disabled test counter should be in report
 ---
--Launch: ../../build/lunchtoast ./test -ext=.test -report=report.res -skip=world -skip=pluto -shell='wsl.exe sh -c -e'
+-Launch: ../../build/lunchtoast ./test -ext=.test -report=report.res -skip=world -skip=pluto -shell='msys2 -c'
 -Assert files equal: report.res report.ref

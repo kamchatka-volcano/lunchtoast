@@ -7,5 +7,5 @@
     THEN test should fail because test directory doesn't exist
 ---    
 -Launch unchecked: rm test/testdata/test.txt
--Launch: ../../build/lunchtoast ./test/lunchtoast.test | sed 's/~\|\/[^ ]*//g' > report.res
+-Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test | sed 's/~\|\/[^ ]*//g' > report.res
 -Assert files equal: report.res report.ref

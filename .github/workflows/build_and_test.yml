@@ -73,7 +73,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: Vampire/setup-wsl@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          path-type: inherit
       - uses: robinraju/release-downloader@v1.7
         with:
           repository: "kamchatka-volcano/lunchtoast"
@@ -91,7 +93,7 @@ jobs:
         run: mklink lunchtoast lunchtoast.exe
       - name: Launch tests
         working-directory: ${{github.workspace}}
-        run: master/lunchtoast.exe functional_tests -skip=linux
+        run: master/lunchtoast.exe functional_tests -skip=linux -shell="msys2 -c"
 
   functional_test_linux:
     name: Functional testing (Ubuntu)
@@ -122,10 +124,10 @@ jobs:
         working-directory: ${{github.workspace}}/
         run: master/lunchtoast functional_tests/ -skip=windows
 
-      - name: Upload failing tests as artifact (debug)
-        uses: actions/upload-artifact@v3
-        with:
-          name: lunchtoast-failing-tests
-          path: |
-            functional_tests/set_contents
-            functional_tests/compare_files_regexp_error
+#      - name: Upload failing tests as artifact (debug)
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: lunchtoast-failing-tests
+#          path: |
+#            functional_tests/set_contents
+#            functional_tests/compare_files_regexp_error

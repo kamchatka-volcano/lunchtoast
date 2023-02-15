@@ -7,5 +7,5 @@
     THEN test should pass
 ---    
 -Launch unchecked: rm test/test.res
--Launch: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res -shell='wsl.exe sh -c -e'
+-Launch: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res -shell='msys2 -c'
 -Assert files equal: report.res report.ref
