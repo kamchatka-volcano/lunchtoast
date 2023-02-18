@@ -19,8 +19,26 @@ TEST(Utils, SplitCommand2)
 
 TEST(Utils, SplitCommand3)
 {
+    auto parts = lunchtoast::splitCommand("command -param=\"hello world\" -param2=\"hello world 2\"");
+    ASSERT_EQ(parts, (std::vector<std::string_view>{"command", "-param=\"hello world\"", "-param2=\"hello world 2\""}));
+}
+
+TEST(Utils, SplitCommand4)
+{
     auto parts = lunchtoast::splitCommand("\"hello world\" command");
     ASSERT_EQ(parts, (std::vector<std::string_view>{"hello world", "command"}));
+}
+
+TEST(Utils, SplitCommand5)
+{
+    auto parts = lunchtoast::splitCommand("\"  hello world  \" command");
+    ASSERT_EQ(parts, (std::vector<std::string_view>{"  hello world  ", "command"}));
+}
+
+TEST(Utils, SplitCommand6)
+{
+    auto parts = lunchtoast::splitCommand("\" hello world \" --param2 \"hello world 2\" -param3=\"hello world 3\"");
+    ASSERT_EQ(parts, (std::vector<std::string_view>{" hello world ", "--param2", "hello world 2", "-param3=\"hello world 3\""}));
 }
 
 TEST(Utils, SplitCommandNoWhitespace)

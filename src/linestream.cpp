@@ -20,6 +20,17 @@ std::string LineStream::readLine()
     auto line = std::string{};
     while (stream().get(ch)){
         line += ch;
+        if (ch == '\r'){
+            line.pop_back();
+            auto pos = stream().tellg();
+            stream().get(ch);
+            if (ch != '\n')
+                stream().seekg(pos);
+
+            line.push_back('\n');
+            lineNumber_++;
+            return line;
+        }
         if (ch == '\n') {
             lineNumber_++;
             return line;

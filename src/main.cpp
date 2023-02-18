@@ -2,6 +2,7 @@
 #include "testcontentsgenerator.h"
 #include "testlauncher.h"
 #include "testreporter.h"
+#include "utils.h"
 #include <cmdlime/commandlinereader.h>
 #include <fmt/format.h>
 #include <filesystem>
@@ -10,6 +11,21 @@
 
 namespace fs = std::filesystem;
 
+namespace cmdlime {
+template<>
+struct StringConverter<fs::path> {
+    static std::optional<std::string> toString(const fs::path& coord)
+    {
+        return lunchtoast::toString(coord);
+    }
+
+    static std::optional<fs::path> fromString(const std::string& data)
+    {
+        return lunchtoast::toPath(data);
+    }
+};
+}
+
 struct EnsurePathExists {
     void operator()(const fs::path& path)
     {
@@ -17,7 +33,7 @@ struct EnsurePathExists {
             throw cmdlime::ValidationError{fmt::format(
                     "specified test directory "
                     "or file path '{}' doesn't exist.\n",
-                    path.string())};
+                    lunchtoast::toString(path))};
     }
 };
 
@@ -75,12 +91,26 @@ int mainApp(const Cfg& cfg)
         return 1;
 }
 
+#ifndef _WIN32
 int main(int argc, char** argv)
 {
     auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast"};
     cmdlineReader.setErrorOutputStream(std::cout);
     return cmdlineReader.exec<Cfg>(argc, argv, mainApp);
 }
+#else
+int wmain(int argc, wchar_t** argv)
+{
+    auto wargs = std::vector<std::wstring>{argv, argv + argc};
+    wargs.erase(wargs.begin());
+    auto args = std::vector<std::string>{};
+    std::transform(wargs.begin(), wargs.end(), std::back_inserter(args), [](const std::wstring& arg){ return lunchtoast::toUtf8(arg);});
+
+    auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast"};
+    cmdlineReader.setErrorOutputStream(std::cout);
+    return cmdlineReader.exec<Cfg>(args, mainApp);
+}
+#endif
 
 int generateTestContens(const Cfg& cfg)
 {

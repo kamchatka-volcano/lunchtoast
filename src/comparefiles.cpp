@@ -21,7 +21,7 @@ std::string filenameListStr(const std::vector<fs::path>& pathList)
 {
     auto pathToString = [](const fs::path& path)
     {
-        return path.filename().string();
+        return toString(path.filename());
     };
     auto filenameList = std::vector<std::string>{};
     std::transform(pathList.begin(), pathList.end(), std::back_inserter(filenameList), pathToString);
@@ -67,9 +67,9 @@ bool CompareFiles::compareFiles(const fs::path& lhs, const fs::path& rhs, std::s
         failedComparisonInfo +=
                 fmt::format("Files {} and {} equality check has failed, ", lhs_.string(), rhs_.string());
     if (!lhsExists)
-        failedComparisonInfo += fmt::format("file {} doesn't exist; ", lhs.filename().string());
+        failedComparisonInfo += fmt::format("file {} doesn't exist; ", toString(lhs.filename()));
     if (!rhsExists)
-        failedComparisonInfo += fmt::format("file {} doesn't exist; ", rhs.filename().string());
+        failedComparisonInfo += fmt::format("file {} doesn't exist; ", toString(rhs.filename()));
     if (!bothFilesExist)
         return false;
 
@@ -78,8 +78,8 @@ bool CompareFiles::compareFiles(const fs::path& lhs, const fs::path& rhs, std::s
                 "Files {} and {} equality check has failed, files {} and {} are different",
                 lhs_.string(),
                 rhs_.string(),
-                lhs.filename().string(),
-                rhs.filename().string());
+                toString(lhs.filename()),
+                toString(rhs.filename()));
         return false;
     }
     return true;

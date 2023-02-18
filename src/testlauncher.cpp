@@ -86,7 +86,7 @@ void TestLauncher::collectTests(const fs::path& testPath, const std::string& tes
         for (auto it = fs::directory_iterator{testPath}; it != end; ++it)
             if (fs::is_directory(it->status()))
                 dirSet.insert(it->path());
-            else if (it->path().extension().string() == testFileExt)
+            else if (toString(it->path().extension()) == testFileExt)
                 fileSet.insert(it->path());
 
         for (const auto& dirPath : dirSet)
@@ -132,7 +132,7 @@ bool isTestSelected(
 
 void TestLauncher::addTest(const fs::path& testFile)
 {
-    auto stream = std::ifstream{testFile.string()};
+    auto stream = std::ifstream{testFile, std::ios::binary};
     auto error = SectionReadingError{};
     auto sections = lunchtoast::readSections(stream, error);
 
@@ -141,7 +141,7 @@ void TestLauncher::addTest(const fs::path& testFile)
     stream.clear();
     stream.seekg(0, std::ios::beg);
     auto suiteName = getSectionValue("Suite", sections);
-    processVariablesSubstitution(suiteName, testFile.stem().string(), testFile.parent_path().stem().string());
+    processVariablesSubstitution(suiteName, toString(testFile.stem()), toString(testFile.parent_path().stem()));
 
     auto tagsStr = getSectionValue("Tags", sections);
     auto tags = sfun::split(tagsStr, ",");

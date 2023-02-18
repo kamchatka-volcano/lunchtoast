@@ -6,6 +6,7 @@
 
 namespace lunchtoast{
 
+std::string readTextFile(const std::filesystem::path& filePath);
 std::string readFile(const std::filesystem::path& filePath);
 void processVariablesSubstitution(std::string& value,
                                   const std::string& varFileName,
@@ -19,4 +20,11 @@ std::string toLower(std::string_view str);
 
 std::vector<std::string_view> splitCommand(std::string_view str);
 
+std::filesystem::path toPath(std::string_view str);
+std::string toString(const std::filesystem::path& path);
+
+#ifdef _WIN32
+std::string toUtf8(std::wstring_view utf16String);
+std::wstring toUtf16(std::string_view utf8String);
+#endif
 }

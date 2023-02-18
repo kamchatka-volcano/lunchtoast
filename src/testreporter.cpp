@@ -8,6 +8,7 @@
 #include <spdlog/logger.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/pattern_formatter.h>
 
 
 namespace lunchtoast{
@@ -200,21 +201,26 @@ void TestReporter::initReporter(const fs::path& reportFilePath)
         sink->set_level(spdlog::level::trace);
         //sink->set_color(spdlog::level::trace, 0);
         sink->set_pattern("%^%v%$");
+        //sink->set_formatter(std::make_unique<spdlog::pattern_formatter>("%^%v%$", spdlog::pattern_time_type::local, "\n"));
         return sink;
     };
     auto makeFileSink = [](const fs::path& logFilePath){
-        auto sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(logFilePath.string(), true);
+        auto sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(toString(logFilePath), true);
         sink->set_level(spdlog::level::trace);
         sink->set_pattern("%v");
+        //sink->set_formatter(std::make_unique<spdlog::pattern_formatter>("%v", spdlog::pattern_time_type::local, "\n"));
         return sink;
     };
 
     auto logger = std::shared_ptr<spdlog::logger>{};
+
     if (reportFilePath.empty())
         logger = std::make_shared<spdlog::logger>("reporter", spdlog::sinks_init_list{makeConsoleSink()});
+
     else
-        logger = std::make_shared<spdlog::logger>("reporter", spdlog::sinks_init_list{makeConsoleSink(),
-                                                                                      makeFileSink(reportFilePath)});
+        logger = std::make_shared<spdlog::logger>(
+                "reporter",
+                spdlog::sinks_init_list{makeConsoleSink(), makeFileSink(reportFilePath)});
 
     logger->set_level(spdlog::level::trace);
     logger->flush_on(spdlog::level::trace);

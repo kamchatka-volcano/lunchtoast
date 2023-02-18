@@ -1,5 +1,0 @@
-#Some comment
--Contents: file_to_preserve.txt lhs.txt lunchtoast.test rhs.txt
--Assert files equal: lhs.txt rhs.txt
-#Other comment
-

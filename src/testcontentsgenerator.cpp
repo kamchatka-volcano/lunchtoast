@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "test.h"
 #include "errors.h"
+#include "linestream.h"
 #include <sfun/string_utils.h>
 #include <fmt/format.h>
 #include <fstream>
@@ -32,7 +33,7 @@ void TestContentsGenerator::collectTestConfigs(const fs::path& testPath, const s
         for (auto it = fs::directory_iterator{testPath}; it != end; ++it)
             if (fs::is_directory(it->status()))
                 collectTestConfigs(it->path(), testFileExt);
-            else if (it->path().extension().string() == testFileExt)
+            else if (toString(it->path().extension()) == testFileExt)
                 testConfigs_.push_back(fs::canonical(it->path()));
     } else
         testConfigs_.push_back(fs::canonical(testPath));
@@ -70,7 +71,7 @@ fs::path getTestDirectory(const fs::path& cfgPath, const std::vector<Section>& s
                 return section.name == "Directory";
             });
     if (dirSectionIt != sections.end())
-        cfgDir = sfun::trim(dirSectionIt->value);
+        cfgDir = toPath(sfun::trim(dirSectionIt->value));
     if (!cfgDir.empty())
         testDir = fs::canonical(testDir) / cfgDir;
     return testDir;
@@ -80,7 +81,7 @@ std::string getDirectoryContentString(const fs::path& dir)
 {
     auto testDirPaths = getDirectoryContent(dir);
     auto testDirPathsStr = std::vector<std::string>{};
-    auto pathRelativeToDir = [&dir](const fs::path& path) { return fs::relative(path, dir).string(); };
+    auto pathRelativeToDir = [&dir](const fs::path& path) { return toString(fs::relative(path, dir)); };
     std::transform(testDirPaths.begin(), testDirPaths.end(), std::back_inserter(testDirPathsStr), pathRelativeToDir);
     std::sort(testDirPathsStr.begin(), testDirPathsStr.end());
     return sfun::join(testDirPathsStr, " ");
@@ -88,9 +89,8 @@ std::string getDirectoryContentString(const fs::path& dir)
 
 void writeSections(const std::vector<Section>& sections, const fs::path& outFilePath)
 {
-    auto stream = std::ofstream{};
+    auto stream = std::ofstream{outFilePath, std::ios::binary};
     stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    stream.open(outFilePath.string());
     for (const auto& section: sections)
         stream << section.originalText;
 }
@@ -100,23 +100,27 @@ void copyComments(const std::string& input, std::string& output)
     auto stream = std::stringstream{input};
     auto line = std::string{};
     auto sectionEncountered = false;
-    while (std::getline(stream, line)){
+    auto lineStream = LineStream{stream};
+    line = lineStream.readLine();
+    while (!line.empty()){
         if (sfun::trim(line).empty())
             output += "\n";
         else if (sfun::startsWith(line, "#")){
             if (!sectionEncountered)
-                output.insert(0, line + "\n");
+                output.insert(0, line);
             else
-                output += line + "\n";
+                output += line;
         }
         else if (sfun::startsWith(line, "-"))
             sectionEncountered = true;
+
+        line = lineStream.readLine();
     }
 }
 
 void processTestConfig(const fs::path& cfgPath)
 {
-    auto stream = std::ifstream{cfgPath.string()};
+    auto stream = std::ifstream{cfgPath, std::ios::binary};
     if (!stream.is_open())
         throw TestConfigError{fmt::format("Test config file {} doesn't exist", homePathString(cfgPath))};
 

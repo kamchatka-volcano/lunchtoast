@@ -22,7 +22,7 @@ namespace lunchtoast {
 namespace fs = std::filesystem;
 
 Test::Test(const fs::path& configPath, std::string shellCommand, bool cleanup)
-    : name_(configPath.stem().string())
+    : name_(toString(configPath.stem()))
     , directory_(configPath.parent_path())
     , shellCommand_(std::move(shellCommand))
     , isEnabled_(true)
@@ -144,7 +144,7 @@ bool isValidUnusedSection(const Section& section)
 
 void Test::readConfig(const fs::path& path)
 {
-    auto fileStream = std::ifstream{path.string()};
+    auto fileStream = std::ifstream{path, std::ios::binary};
     if (!fileStream.is_open())
         throw TestConfigError{fmt::format("Test config file {} doesn't exist", homePathString(path))};
 
@@ -167,9 +167,9 @@ void Test::readConfig(const fs::path& path)
     }
 
     checkParams();
-    processVariablesSubstitution(name_, path.stem().string(), directory_.stem().string());
-    processVariablesSubstitution(description_, path.stem().string(), directory_.stem().string());
-    processVariablesSubstitution(suite_, path.stem().string(), directory_.stem().string());
+    processVariablesSubstitution(name_, toString(path.stem()), toString(directory_.stem()));
+    processVariablesSubstitution(description_, toString(path.stem()), toString(directory_.stem()));
+    processVariablesSubstitution(suite_, toString(path.stem()), toString(directory_.stem()));
 }
 
 void Test::checkParams()
@@ -227,8 +227,8 @@ void Test::createLaunchAction(const Section& section)
 void Test::createWriteAction(const Section& section)
 {
     const auto fileName = sfun::trim(sfun::after(section.name, "Write"));
-    const auto path = fs::absolute(directory_) / fileName;
-    actions_.push_back({WriteFile{path.string(), section.value}, TestActionType::RequiredOperation});
+    const auto path = fs::absolute(directory_) / toPath(fileName);
+    actions_.push_back({WriteFile{path, section.value}, TestActionType::RequiredOperation});
 }
 
 void Test::createCompareFilesAction(TestActionType actionType, const std::string& filenamesStr)
@@ -337,11 +337,11 @@ void Test::postProcessCleanupConfig(const fs::path& configPath)
                 std::back_inserter(contents_),
                 [this](const fs::path& path)
                 {
-                    return FilenameGroup{fs::relative(path, directory_).string(), directory_};
+                    return FilenameGroup{toString(fs::relative(path, directory_)), directory_};
                 });
         return;
     }
-    contents_.emplace_back(fs::relative(configPath, directory_).string(), directory_);
+    contents_.emplace_back(toString(fs::relative(configPath, directory_)), directory_);
 }
 
 } //namespace lunchtoast

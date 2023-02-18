@@ -32,7 +32,7 @@ std::vector<fs::path> FilenameGroup::fileList() const
         return getMatchingPaths(directory_, fileMatchingRegexp_,
                                 [](const fs::path& path) { return fs::is_regular_file(path); });
     else
-        return {fs::absolute(directory_) / fs::path{filenameOrRegexp_}};
+        return {fs::absolute(directory_) / toPath(filenameOrRegexp_)};
 }
 
 std::vector<fs::path> FilenameGroup::pathList() const
@@ -41,7 +41,7 @@ std::vector<fs::path> FilenameGroup::pathList() const
     if (isRegexp_)
         result = getMatchingPaths(directory_, fileMatchingRegexp_);
     else
-        result = {fs::absolute(directory_) / fs::path{filenameOrRegexp_}};
+        result = {fs::absolute(directory_) / toPath(filenameOrRegexp_)};
 
     auto dirs = std::set<fs::path>{};
     for (const auto& path: result) {
@@ -81,11 +81,11 @@ std::vector<fs::path> getMatchingPaths(const fs::path& directory, const std::reg
         if (!pathMatchPredicate(path))
             continue;
         auto match = std::smatch{};
-        auto fileEntry = fs::relative(path, directory).string();
+        auto fileEntry = toString(fs::relative(path, directory));
         auto unixFileEntry = sfun::replace(fileEntry, "/", "\\");
         auto windowsFileEntry = sfun::replace(fileEntry, "\\", "/");
         if (std::regex_match(unixFileEntry, match, pathFilter) || std::regex_match(windowsFileEntry, match, pathFilter))
-            result.push_back(fs::absolute(directory) / fileEntry);
+            result.push_back(fs::absolute(directory) / toPath(fileEntry));
     }
     return result;
 }

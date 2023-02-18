@@ -1,0 +1,10 @@
+-Name: $dir$
+-Contents: test test/лхс.txt test/ланчтост.test test/рхс.txt test.toast report.ref
+-Tags: windows
+-Description: 
+    GIVEN 2 equal files (lhs.txt and rhs.txt)
+    WHEN test single assertion of files equality
+    THEN test should pass
+---    
+-Launch process: ../../build/lunchtoast ./test/ланчтост.test -report=report.res -shell="msys2 -c"
+-Assert files equal: report.res report.ref

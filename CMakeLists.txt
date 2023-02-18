@@ -69,4 +69,7 @@ SealLake_Executable(
             Microsoft.GSL::GSL
             sago::platform_folders
 )
+target_compile_definitions(lunchtoast PRIVATE _UNICODE UNICODE)
+
 SealLake_OptionalBuildSteps(tests)
+
