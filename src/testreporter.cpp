@@ -68,7 +68,7 @@ std::string truncateString(std::string str, int maxWidth)
 }
 
 void TestReporter::reportResult(const Test& test, const TestResult& result,
-                                std::string suiteName, int suiteTestNumber, int suiteNumOfTests) const
+                                std::string suiteName, int suiteTestNumber, sfun::ssize_t suiteNumOfTests) const
 {
     suiteName = truncateString(suiteName, reportWidth_ / 2);
     auto header = fmt::format(" {} [ {} / {} ] ", suiteName, suiteTestNumber, suiteNumOfTests);
@@ -100,7 +100,7 @@ void TestReporter::reportResult(const Test& test, const TestResult& result,
 }
 
 void TestReporter::reportBrokenTest(const fs::path& brokenTestConfig, const std::string& errorInfo,
-                                    std::string suiteName, int suiteTestNumber, int suiteNumOfTests) const
+                                    std::string suiteName, int suiteTestNumber, std::ptrdiff_t suiteNumOfTests) const
 {
     suiteName = truncateString(suiteName, reportWidth_ / 2);
     auto header = fmt::format(" {} [ {} / {} ] ", suiteName, suiteTestNumber, suiteNumOfTests);
@@ -112,7 +112,7 @@ void TestReporter::reportBrokenTest(const fs::path& brokenTestConfig, const std:
 }
 
 void TestReporter::reportDisabledTest(const Test& test,
-                                      std::string suiteName, int suiteTestNumber, int suiteNumOfTests) const
+                                      std::string suiteName, int suiteTestNumber, sfun::ssize_t suiteNumOfTests) const
 {
     suiteName = truncateString(suiteName, reportWidth_ / 2);
     auto header = fmt::format(" {} [ {} / {} ] ", suiteName, suiteTestNumber, suiteNumOfTests);

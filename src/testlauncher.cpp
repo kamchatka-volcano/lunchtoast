@@ -1,10 +1,12 @@
 #include "testlauncher.h"
+#include "commandline.h"
 #include "errors.h"
 #include "sectionsreader.h"
 #include "test.h"
 #include "testreporter.h"
 #include "utils.h"
 #include <sfun/string_utils.h>
+#include <sfun/utility.h>
 #include <algorithm>
 #include <fstream>
 #include <iterator>
@@ -13,21 +15,16 @@
 namespace lunchtoast {
 namespace fs = std::filesystem;
 
-TestLauncher::TestLauncher(
-        const fs::path& testPath,
-        const std::string& testFileExt,
-        std::string shellCommand,
-        bool cleanup,
-        const TestReporter& reporter,
-        std::vector<std::string> selectedTags,
-        std::vector<std::string> skippedTags)
+TestLauncher::TestLauncher(const TestReporter& reporter, const CommandLine& commandLine)
     : reporter_{reporter}
-    , shellCommand_{std::move(shellCommand)}
-    , cleanup_{cleanup}
-    , selectedTags_{std::move(selectedTags)}
-    , skippedTags_{std::move(skippedTags)}
+    , shellCommand_{commandLine.shell}
+    , cleanup_{!commandLine.noCleanup}
+    , selectedTags_{commandLine.select}
+    , skippedTags_{commandLine.skip}
+    , listOfFailedTests_{commandLine.listFailedTests}
+    , dirWithFailedTests_{commandLine.collectFailedTests}
 {
-    collectTests(testPath, testFileExt);
+    collectTests(commandLine.testPath, commandLine.ext);
 }
 
 const TestReporter& TestLauncher::reporter()
@@ -35,23 +32,67 @@ const TestReporter& TestLauncher::reporter()
     return reporter_;
 }
 
-bool TestLauncher::process()
+namespace {
+template<typename TContainer>
+auto concat(TContainer& lhs, const TContainer& rhs)
 {
-    auto ok = processSuite("", defaultSuite_);
-    for (auto& suitePair : suites_)
-        if (!processSuite(suitePair.first, suitePair.second))
-            ok = false;
-    reporter().reportSummary(defaultSuite_, suites_);
-    return ok;
+    lhs.insert(lhs.end(), rhs.begin(), rhs.end());
 }
 
-bool TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
+void writePathList(const std::vector<fs::path>& pathList, const fs::path& outputFile)
 {
-    const auto& tests = suite.tests;
-    const auto testsCount = static_cast<int>(tests.size());
+    if (pathList.empty())
+        return;
+
+    auto stream = std::ofstream{outputFile};
+    for (const auto& path : pathList)
+        stream << sfun::replace(toString(path), "\\", "/") << std::endl;
+}
+
+void copyDirList(const std::vector<fs::path>& pathList, const fs::path& targetDir)
+{
+    if (pathList.empty())
+        return;
+
+    if (!fs::exists(targetDir))
+        fs::create_directory(targetDir);
+
+    for (const auto& path : pathList)
+        if (fs::is_directory(path))
+            fs::copy(path, targetDir / path.stem(), fs::copy_options::update_existing | fs::copy_options::recursive);
+        else
+            fs::copy(
+                    path.parent_path(),
+                    targetDir / path.parent_path().stem(),
+                    fs::copy_options::update_existing | fs::copy_options::recursive);
+}
+
+} //namespace
+
+bool TestLauncher::process()
+{
+    auto failedTests = std::vector<fs::path>{};
+    concat(failedTests, processSuite("", defaultSuite_));
+    for (auto& suitePair : suites_)
+        concat(failedTests, processSuite(suitePair.first, suitePair.second));
+
+    reporter().reportSummary(defaultSuite_, suites_);
+    if (!listOfFailedTests_.empty())
+        writePathList(failedTests, listOfFailedTests_);
+    if (!dirWithFailedTests_.empty()) {
+        copyDirList(failedTests, dirWithFailedTests_);
+    }
+
+    return failedTests.empty();
+}
+
+std::vector<std::filesystem::path> TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
+{
+    const auto testsCount = sfun::ssize(suite.tests);
     auto testNumber = 0;
-    bool ok = true;
-    for (const auto& testCfg : tests) {
+    auto failedTests = std::vector<fs::path>{};
+
+    for (const auto& testCfg : suite.tests) {
         testNumber++;
         try {
             auto test = Test{testCfg.path, shellCommand_, cleanup_};
@@ -63,15 +104,16 @@ bool TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
             if (result.type() == TestResultType::Success)
                 suite.passedTestsCounter++;
             else
-                ok = false;
+                failedTests.push_back(testCfg.path);
+
             reporter().reportResult(test, result, suiteName, testNumber, testsCount);
         }
         catch (const TestConfigError& error) {
             reporter().reportBrokenTest(testCfg.path, error.what(), suiteName, testNumber, testsCount);
-            ok = false;
+            failedTests.push_back(testCfg.path);
         }
     }
-    return ok;
+    return failedTests;
 }
 
 void TestLauncher::collectTests(const fs::path& testPath, const std::string& testFileExt)

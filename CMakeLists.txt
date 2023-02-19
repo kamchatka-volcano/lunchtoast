@@ -5,9 +5,9 @@ find_package(Boost 1.67 REQUIRED COMPONENTS system filesystem)
 include(GNUInstallDirs)
 include(external/seal_lake)
 
-SealLake_Import(sfun 2.4.0
+SealLake_Import(sfun 3.2.0
         GIT_REPOSITORY https://github.com/kamchatka-volcano/sfun
-        GIT_TAG v3
+        GIT_TAG v3.2.0
 )
 SealLake_Import(cmdlime 2.3.1
         GIT_REPOSITORY https://github.com/kamchatka-volcano/cmdlime

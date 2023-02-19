@@ -1,3 +1,3 @@
 Positional argument 'testPath' is missing.
-Usage: lunchtoast <testPath> [-report=<path>] [-ext=<string>] [-width=<int>] [-shell=<string>] [-select=<string>...] [-skip=<string>...] [--saveContents] [--noCleanup] [--help] 
+Usage: lunchtoast <testPath> [-report=<path>] [-listFailedTests=<path>] [-collectFailedTests=<path>] [-ext=<string>] [-width=<int>] [-shell=<string>] [-select=<string>...] [-skip=<string>...] [--saveContents] [--noCleanup] [--help] 
 

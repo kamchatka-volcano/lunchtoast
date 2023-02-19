@@ -3,29 +3,24 @@
 #include <filesystem>
 #include <functional>
 #include <map>
+#include <vector>
 
 namespace lunchtoast {
 
 class Test;
 class TestResult;
 class TestReporter;
+struct CommandLine;
 
 class TestLauncher {
 public:
-    TestLauncher(
-            const std::filesystem::path& testPath,
-            const std::string& testFileExt,
-            std::string shellCommand,
-            bool cleanup,
-            const TestReporter& reporter,
-            std::vector<std::string> selectedTags,
-            std::vector<std::string> skippedTags);
+    TestLauncher(const TestReporter&, const CommandLine&);
     bool process();
 
 private:
     void collectTests(const std::filesystem::path& testPath, const std::string& testFileExt);
     void addTest(const std::filesystem::path& testFile);
-    bool processSuite(const std::string& suiteName, TestSuite& suite);
+    std::vector<std::filesystem::path> processSuite(const std::string& suiteName, TestSuite& suite);
     const TestReporter& reporter();
 
 private:
@@ -36,6 +31,8 @@ private:
     bool cleanup_;
     std::vector<std::string> selectedTags_;
     std::vector<std::string> skippedTags_;
+    std::filesystem::path listOfFailedTests_;
+    std::filesystem::path dirWithFailedTests_;
 };
 
 } //namespace lunchtoast

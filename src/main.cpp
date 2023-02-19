@@ -1,83 +1,24 @@
+#include "commandline.h"
 #include "test.h"
 #include "testcontentsgenerator.h"
 #include "testlauncher.h"
 #include "testreporter.h"
-#include "utils.h"
 #include <cmdlime/commandlinereader.h>
 #include <fmt/format.h>
-#include <filesystem>
-#include <fstream>
 #include <set>
 
-namespace fs = std::filesystem;
+using namespace lunchtoast;
 
-namespace cmdlime {
-template<>
-struct StringConverter<fs::path> {
-    static std::optional<std::string> toString(const fs::path& coord)
-    {
-        return lunchtoast::toString(coord);
-    }
-
-    static std::optional<fs::path> fromString(const std::string& data)
-    {
-        return lunchtoast::toPath(data);
-    }
-};
-}
-
-struct EnsurePathExists {
-    void operator()(const fs::path& path)
-    {
-        if (!fs::exists(path))
-            throw cmdlime::ValidationError{fmt::format(
-                    "specified test directory "
-                    "or file path '{}' doesn't exist.\n",
-                    lunchtoast::toString(path))};
-    }
-};
-
-struct EnsureContainsUniqueElements {
-    void operator()(const std::vector<std::string>& list)
-    {
-        auto set = std::set<std::string>{list.begin(), list.end()};
-        if (list.size() != set.size())
-            throw cmdlime::ValidationError{"must contain unique elements"};
-    }
-};
-
-// clang-format off
-struct Cfg : public cmdlime::Config{
-    CMDLIME_ARG(testPath, fs::path)               << "a test file or a directory containing tests" << EnsurePathExists{};
-    CMDLIME_PARAM(report, fs::path)()             << "save test report to file";
-    CMDLIME_PARAM(ext, std::string)(".toast")     << "the extension of searched test files, "
-                                                     "required when specified test path is a directory";
-    CMDLIME_PARAM(width, int)(48)                 << "set test report's width in number of characters";
-    CMDLIME_FLAG(saveContents)                    << "save the current contents of of the test directory";
-    CMDLIME_PARAM(shell, std::string)("sh -c -e") << "shell command";
-    CMDLIME_FLAG(noCleanup)                       << "disables cleanup of test files";
-    CMDLIME_PARAMLIST(select, std::vector<std::string>)() << "select tests by tag names" << EnsureContainsUniqueElements{};
-    CMDLIME_PARAMLIST(skip, std::vector<std::string>)()   << "skip tests by tag names" << EnsureContainsUniqueElements{};
-};
-// clang-format on
-
-int generateTestContens(const Cfg& cfg);
-int mainApp(const Cfg& cfg)
+int generateTestContents(const CommandLine& commandLine);
+int mainApp(const CommandLine& commandLine)
 {
-    if (cfg.saveContents)
-        return generateTestContens(cfg);
+    if (commandLine.saveContents)
+        return generateTestContents(commandLine);
 
     auto allTestsPassed = false;
     try {
-        const auto testReporter = lunchtoast::TestReporter{cfg.report, cfg.width};
-        auto testLauncher = lunchtoast::TestLauncher{
-                cfg.testPath,
-                cfg.ext,
-                cfg.shell,
-                !cfg.noCleanup,
-                testReporter,
-                cfg.select,
-                cfg.skip};
+        const auto testReporter = TestReporter{commandLine.report, commandLine.width};
+        auto testLauncher = TestLauncher{testReporter, commandLine};
         allTestsPassed = testLauncher.process();
     }
     catch (const std::exception& e) {
@@ -96,7 +37,7 @@ int main(int argc, char** argv)
 {
     auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast"};
     cmdlineReader.setErrorOutputStream(std::cout);
-    return cmdlineReader.exec<Cfg>(argc, argv, mainApp);
+    return cmdlineReader.exec<CommandLine>(argc, argv, mainApp);
 }
 #else
 int wmain(int argc, wchar_t** argv)
@@ -104,18 +45,25 @@ int wmain(int argc, wchar_t** argv)
     auto wargs = std::vector<std::wstring>{argv, argv + argc};
     wargs.erase(wargs.begin());
     auto args = std::vector<std::string>{};
-    std::transform(wargs.begin(), wargs.end(), std::back_inserter(args), [](const std::wstring& arg){ return lunchtoast::toUtf8(arg);});
+    std::transform(
+            wargs.begin(),
+            wargs.end(),
+            std::back_inserter(args),
+            [](const std::wstring& arg)
+            {
+                return lunchtoast::toUtf8(arg);
+            });
 
     auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast"};
     cmdlineReader.setErrorOutputStream(std::cout);
-    return cmdlineReader.exec<Cfg>(args, mainApp);
+    return cmdlineReader.exec<CommandLine>(args, mainApp);
 }
 #endif
 
-int generateTestContens(const Cfg& cfg)
+int generateTestContents(const CommandLine& commandLine)
 {
     try {
-        auto testContentsGenerator = lunchtoast::TestContentsGenerator{cfg.testPath, cfg.ext};
+        auto testContentsGenerator = TestContentsGenerator{commandLine.testPath, commandLine.ext};
         if (testContentsGenerator.process())
             return 0;
         else

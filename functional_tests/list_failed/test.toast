@@ -1,0 +1,12 @@
+-Name: $dir$
+-Contents: {test/.*} {.*\.ref}
+-Tags: linux
+-Description:
+    GIVEN 2 different files (lhs.txt and rhs.txt) and 2 different files (lhs2.txt rhs2.txt)
+    WHEN test two expectations of files equality
+    THEN first expectation should fail, second expectation should fail, after that the test should fail
+---
+-Launch unchecked: ../../build/lunchtoast ./test -ext=".test" -report=report.res -listFailedTests=failed_tests.txt
+-Launch: sed -i 's/.*functional_tests/functional_tests/' failed_tests.txt
+-Assert files equal: report.res report.ref
+-Assert files equal: failed_tests.txt failed_tests.ref
