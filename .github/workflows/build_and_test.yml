@@ -93,12 +93,20 @@ jobs:
           name: lunchtoast-build-windows-latest
           path: build
       - name: Make symlink
+        id: pre_launch_tests
         shell: cmd
         working-directory: '${{github.workspace}}\build'
         run: mklink lunchtoast lunchtoast.exe
       - name: Launch tests
+        id: launch_tests
         working-directory: ${{github.workspace}}
-        run: master/lunchtoast.exe functional_tests -skip=linux -shell="msys2 -c"
+        run: master/lunchtoast.exe functional_tests -skip=linux -shell="msys2 -c" -collectFailedTests=failed_tests
+      - name: Upload failed tests
+        if: failure() && steps.launch_tests.outcome != 'success' && steps.pre_launch_tests.outcome == 'success'
+        uses: actions/upload-artifact@v3
+        with:
+          name: lunchtoast-windows-latest-failed-tests
+          path: failed_tests
 
   functional_test_linux:
     name: Functional testing (Ubuntu)
@@ -122,17 +130,17 @@ jobs:
           name: lunchtoast-build-ubuntu-latest
           path: build
       - name: Set lunchtoast build execute permissions
+        id: pre_launch_tests
         shell: sh
         working-directory: ${{github.workspace}}/build
         run: chmod +x lunchtoast
       - name: Launch tests
+        id: launch_tests
         working-directory: ${{github.workspace}}/
-        run: master/lunchtoast functional_tests/ -skip=windows
-
-#      - name: Upload failing tests as artifact (debug)
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: lunchtoast-failing-tests
-#          path: |
-#            functional_tests/set_contents
-#            functional_tests/compare_files_regexp_error
+        run: master/lunchtoast functional_tests/ -skip=windows -collectFailedTests=failed_tests
+      - name: Upload failed tests
+        if: failure() && steps.launch_tests.outcome != 'success' && steps.pre_launch_tests.outcome == 'success'
+        uses: actions/upload-artifact@v3
+        with:
+          name: lunchtoast-ubuntu-latest-failed-tests
+          path: failed_tests

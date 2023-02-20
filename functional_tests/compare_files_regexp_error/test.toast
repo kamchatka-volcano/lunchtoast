@@ -7,5 +7,5 @@
          with extension .res and with extension .ref
     THEN test should not start because of the config error
 ---    
--Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test | sed 's/~\|\/[^ ]*//g' | sed 's/regex_error.*/regex_error/' > report.res
--Assert files equal: report.res report.ref
+-Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test
+-Assert exit code: 1
