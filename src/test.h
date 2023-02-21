@@ -27,7 +27,10 @@ private:
     bool readActionFromSection(const Section& section);
     void createLaunchAction(const Section& section);
     void createWriteAction(const Section& section);
-    void createCompareFilesAction(TestActionType actionType, const std::string& filenamesStr);
+    void createCompareFilesAction(
+            TestActionType actionType,
+            const std::string& comparisonType,
+            const std::string& filenamesStr);
     void createCompareFileContentAction(
             TestActionType actionType,
             const std::string& filenameStr,

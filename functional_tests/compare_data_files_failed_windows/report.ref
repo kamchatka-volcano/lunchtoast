@@ -1,0 +1,9 @@
+################## [ 1 / 1 ] ###################
+Name: lunchtoast
+Failure: Files crlf.txt and lf.txt equality check has failed, files crlf.txt and lf.txt are different
+                              Result:     FAILED
+ 
+##################  SUMMARY  ###################
+Default:                     0 out of 1 passed, 1 failed
+---
+Total:                       0 out of 1 passed, 1 failed

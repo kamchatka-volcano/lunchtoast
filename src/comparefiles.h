@@ -7,9 +7,14 @@
 
 namespace lunchtoast {
 
+enum class ComparisonMode{
+    Text,
+    Binary
+};
+
 class CompareFiles{
 public:
-    CompareFiles(FilenameGroup lhs, FilenameGroup rhs);
+    CompareFiles(FilenameGroup lhs, FilenameGroup rhs, ComparisonMode mode);
     TestActionResult operator()();
 
 private:
@@ -21,6 +26,7 @@ private:
 private:
     FilenameGroup lhs_;
     FilenameGroup rhs_;
+    ComparisonMode mode_;
 };
 
 }

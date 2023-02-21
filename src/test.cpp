@@ -183,8 +183,9 @@ bool Test::createComparisonAction(
         const std::string& encodedActionType,
         const Section& section)
 {
-    if (encodedActionType == "files equal") {
-        createCompareFilesAction(actionType, section.value);
+    if (encodedActionType == "files equal" || encodedActionType == "text files equal" ||
+        encodedActionType == "data files equal") {
+        createCompareFilesAction(actionType, encodedActionType, section.value);
         return true;
     }
     if (sfun::startsWith(encodedActionType, "content of ")) {
@@ -231,13 +232,14 @@ void Test::createWriteAction(const Section& section)
     actions_.push_back({WriteFile{path, section.value}, TestActionType::RequiredOperation});
 }
 
-void Test::createCompareFilesAction(TestActionType actionType, const std::string& filenamesStr)
+void Test::createCompareFilesAction(TestActionType actionType, const std::string& comparisonType, const std::string& filenamesStr)
 {
     const auto filenameGroups = readFilenames(filenamesStr, directory_);
     if (filenameGroups.size() != 2)
         throw TestConfigError{"Comparison of files require exactly two filenames or filename matching regular "
                               "expressions to be specified"};
-    actions_.push_back({CompareFiles{filenameGroups[0], filenameGroups[1]}, actionType});
+    auto comparisonMode = sfun::startsWith(comparisonType, "data") ? ComparisonMode::Binary : ComparisonMode::Text;
+    actions_.push_back({CompareFiles{filenameGroups[0], filenameGroups[1], comparisonMode}, actionType});
 }
 
 void Test::createCompareFileContentAction(

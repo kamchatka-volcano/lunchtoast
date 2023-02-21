@@ -1,6 +1,8 @@
 #include "utils.h"
 #include <platform_folders.h>
 #include <sfun/string_utils.h>
+#include <sfun/path.h>
+#include <fmt/format.h>
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
@@ -15,6 +17,8 @@ namespace fs = std::filesystem;
 std::string readTextFile(const fs::path& filePath)
 {
     auto fileStream = std::ifstream{filePath, std::ios::binary};
+    if (!fileStream.is_open())
+        throw std::runtime_error{fmt::format("Can't open {}", sfun::pathString(filePath))};
     fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     auto buffer = std::stringstream{};
     buffer << fileStream.rdbuf();
@@ -25,6 +29,9 @@ std::string readTextFile(const fs::path& filePath)
 std::string readFile(const fs::path& filePath)
 {
     auto fileStream = std::ifstream{filePath, std::ios::binary};
+    if (!fileStream.is_open())
+        throw std::runtime_error{fmt::format("Can't open {}", sfun::pathString(filePath))};
+
     fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     auto buffer = std::stringstream{};
     buffer << fileStream.rdbuf();

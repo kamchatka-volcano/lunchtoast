@@ -10,9 +10,10 @@
 namespace lunchtoast {
 namespace fs = std::filesystem;
 
-CompareFiles::CompareFiles(FilenameGroup lhs, FilenameGroup rhs)
-    : lhs_(std::move(lhs))
-    , rhs_(std::move(rhs))
+CompareFiles::CompareFiles(FilenameGroup lhs, FilenameGroup rhs, ComparisonMode mode)
+    : lhs_{std::move(lhs)}
+    , rhs_{std::move(rhs)}
+    , mode_{mode}
 {
 }
 
@@ -73,7 +74,13 @@ bool CompareFiles::compareFiles(const fs::path& lhs, const fs::path& rhs, std::s
     if (!bothFilesExist)
         return false;
 
-    if (readFile(lhs) != readFile(rhs)) {
+    auto getFileContent = [&](const fs::path& path)
+    {
+        if (mode_ == ComparisonMode::Text)
+            return readTextFile(path);
+        return readFile(path);
+    };
+    if (getFileContent(lhs) != getFileContent(rhs)) {
         failedComparisonInfo += fmt::format(
                 "Files {} and {} equality check has failed, files {} and {} are different",
                 lhs_.string(),
