@@ -4,10 +4,9 @@
 
 namespace lunchtoast {
 
-class CompareFileContent{
+class CompareFileContent {
 public:
-    CompareFileContent(std::filesystem::path filePath,
-                       std::string expectedFileContent);
+    CompareFileContent(std::filesystem::path filePath, std::string expectedFileContent);
     TestActionResult operator()();
 
 private:
@@ -15,4 +14,4 @@ private:
     std::string expectedFileContent_;
 };
 
-}
+} //namespace lunchtoast

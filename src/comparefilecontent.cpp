@@ -1,6 +1,7 @@
 #include "comparefilecontent.h"
 #include "utils.h"
 #include <fmt/format.h>
+#include <sfun/path.h>
 #include <utility>
 
 namespace lunchtoast {
@@ -16,14 +17,14 @@ TestActionResult CompareFileContent::operator()()
 {
     if (!fs::exists(filePath_))
         return TestActionResult::Failure(
-                fmt::format("File content check has failed: {} doesn't exist", toString(filePath_.filename())));
+                fmt::format("File content check has failed: {} doesn't exist", sfun::pathString(filePath_.filename())));
 
     if (readTextFile(filePath_) != expectedFileContent_)
-        return TestActionResult::Failure(
-                fmt::format("File {} content isn't equal to the expected string", toString(filePath_.filename())));
+        return TestActionResult::Failure(fmt::format(
+                "File {} content isn't equal to the expected string",
+                sfun::pathString(filePath_.filename())));
 
     return TestActionResult::Success();
 }
 
 } //namespace lunchtoast
-

@@ -5,6 +5,7 @@
 #include "testreporter.h"
 #include <cmdlime/commandlinereader.h>
 #include <fmt/format.h>
+#include <sfun/utfconv.h>
 #include <set>
 
 using namespace lunchtoast;
@@ -51,7 +52,7 @@ int wmain(int argc, wchar_t** argv)
             std::back_inserter(args),
             [](const std::wstring& arg)
             {
-                return lunchtoast::toUtf8(arg);
+                return sfun::toUtf8(arg);
             });
 
     auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast"};

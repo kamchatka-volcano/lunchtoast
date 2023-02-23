@@ -5,6 +5,7 @@
 #include "test.h"
 #include "testreporter.h"
 #include "utils.h"
+#include <sfun/path.h>
 #include <sfun/string_utils.h>
 #include <sfun/utility.h>
 #include <algorithm>
@@ -46,7 +47,7 @@ void writePathList(const std::vector<fs::path>& pathList, const fs::path& output
 
     auto stream = std::ofstream{outputFile};
     for (const auto& path : pathList)
-        stream << sfun::replace(toString(path), "\\", "/") << std::endl;
+        stream << sfun::replace(sfun::pathString(path), "\\", "/") << std::endl;
 }
 
 void copyDirList(const std::vector<fs::path>& pathList, const fs::path& targetDir)
@@ -128,7 +129,7 @@ void TestLauncher::collectTests(const fs::path& testPath, const std::string& tes
         for (auto it = fs::directory_iterator{testPath}; it != end; ++it)
             if (fs::is_directory(it->status()))
                 dirSet.insert(it->path());
-            else if (toString(it->path().extension()) == testFileExt)
+            else if (sfun::pathString(it->path().extension()) == testFileExt)
                 fileSet.insert(it->path());
 
         for (const auto& dirPath : dirSet)
@@ -183,7 +184,10 @@ void TestLauncher::addTest(const fs::path& testFile)
     stream.clear();
     stream.seekg(0, std::ios::beg);
     auto suiteName = getSectionValue("Suite", sections);
-    processVariablesSubstitution(suiteName, toString(testFile.stem()), toString(testFile.parent_path().stem()));
+    processVariablesSubstitution(
+            suiteName,
+            sfun::pathString(testFile.stem()),
+            sfun::pathString(testFile.parent_path().stem()));
 
     auto tagsStr = getSectionValue("Tags", sections);
     auto tags = sfun::split(tagsStr, ",");

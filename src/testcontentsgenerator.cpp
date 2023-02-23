@@ -1,14 +1,14 @@
 #include "testcontentsgenerator.h"
-#include "sectionsreader.h"
-#include "utils.h"
-#include "test.h"
 #include "errors.h"
 #include "linestream.h"
-#include <sfun/string_utils.h>
+#include "sectionsreader.h"
+#include "test.h"
+#include "utils.h"
 #include <fmt/format.h>
+#include <sfun/path.h>
+#include <sfun/string_utils.h>
 #include <fstream>
 #include <sstream>
-
 
 namespace lunchtoast {
 namespace fs = std::filesystem;
@@ -17,8 +17,7 @@ namespace {
 void processTestConfig(const fs::path& cfgPath);
 }
 
-TestContentsGenerator::TestContentsGenerator(const fs::path& testPath,
-                                             const std::string& testFileExt)
+TestContentsGenerator::TestContentsGenerator(const fs::path& testPath, const std::string& testFileExt)
 {
     collectTestConfigs(testPath, testFileExt);
 }
@@ -33,9 +32,10 @@ void TestContentsGenerator::collectTestConfigs(const fs::path& testPath, const s
         for (auto it = fs::directory_iterator{testPath}; it != end; ++it)
             if (fs::is_directory(it->status()))
                 collectTestConfigs(it->path(), testFileExt);
-            else if (toString(it->path().extension()) == testFileExt)
+            else if (sfun::pathString(it->path().extension()) == testFileExt)
                 testConfigs_.push_back(fs::canonical(it->path()));
-    } else
+    }
+    else
         testConfigs_.push_back(fs::canonical(testPath));
 }
 
@@ -46,12 +46,12 @@ bool TestContentsGenerator::process()
         return false;
     }
 
-    for (const auto& cfgPath: testConfigs_) {
+    for (const auto& cfgPath : testConfigs_) {
         try {
             processTestConfig(cfgPath);
-        } catch (const TestConfigError& error) {
-            fmt::print("Can't generate test contents in config {}. Error: {}\n", homePathString(cfgPath),
-                       error.what());
+        }
+        catch (const TestConfigError& error) {
+            fmt::print("Can't generate test contents in config {}. Error: {}\n", homePathString(cfgPath), error.what());
         }
         fmt::print("Generating test contents in test config {}\n", homePathString(cfgPath));
     }
@@ -71,7 +71,7 @@ fs::path getTestDirectory(const fs::path& cfgPath, const std::vector<Section>& s
                 return section.name == "Directory";
             });
     if (dirSectionIt != sections.end())
-        cfgDir = toPath(sfun::trim(dirSectionIt->value));
+        cfgDir = sfun::makePath(sfun::trim(dirSectionIt->value));
     if (!cfgDir.empty())
         testDir = fs::canonical(testDir) / cfgDir;
     return testDir;
@@ -81,7 +81,10 @@ std::string getDirectoryContentString(const fs::path& dir)
 {
     auto testDirPaths = getDirectoryContent(dir);
     auto testDirPathsStr = std::vector<std::string>{};
-    auto pathRelativeToDir = [&dir](const fs::path& path) { return toString(fs::relative(path, dir)); };
+    auto pathRelativeToDir = [&dir](const fs::path& path)
+    {
+        return sfun::pathString(fs::relative(path, dir));
+    };
     std::transform(testDirPaths.begin(), testDirPaths.end(), std::back_inserter(testDirPathsStr), pathRelativeToDir);
     std::sort(testDirPathsStr.begin(), testDirPathsStr.end());
     return sfun::join(testDirPathsStr, " ");
@@ -91,7 +94,7 @@ void writeSections(const std::vector<Section>& sections, const fs::path& outFile
 {
     auto stream = std::ofstream{outFilePath, std::ios::binary};
     stream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    for (const auto& section: sections)
+    for (const auto& section : sections)
         stream << section.originalText;
 }
 
@@ -102,10 +105,10 @@ void copyComments(const std::string& input, std::string& output)
     auto sectionEncountered = false;
     auto lineStream = LineStream{stream};
     line = lineStream.readLine();
-    while (!line.empty()){
+    while (!line.empty()) {
         if (sfun::trim(line).empty())
             output += "\n";
-        else if (sfun::startsWith(line, "#")){
+        else if (sfun::startsWith(line, "#")) {
             if (!sectionEncountered)
                 output.insert(0, line);
             else
@@ -125,23 +128,28 @@ void processTestConfig(const fs::path& cfgPath)
         throw TestConfigError{fmt::format("Test config file {} doesn't exist", homePathString(cfgPath))};
 
     auto sections = readSections(stream);
-    auto testDir = getTestDirectory(cfgPath, sections);
+    const auto testDir = getTestDirectory(cfgPath, sections);
     const auto testDirContent = getDirectoryContentString(testDir);
     auto newWhiteListSection = Section{"Contents", testDirContent, "-Contents: " + testDirContent + "\n"};
 
-    const auto whitelistSectionIt = std::find_if(sections.cbegin(), sections.cend(), [](const Section& section) {
-        return section.name == "Contents";
-    });
+    const auto whitelistSectionIt = std::find_if(
+            sections.cbegin(),
+            sections.cend(),
+            [](const Section& section)
+            {
+                return section.name == "Contents";
+            });
     if (whitelistSectionIt != sections.cend()) {
         auto whitelistSectionPos = std::distance(sections.cbegin(), whitelistSectionIt);
         copyComments(whitelistSectionIt->originalText, newWhiteListSection.originalText);
         sections.erase(whitelistSectionIt);
         sections.insert(sections.begin() + whitelistSectionPos, newWhiteListSection);
-    } else {
+    }
+    else {
         sections.push_back(newWhiteListSection);
     }
     writeSections(sections, cfgPath);
 }
-}
+} //namespace
 
-}
+} //namespace lunchtoast

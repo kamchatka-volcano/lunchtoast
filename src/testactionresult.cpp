@@ -1,6 +1,6 @@
 #include "testactionresult.h"
 
-namespace lunchtoast{
+namespace lunchtoast {
 
 TestActionResult TestActionResult::Success()
 {
@@ -27,4 +27,4 @@ const std::string& TestActionResult::errorInfo() const
     return errorInfo_;
 }
 
-}
+} //namespace lunchtoast

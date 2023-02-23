@@ -1,11 +1,11 @@
 #pragma once
-#include <string>
-#include <istream>
 #include <functional>
+#include <istream>
+#include <string>
 
-namespace lunchtoast{
+namespace lunchtoast {
 
-class LineStream{
+class LineStream {
 public:
     explicit LineStream(std::istream& stream);
     void skipLine();
@@ -22,5 +22,4 @@ private:
     int lineNumber_ = 1;
 };
 
-}
-
+} //namespace lunchtoast

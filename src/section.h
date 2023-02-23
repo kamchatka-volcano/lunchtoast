@@ -2,12 +2,12 @@
 #include <string>
 #include <vector>
 
-namespace lunchtoast{
+namespace lunchtoast {
 
-struct Section{
+struct Section {
     std::string name;
     std::string value;
     std::string originalText;
 };
 
-}
+} //namespace lunchtoast

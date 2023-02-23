@@ -1,15 +1,14 @@
 #include "utils.h"
 #include <platform_folders.h>
-#include <sfun/string_utils.h>
-#include <sfun/path.h>
 #include <fmt/format.h>
-#include <cstdlib>
+#include <sfun/contract.h>
+#include <sfun/path.h>
+#include <sfun/string_utils.h>
+#include <sfun/utility.h>
 #include <fstream>
+#include <optional>
 #include <sstream>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
 
 namespace lunchtoast {
 namespace fs = std::filesystem;
@@ -61,7 +60,7 @@ std::vector<fs::path> getDirectoryContent(const fs::path& dir)
 namespace {
 std::filesystem::path homePath()
 {
-    return toPath(sago::getDesktopFolder()).parent_path();
+    return sfun::makePath(sago::getDesktopFolder()).parent_path();
 }
 } //namespace
 
@@ -69,11 +68,11 @@ std::string homePathString(const fs::path& path)
 {
     auto resPath = fs::relative(path, homePath());
     if (resPath == path)
-        return toString(resPath);
-    else if (toString(resPath) == ".")
+        return sfun::pathString(resPath);
+    else if (sfun::pathString(resPath) == ".")
         return "~/";
     else
-        return "~/" + toString(resPath);
+        return "~/" + sfun::pathString(resPath);
 }
 
 std::string toLower(std::string_view str)
@@ -96,20 +95,22 @@ std::vector<std::string_view> splitCommand(std::string_view str)
         return std::vector<std::string_view>{str};
 
     auto result = std::vector<std::string_view>{};
-    auto pos = std::size_t{0};
-    auto partPos = std::string_view::npos;
+    auto pos = sfun::index_t{};
+    auto partPos = std::optional<sfun::index_t>{};
 
     auto insideString = false;
     auto isQuotationAtStart = true;
     auto addCommandPart = [&]
     {
+        sfunPrecondition(partPos.has_value());
         result.emplace_back(
-                std::string_view{std::next(str.data(), partPos), pos - partPos + (isQuotationAtStart ? 0 : 1)});
-        partPos = std::string_view::npos;
+                std::next(str.data(), *partPos),
+                static_cast<std::size_t>(pos - *partPos + (isQuotationAtStart ? 0 : 1)));
+        partPos = std::nullopt;
     };
-    for (; pos < str.size(); ++pos) {
+    for (; pos < sfun::ssize(str); ++pos) {
         if (!insideString && sfun::isspace(str.at(pos))) {
-            if (partPos != std::string_view::npos)
+            if (partPos.has_value())
                 addCommandPart();
             continue;
         }
@@ -117,68 +118,24 @@ std::vector<std::string_view> splitCommand(std::string_view str)
             if (insideString)
                 addCommandPart();
             else {
-                isQuotationAtStart = (partPos == std::string_view::npos);
-                if (pos != str.size() - 1 && sfun::isspace(str.at(pos + 1)))
+                isQuotationAtStart = !partPos.has_value();
+                if (pos != sfun::ssize(str) - 1 && sfun::isspace(str.at(pos + 1)))
                     partPos = pos + 1;
             }
 
             insideString = !insideString;
             continue;
         }
-        if (!sfun::isspace(str.at(pos)) && partPos == std::string_view::npos)
+        if (!sfun::isspace(str.at(pos)) && !partPos.has_value())
             partPos = pos;
     }
     if (insideString)
         return {};
 
-    if (partPos != std::string_view::npos)
+    if (partPos.has_value())
         addCommandPart();
 
     return result;
 }
-
-std::filesystem::path toPath(std::string_view str)
-{
-#ifdef _WIN32
-    return toUtf16(str);
-#else
-    return str;
-#endif
-}
-
-std::string toString(const std::filesystem::path& path)
-{
-#ifdef _WIN32
-    return toUtf8(path.wstring());
-#else
-    return path.string();
-#endif
-}
-
-#ifdef _WIN32
-std::string toUtf8(std::wstring_view utf16String)
-{
-    int count = WideCharToMultiByte(
-            CP_UTF8,
-            0,
-            utf16String.data(),
-            static_cast<int>(utf16String.size()),
-            nullptr,
-            0,
-            nullptr,
-            nullptr);
-    auto utf8String = std::string(count, 0);
-    WideCharToMultiByte(CP_UTF8, 0, utf16String.data(), -1, &utf8String[0], count, nullptr, nullptr);
-    return utf8String;
-}
-
-std::wstring toUtf16(std::string_view utf8String)
-{
-    int count = MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int>(utf8String.size()), nullptr, 0);
-    auto utf16String = std::wstring(count, 0);
-    MultiByteToWideChar(CP_UTF8, 0, utf8String.data(), static_cast<int>(utf8String.size()), &utf16String[0], count);
-    return utf16String;
-}
-#endif
 
 } //namespace lunchtoast

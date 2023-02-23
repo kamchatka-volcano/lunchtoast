@@ -11,18 +11,16 @@
 #include "writefile.h"
 #include <fmt/format.h>
 #include <sfun/functional.h>
+#include <sfun/path.h>
 #include <sfun/string_utils.h>
 #include <fstream>
-#include <iomanip>
 #include <sstream>
-
-#include <boost/process.hpp>
 
 namespace lunchtoast {
 namespace fs = std::filesystem;
 
 Test::Test(const fs::path& configPath, std::string shellCommand, bool cleanup)
-    : name_(toString(configPath.stem()))
+    : name_(sfun::pathString(configPath.stem()))
     , directory_(configPath.parent_path())
     , shellCommand_(std::move(shellCommand))
     , isEnabled_(true)
@@ -167,9 +165,9 @@ void Test::readConfig(const fs::path& path)
     }
 
     checkParams();
-    processVariablesSubstitution(name_, toString(path.stem()), toString(directory_.stem()));
-    processVariablesSubstitution(description_, toString(path.stem()), toString(directory_.stem()));
-    processVariablesSubstitution(suite_, toString(path.stem()), toString(directory_.stem()));
+    processVariablesSubstitution(name_, sfun::pathString(path.stem()), sfun::pathString(directory_.stem()));
+    processVariablesSubstitution(description_, sfun::pathString(path.stem()), sfun::pathString(directory_.stem()));
+    processVariablesSubstitution(suite_, sfun::pathString(path.stem()), sfun::pathString(directory_.stem()));
 }
 
 void Test::checkParams()
@@ -228,11 +226,14 @@ void Test::createLaunchAction(const Section& section)
 void Test::createWriteAction(const Section& section)
 {
     const auto fileName = sfun::trim(sfun::after(section.name, "Write"));
-    const auto path = fs::absolute(directory_) / toPath(fileName);
+    const auto path = fs::absolute(directory_) / sfun::makePath(fileName);
     actions_.push_back({WriteFile{path, section.value}, TestActionType::RequiredOperation});
 }
 
-void Test::createCompareFilesAction(TestActionType actionType, const std::string& comparisonType, const std::string& filenamesStr)
+void Test::createCompareFilesAction(
+        TestActionType actionType,
+        const std::string& comparisonType,
+        const std::string& filenamesStr)
 {
     const auto filenameGroups = readFilenames(filenamesStr, directory_);
     if (filenameGroups.size() != 2)
@@ -339,11 +340,11 @@ void Test::postProcessCleanupConfig(const fs::path& configPath)
                 std::back_inserter(contents_),
                 [this](const fs::path& path)
                 {
-                    return FilenameGroup{toString(fs::relative(path, directory_)), directory_};
+                    return FilenameGroup{sfun::pathString(fs::relative(path, directory_)), directory_};
                 });
         return;
     }
-    contents_.emplace_back(toString(fs::relative(configPath, directory_)), directory_);
+    contents_.emplace_back(sfun::pathString(fs::relative(configPath, directory_)), directory_);
 }
 
 } //namespace lunchtoast

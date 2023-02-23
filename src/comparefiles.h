@@ -2,17 +2,17 @@
 #include "filenamereader.h"
 #include "testactionresult.h"
 #include <filesystem>
-#include <vector>
 #include <regex>
+#include <vector>
 
 namespace lunchtoast {
 
-enum class ComparisonMode{
+enum class ComparisonMode {
     Text,
     Binary
 };
 
-class CompareFiles{
+class CompareFiles {
 public:
     CompareFiles(FilenameGroup lhs, FilenameGroup rhs, ComparisonMode mode);
     TestActionResult operator()();
@@ -29,4 +29,4 @@ private:
     ComparisonMode mode_;
 };
 
-}
+} //namespace lunchtoast

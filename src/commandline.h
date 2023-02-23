@@ -2,6 +2,8 @@
 #include "utils.h"
 #include <cmdlime/config.h>
 #include <fmt/format.h>
+#include <sfun/path.h>
+#include <sfun/utility.h>
 #include <filesystem>
 #include <set>
 #include <string>
@@ -11,15 +13,15 @@ template<>
 struct StringConverter<std::filesystem::path> {
     static std::optional<std::string> toString(const std::filesystem::path& coord)
     {
-        return lunchtoast::toString(coord);
+        return ::sfun::pathString(coord);
     }
 
     static std::optional<std::filesystem::path> fromString(const std::string& data)
     {
-        return lunchtoast::toPath(data);
+        return ::sfun::makePath(data);
     }
 };
-}
+} //namespace cmdlime
 
 namespace lunchtoast {
 
@@ -30,7 +32,7 @@ struct EnsurePathExists {
             throw cmdlime::ValidationError{fmt::format(
                     "specified test directory "
                     "or file path '{}' doesn't exist.\n",
-                    lunchtoast::toString(path))};
+                    sfun::pathString(path))};
     }
 };
 
@@ -38,7 +40,7 @@ struct EnsureContainsUniqueElements {
     void operator()(const std::vector<std::string>& list)
     {
         auto set = std::set<std::string>{list.begin(), list.end()};
-        if (list.size() != set.size())
+        if (sfun::ssize(list) != sfun::ssize(set))
             throw cmdlime::ValidationError{"must contain unique elements"};
     }
 };
@@ -60,4 +62,4 @@ struct CommandLine : public cmdlime::Config{
 };
 
 // clang-format on
-}
+} //namespace lunchtoast

@@ -2,16 +2,15 @@
 #include <string>
 #include <vector>
 
+namespace lunchtoast {
 
-namespace lunchtoast{
-
-enum class TestResultType{
+enum class TestResultType {
     Success,
     Failure,
     RuntimeError
 };
 
-class TestResult{
+class TestResult {
 public:
     static TestResult Success();
     static TestResult Failure(const std::vector<std::string>& failedActionsMessages);
@@ -30,4 +29,4 @@ private:
     std::vector<std::string> failedActionsMessages_;
 };
 
-}
+} //namespace lunchtoast

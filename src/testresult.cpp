@@ -1,6 +1,6 @@
 #include "testresult.h"
 
-namespace lunchtoast{
+namespace lunchtoast {
 
 TestResult TestResult::Success()
 {
@@ -41,4 +41,4 @@ const std::vector<std::string>& TestResult::failedActionsMessages() const
     return failedActionsMessages_;
 }
 
-}
+} //namespace lunchtoast

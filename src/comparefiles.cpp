@@ -1,7 +1,9 @@
 #include "comparefiles.h"
 #include "utils.h"
 #include <fmt/format.h>
+#include <sfun/path.h>
 #include <sfun/string_utils.h>
+#include <sfun/utility.h>
 #include <algorithm>
 #include <iterator>
 #include <string>
@@ -22,7 +24,7 @@ std::string filenameListStr(const std::vector<fs::path>& pathList)
 {
     auto pathToString = [](const fs::path& path)
     {
-        return toString(path.filename());
+        return sfun::pathString(path.filename());
     };
     auto filenameList = std::vector<std::string>{};
     std::transform(pathList.begin(), pathList.end(), std::back_inserter(filenameList), pathToString);
@@ -36,7 +38,7 @@ TestActionResult CompareFiles::operator()()
     std::sort(lhsPaths.begin(), lhsPaths.end());
     auto rhsPaths = rhs_.fileList();
     std::sort(rhsPaths.begin(), rhsPaths.end());
-    if (lhsPaths.size() != rhsPaths.size()) {
+    if (sfun::ssize(lhsPaths) != sfun::ssize(rhsPaths)) {
         return TestActionResult::Failure(fmt::format(
                 "Files equality check has failed, file lists have different number of elements:\n{} : {}\n{} : {}\n",
                 lhs_.string(),
@@ -46,7 +48,7 @@ TestActionResult CompareFiles::operator()()
     }
     auto result = true;
     auto errorInfo = std::vector<std::string>{};
-    for (auto i = 0u; i < lhsPaths.size(); ++i) {
+    for (auto i = sfun::index_t{}; i < sfun::ssize(lhsPaths); ++i) {
         auto failedComparisonInfo = std::string{};
         if (!compareFiles(lhsPaths[i], rhsPaths[i], failedComparisonInfo)) {
             errorInfo.push_back(failedComparisonInfo);
@@ -68,9 +70,9 @@ bool CompareFiles::compareFiles(const fs::path& lhs, const fs::path& rhs, std::s
         failedComparisonInfo +=
                 fmt::format("Files {} and {} equality check has failed, ", lhs_.string(), rhs_.string());
     if (!lhsExists)
-        failedComparisonInfo += fmt::format("file {} doesn't exist; ", toString(lhs.filename()));
+        failedComparisonInfo += fmt::format("file {} doesn't exist; ", sfun::pathString(lhs.filename()));
     if (!rhsExists)
-        failedComparisonInfo += fmt::format("file {} doesn't exist; ", toString(rhs.filename()));
+        failedComparisonInfo += fmt::format("file {} doesn't exist; ", sfun::pathString(rhs.filename()));
     if (!bothFilesExist)
         return false;
 
@@ -85,8 +87,8 @@ bool CompareFiles::compareFiles(const fs::path& lhs, const fs::path& rhs, std::s
                 "Files {} and {} equality check has failed, files {} and {} are different",
                 lhs_.string(),
                 rhs_.string(),
-                toString(lhs.filename()),
-                toString(rhs.filename()));
+                sfun::pathString(lhs.filename()),
+                sfun::pathString(rhs.filename()));
         return false;
     }
     return true;

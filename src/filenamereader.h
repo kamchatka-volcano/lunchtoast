@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-
 namespace lunchtoast {
 
 class FilenameGroup {
@@ -23,4 +22,4 @@ private:
 
 std::vector<FilenameGroup> readFilenames(const std::string& input, const std::filesystem::path& directory);
 
-}
+} //namespace lunchtoast

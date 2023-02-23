@@ -1,12 +1,12 @@
 #include "sectionsreader.h"
 #include "errors.h"
 #include "linestream.h"
-#include <sfun/string_utils.h>
 #include <fmt/format.h>
+#include <sfun/string_utils.h>
 #include <gsl/util>
 #include <algorithm>
 
-namespace lunchtoast{
+namespace lunchtoast {
 
 namespace {
 
@@ -19,15 +19,18 @@ void readMultilineSectionValue(Section& section, LineStream& stream, const std::
         section.originalText += line;
         if (sfun::trim(line) == separator) {
             if (!sfun::startsWith(line, separator))
-                throw TestConfigError{lineNumber, "A multiline section separator must be placed at the start of a line"};
+                throw TestConfigError{
+                        lineNumber,
+                        "A multiline section separator must be placed at the start of a line"};
             if (!section.value.empty())
                 section.value.pop_back();
             return;
         }
         section.value += line;
     }
-    throw TestConfigError{sectionStartLineNumber,
-                fmt::format("A multiline section must be closed with '{}' separator", separator)};
+    throw TestConfigError{
+            sectionStartLineNumber,
+            fmt::format("A multiline section must be closed with '{}' separator", separator)};
 }
 
 Section readSection(LineStream& stream, const std::string& multilineSectionSeparator)
@@ -54,13 +57,19 @@ Section readSection(LineStream& stream, const std::string& multilineSectionSepar
 
 std::string getMultilineSectionSeparator(const std::vector<Section>& sections)
 {
-    auto sectionIt = std::find_if(sections.begin(), sections.end(), [](const auto& section) { return section.name == "Section separator"; });
+    auto sectionIt = std::find_if(
+            sections.begin(),
+            sections.end(),
+            [](const auto& section)
+            {
+                return section.name == "Section separator";
+            });
     if (sectionIt == sections.end())
         return "---";
     return sectionIt->value;
 }
 
-}
+} //namespace
 std::vector<Section> readSections(std::istream& input)
 {
     auto error = SectionReadingError{};
@@ -75,10 +84,10 @@ std::vector<Section> readSections(std::istream& input, SectionReadingError& read
     auto result = std::vector<Section>{};
     auto sectionOuterWhitespace = std::string{};
     auto stream = LineStream{input};
-    while(!stream.atEnd()){
+    while (!stream.atEnd()) {
         auto line = stream.peekLine();
         if (sfun::startsWith(line, "-")) {
-            try{
+            try {
                 auto section = readSection(stream, getMultilineSectionSeparator(result));
                 if (result.empty())
                     section.originalText.insert(0, sectionOuterWhitespace);
@@ -87,17 +96,19 @@ std::vector<Section> readSections(std::istream& input, SectionReadingError& read
                 sectionOuterWhitespace.clear();
                 result.emplace_back(std::move(section));
             }
-            catch(const TestConfigError& error){
+            catch (const TestConfigError& error) {
                 readingError = error;
                 return result;
             }
         }
-        else if (sfun::startsWith(line, "#") || sfun::trim(line).empty()){
+        else if (sfun::startsWith(line, "#") || sfun::trim(line).empty()) {
             sectionOuterWhitespace += line;
             stream.skipLine();
         }
-        else{
-            readingError = TestConfigError{stream.lineNumber(), "Space outside of sections can only contain whitespace characters and comments"};
+        else {
+            readingError = TestConfigError{
+                    stream.lineNumber(),
+                    "Space outside of sections can only contain whitespace characters and comments"};
             return result;
         }
     }
@@ -106,4 +117,4 @@ std::vector<Section> readSections(std::istream& input, SectionReadingError& read
     return result;
 }
 
-}
+} //namespace lunchtoast

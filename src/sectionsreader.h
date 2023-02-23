@@ -1,14 +1,14 @@
 #pragma once
-#include "section.h"
 #include "errors.h"
-#include <string>
-#include <vector>
+#include "section.h"
 #include <istream>
 #include <optional>
+#include <string>
+#include <vector>
 
-namespace lunchtoast{
+namespace lunchtoast {
 
-class SectionReadingError{
+class SectionReadingError {
 public:
     operator bool()
     {
@@ -30,4 +30,4 @@ private:
 std::vector<Section> readSections(std::istream& input);
 std::vector<Section> readSections(std::istream& input, SectionReadingError&);
 
-}
+} //namespace lunchtoast

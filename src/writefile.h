@@ -3,10 +3,9 @@
 #include <filesystem>
 #include <string>
 
+namespace lunchtoast {
 
-namespace lunchtoast{
-
-class WriteFile{
+class WriteFile {
 public:
     WriteFile(std::filesystem::path fileName, std::string content);
     TestActionResult operator()();
@@ -16,5 +15,4 @@ private:
     std::string content_;
 };
 
-}
-
+} //namespace lunchtoast

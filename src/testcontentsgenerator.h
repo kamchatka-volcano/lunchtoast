@@ -1,15 +1,13 @@
 #pragma once
 #include <filesystem>
-#include <vector>
 #include <string>
-
+#include <vector>
 
 namespace lunchtoast {
 
-class TestContentsGenerator{
+class TestContentsGenerator {
 public:
-    TestContentsGenerator(const std::filesystem::path& testPath,
-                          const std::string& testFileExt);
+    TestContentsGenerator(const std::filesystem::path& testPath, const std::string& testFileExt);
     bool process();
 
 private:
@@ -19,4 +17,4 @@ private:
     std::vector<std::filesystem::path> testConfigs_;
 };
 
-}
+} //namespace lunchtoast

@@ -2,16 +2,16 @@
 #include "test.h"
 #include "testresult.h"
 #include "utils.h"
+#include <sfun/path.h>
 #include <sfun/string_utils.h>
 #include <sfun/utility.h>
-#include <spdlog/spdlog.h>
 #include <spdlog/logger.h>
+#include <spdlog/pattern_formatter.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/pattern_formatter.h>
+#include <spdlog/spdlog.h>
 
-
-namespace lunchtoast{
+namespace lunchtoast {
 namespace fs = std::filesystem;
 
 TestReporter::TestReporter(const fs::path& reportFilePath, int reportWidth)
@@ -20,28 +20,28 @@ TestReporter::TestReporter(const fs::path& reportFilePath, int reportWidth)
     initReporter(reportFilePath);
 }
 
-namespace{
+namespace {
 std::string testResultStr(TestResultType resultType)
 {
-    switch (resultType){
-        case TestResultType::Success:
-            return "PASSED";
-        case TestResultType::Failure:
-            return "FAILED";
-        case TestResultType::RuntimeError:
-            return "ERROR";
+    switch (resultType) {
+    case TestResultType::Success:
+        return "PASSED";
+    case TestResultType::Failure:
+        return "FAILED";
+    case TestResultType::RuntimeError:
+        return "ERROR";
     }
     return {};
 }
 
 template<typename... Args>
-void print(Args&& ... args)
+void print(Args&&... args)
 {
     spdlog::trace(std::forward<Args>(args)...);
 };
 
 template<typename... Args>
-void print(TestResultType type, Args&& ... args)
+void print(TestResultType type, Args&&... args)
 {
     if (type == TestResultType::Success)
         spdlog::info(std::forward<Args>(args)...);
@@ -56,19 +56,23 @@ void printNewLine()
 
 std::string truncateString(std::string str, int maxWidth)
 {
-    if (str.size() < static_cast<std::size_t>(4))
+    if (sfun::ssize(str) < 4)
         return str;
-    if (str.size() > static_cast<std::size_t>(maxWidth)){
+    if (sfun::ssize(str) > maxWidth) {
         str.resize(static_cast<std::size_t>(maxWidth - 3));
         str += "...";
     }
     return str;
 }
 
-}
+} //namespace
 
-void TestReporter::reportResult(const Test& test, const TestResult& result,
-                                std::string suiteName, int suiteTestNumber, sfun::ssize_t suiteNumOfTests) const
+void TestReporter::reportResult(
+        const Test& test,
+        const TestResult& result,
+        std::string suiteName,
+        int suiteTestNumber,
+        sfun::ssize_t suiteNumOfTests) const
 {
     suiteName = truncateString(suiteName, reportWidth_ / 2);
     auto header = fmt::format(" {} [ {} / {} ] ", suiteName, suiteTestNumber, suiteNumOfTests);
@@ -77,15 +81,15 @@ void TestReporter::reportResult(const Test& test, const TestResult& result,
 
     print(result.type(), "{:#^" + std::to_string(reportWidth_) + "}", header);
     print("Name: {}", test.name());
-    if (result.type() != TestResultType::Success){
-        if (!test.description().empty()){
+    if (result.type() != TestResultType::Success) {
+        if (!test.description().empty()) {
             auto descriptionHasMultipleLines = !sfun::after(test.description(), "\n").empty();
             if (descriptionHasMultipleLines)
                 print("Description:\n{}", test.description());
             else
                 print("Description: {}", test.description());
         }
-        if (!result.failedActionsMessages().empty()){
+        if (!result.failedActionsMessages().empty()) {
             if (result.failedActionsMessages().size() > 1)
                 print("Failure:\n{}", sfun::join(result.failedActionsMessages(), "\n"));
             else
@@ -99,8 +103,12 @@ void TestReporter::reportResult(const Test& test, const TestResult& result,
     print(result.type(), "{:>" + std::to_string(reportWidth_) + "}", resultStr);
 }
 
-void TestReporter::reportBrokenTest(const fs::path& brokenTestConfig, const std::string& errorInfo,
-                                    std::string suiteName, int suiteTestNumber, std::ptrdiff_t suiteNumOfTests) const
+void TestReporter::reportBrokenTest(
+        const fs::path& brokenTestConfig,
+        const std::string& errorInfo,
+        std::string suiteName,
+        int suiteTestNumber,
+        std::ptrdiff_t suiteNumOfTests) const
 {
     suiteName = truncateString(suiteName, reportWidth_ / 2);
     auto header = fmt::format(" {} [ {} / {} ] ", suiteName, suiteTestNumber, suiteNumOfTests);
@@ -111,8 +119,11 @@ void TestReporter::reportBrokenTest(const fs::path& brokenTestConfig, const std:
     print("Test can't be started. Config file {} error:\n{}\n", homePathString(brokenTestConfig), errorInfo);
 }
 
-void TestReporter::reportDisabledTest(const Test& test,
-                                      std::string suiteName, int suiteTestNumber, sfun::ssize_t suiteNumOfTests) const
+void TestReporter::reportDisabledTest(
+        const Test& test,
+        std::string suiteName,
+        int suiteTestNumber,
+        sfun::ssize_t suiteNumOfTests) const
 {
     suiteName = truncateString(suiteName, reportWidth_ / 2);
     auto header = fmt::format(" {} [ {} / {} ] ", suiteName, suiteTestNumber, suiteNumOfTests);
@@ -121,7 +132,7 @@ void TestReporter::reportDisabledTest(const Test& test,
     print("{:#^" + std::to_string(reportWidth_) + "}", header);
     print("Name: {}", test.name());
 
-    if (!test.description().empty()){
+    if (!test.description().empty()) {
         auto descriptionHasMultipleLines = !sfun::after(test.description(), "\n").empty();
         if (descriptionHasMultipleLines)
             print("Description:\n{}", test.description());
@@ -140,25 +151,27 @@ void TestReporter::reportSuiteResult(std::string suiteName, int passedNumber, in
     const auto failedNumber = totalNumber - disabledNumber - passedNumber;
     const auto width = reportWidth_ / 2 + 4;
     suiteName = truncateString(suiteName, width - 1) + ":";
-    const auto resultType = failedNumber ?
-                            TestResultType::Failure : TestResultType::Success;
+    const auto resultType = failedNumber ? TestResultType::Failure : TestResultType::Success;
     auto resultStr = std::string{};
     if (disabledNumber)
-        resultStr = fmt::format("{} out of {} passed, {} failed, {} disabled",
-                                passedNumber, totalNumber, failedNumber, disabledNumber);
+        resultStr = fmt::format(
+                "{} out of {} passed, {} failed, {} disabled",
+                passedNumber,
+                totalNumber,
+                failedNumber,
+                disabledNumber);
     else
-        resultStr = fmt::format("{} out of {} passed, {} failed",
-                                passedNumber, totalNumber, failedNumber);
+        resultStr = fmt::format("{} out of {} passed, {} failed", passedNumber, totalNumber, failedNumber);
     print(resultType, "{:" + std::to_string(width) + "} {}", suiteName, resultStr);
 }
 
-namespace{
+namespace {
 std::tuple<int, int, int> countTotals(const TestSuite& defaultSuite, const std::map<std::string, TestSuite>& suites)
 {
     auto totalTests = sfun::ssize(defaultSuite.tests);
     auto totalPassed = defaultSuite.passedTestsCounter;
     auto totalDisabled = defaultSuite.disabledTestsCounter;
-    for (const auto& [suiteName, suite] : suites){
+    for (const auto& [suiteName, suite] : suites) {
         [[maybe_unused]] const auto& unused = suite;
 
         totalTests += sfun::ssize(suite.tests);
@@ -167,12 +180,12 @@ std::tuple<int, int, int> countTotals(const TestSuite& defaultSuite, const std::
     }
     return std::make_tuple(static_cast<int>(totalTests), totalPassed, totalDisabled);
 }
-}
+} //namespace
 
 void TestReporter::reportSummary(const TestSuite& defaultSuite, const std::map<std::string, TestSuite>& suites) const
 {
     auto [totalTests, totalPassed, totalDisabled] = countTotals(defaultSuite, suites);
-    if (totalTests == 0 && totalDisabled == 0){
+    if (totalTests == 0 && totalDisabled == 0) {
         print("No tests were found. Exiting.");
         return;
     }
@@ -180,15 +193,17 @@ void TestReporter::reportSummary(const TestSuite& defaultSuite, const std::map<s
     if (totalTests)
         printNewLine();
     print("{:#^" + std::to_string(reportWidth_) + "}", "  SUMMARY  ");
-    reportSuiteResult("Default",
-                      defaultSuite.passedTestsCounter,
-                      static_cast<int>(defaultSuite.tests.size()),
-                      defaultSuite.disabledTestsCounter);
-    for (const auto& [suiteName, suite] : suites){
-        reportSuiteResult(suiteName,
-                          suite.passedTestsCounter,
-                          static_cast<int>(suite.tests.size()),
-                          suite.disabledTestsCounter);
+    reportSuiteResult(
+            "Default",
+            defaultSuite.passedTestsCounter,
+            static_cast<int>(defaultSuite.tests.size()),
+            defaultSuite.disabledTestsCounter);
+    for (const auto& [suiteName, suite] : suites) {
+        reportSuiteResult(
+                suiteName,
+                suite.passedTestsCounter,
+                static_cast<int>(suite.tests.size()),
+                suite.disabledTestsCounter);
     }
     print("---");
     reportSuiteResult("Total", totalPassed, totalTests, totalDisabled);
@@ -196,19 +211,18 @@ void TestReporter::reportSummary(const TestSuite& defaultSuite, const std::map<s
 
 void TestReporter::initReporter(const fs::path& reportFilePath)
 {
-    auto makeConsoleSink = []{
+    auto makeConsoleSink = []
+    {
         auto sink = std::make_shared<spdlog::sinks::stdout_color_sink_st>();
         sink->set_level(spdlog::level::trace);
-        //sink->set_color(spdlog::level::trace, 0);
         sink->set_pattern("%^%v%$");
-        //sink->set_formatter(std::make_unique<spdlog::pattern_formatter>("%^%v%$", spdlog::pattern_time_type::local, "\n"));
         return sink;
     };
-    auto makeFileSink = [](const fs::path& logFilePath){
-        auto sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(toString(logFilePath), true);
+    auto makeFileSink = [](const fs::path& logFilePath)
+    {
+        auto sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(sfun::pathString(logFilePath), true);
         sink->set_level(spdlog::level::trace);
         sink->set_pattern("%v");
-        //sink->set_formatter(std::make_unique<spdlog::pattern_formatter>("%v", spdlog::pattern_time_type::local, "\n"));
         return sink;
     };
 
@@ -227,4 +241,4 @@ void TestReporter::initReporter(const fs::path& reportFilePath)
     spdlog::set_default_logger(logger);
 }
 
-}
+} //namespace lunchtoast

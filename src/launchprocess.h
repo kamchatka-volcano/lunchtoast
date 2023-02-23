@@ -30,4 +30,4 @@ private:
     gsl::not_null<std::optional<TestAction>*> nextAction_;
 };
 
-}
+} //namespace lunchtoast

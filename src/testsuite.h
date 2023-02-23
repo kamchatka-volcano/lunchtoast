@@ -17,4 +17,4 @@ struct TestSuite {
     int disabledTestsCounter = 0;
 };
 
-}
+} //namespace lunchtoast

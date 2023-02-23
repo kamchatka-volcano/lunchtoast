@@ -3,7 +3,10 @@
 #include "testaction.h"
 #include "utils.h"
 #include <fmt/format.h>
+#include <sfun/path.h>
 #include <sfun/string_utils.h>
+#include <sfun/utility.h>
+#include <sfun/utfconv.h>
 #include <boost/process.hpp>
 #include <filesystem>
 #include <utility>
@@ -41,7 +44,7 @@ auto osArgs(const std::vector<std::string_view>& args)
             std::back_inserter(result),
             [](const std::string_view& arg)
             {
-                return toUtf16(arg);
+                return sfun::toUtf16(arg);
             });
     return result;
 #endif
@@ -58,7 +61,7 @@ std::optional<std::tuple<std::string_view, std::vector<std::string_view>>> parse
     auto processCmd = cmdParts[0];
     cmdParts.erase(cmdParts.begin());
     auto processCmdParts = sfun::split(processCmd);
-    if (processCmdParts.size() > 1) {
+    if (sfun::ssize(processCmdParts) > 1) {
         processCmd = processCmdParts[0];
         std::copy(processCmdParts.begin() + 1, processCmdParts.end(), std::inserter(cmdParts, cmdParts.begin()));
     }
@@ -89,7 +92,7 @@ TestActionResult LaunchProcess::operator()()
     auto process = proc::child{
             cmd,
             proc::args(osArgs(cmdArgs)),
-            proc::start_dir = toString(workingDir_),
+            proc::start_dir = sfun::pathString(workingDir_),
             proc::std_out > stdoutStream,
             proc::std_err > stderrStream};
 

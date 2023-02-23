@@ -1,9 +1,8 @@
 #include <utils.h>
-#include <gtest/gtest.h>
 #include <fmt/format.h>
-#include <sstream>
+#include <gtest/gtest.h>
 #include <functional>
-
+#include <sstream>
 
 TEST(Utils, SplitCommand)
 {
@@ -38,7 +37,9 @@ TEST(Utils, SplitCommand5)
 TEST(Utils, SplitCommand6)
 {
     auto parts = lunchtoast::splitCommand("\" hello world \" --param2 \"hello world 2\" -param3=\"hello world 3\"");
-    ASSERT_EQ(parts, (std::vector<std::string_view>{" hello world ", "--param2", "hello world 2", "-param3=\"hello world 3\""}));
+    ASSERT_EQ(
+            parts,
+            (std::vector<std::string_view>{" hello world ", "--param2", "hello world 2", "-param3=\"hello world 3\""}));
 }
 
 TEST(Utils, SplitCommandNoWhitespace)

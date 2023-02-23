@@ -1,10 +1,9 @@
 #pragma once
 #include <string>
 
+namespace lunchtoast {
 
-namespace lunchtoast{
-
-class TestActionResult{
+class TestActionResult {
 public:
     static TestActionResult Success();
     static TestActionResult Failure(const std::string& errorInfo);
@@ -20,4 +19,4 @@ private:
     std::string errorInfo_;
 };
 
-}
+} //namespace lunchtoast

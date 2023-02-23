@@ -1,13 +1,14 @@
 #include "linestream.h"
-#include <string>
-#include <istream>
 #include <functional>
+#include <istream>
+#include <string>
 
-namespace lunchtoast{
+namespace lunchtoast {
 
 LineStream::LineStream(std::istream& stream)
     : stream_{stream}
-{}
+{
+}
 
 void LineStream::skipLine()
 {
@@ -18,9 +19,9 @@ std::string LineStream::readLine()
 {
     auto ch = char{};
     auto line = std::string{};
-    while (stream().get(ch)){
+    while (stream().get(ch)) {
         line += ch;
-        if (ch == '\r'){
+        if (ch == '\r') {
             line.pop_back();
             auto pos = stream().tellg();
             stream().get(ch);
@@ -70,5 +71,4 @@ std::istream& LineStream::stream()
     return stream_;
 }
 
-}
-
+} //namespace lunchtoast
