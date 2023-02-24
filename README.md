@@ -73,12 +73,12 @@ Test case configuration syntax in 3 minutes:
 
 # Macro variables
 # Three parameters described above can be used with the following macro variables:  
-# $dir$ - the name of the directory where the test test case file resides and 
-# $filename$ - the name of the test case file without the extension
+# ${{ DIR }} - the name of the directory where the test test case file resides and 
+# ${{ FILENAME }} - the name of the test case file without the extension
 # For example, they can be used like this:
-# -Decription: $filename$
+# -Decription: ${{ FILENAME }}
 # or
-# -Suite: suite_$dir$
+# -Suite: suite_${{ DIR }}
 
 # Directory, sets the test directory, all non-absolute paths in this config are relative to it. 
 # The default value is the directory where the test case file resides. If the value is a non-absolute path, it's relative to the default value's path.

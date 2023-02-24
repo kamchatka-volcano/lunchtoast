@@ -1,4 +1,4 @@
--Name: $dir$
+-Name: ${{ DIR }}
 -Suite: setting params
 -Contents: test test/lunchtoast3.test test/lunchtoast2.test test/lhs.txt test/rhs2.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
 -Description: 

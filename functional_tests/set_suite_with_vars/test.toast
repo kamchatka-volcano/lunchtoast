@@ -1,8 +1,8 @@
--Name: $dir$
+-Name: ${{ DIR }}
 -Suite: setting params
 -Contents: test test/lhs.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
 -Description: 
-    GIVEN 2 equal files (lhs.txt and rhs.txt), set suite name using built-in variables $filename$ and $dir$
+    GIVEN 2 equal files (lhs.txt and rhs.txt), set suite name using built-in variables ${{ FILENAME }} and ${{ DIR }}
     WHEN test single assertion of files equality
     THEN test should pass, suite name should be in report
 ---    

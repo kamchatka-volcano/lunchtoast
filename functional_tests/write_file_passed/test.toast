@@ -1,4 +1,4 @@
--Name: $dir$
+-Name: ${{ DIR }}
 -Contents: test test/lunchtoast.test test.ref test2.ref test.toast report.ref
 -Description:
     GIVEN file test.ref

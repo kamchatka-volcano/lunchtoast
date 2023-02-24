@@ -1,4 +1,4 @@
--Name: $dir$
+-Name: ${{ DIR }}
 -Contents: {test/.*} {.*\.ref}
 -Tags: windows
 -Description:

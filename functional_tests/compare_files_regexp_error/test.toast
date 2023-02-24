@@ -1,4 +1,4 @@
--Name: $dir$
+-Name: ${{ DIR }}
 -Suite: errors
 -Contents: test test/rhs2.ref test/rhs.ref test/lhs.res test/lunchtoast.test test/lhs2.res test.toast report.ref
 -Description: 

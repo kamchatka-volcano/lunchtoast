@@ -1,2 +1,2 @@
--Name: Files equality assertion ($filename$ - $dir$)
+-Name: Files equality assertion (${{ FILENAME }} - ${{ DIR }})
 -Assert files equal: lhs.txt rhs.txt

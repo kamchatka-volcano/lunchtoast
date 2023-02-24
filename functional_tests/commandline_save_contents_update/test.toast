@@ -1,4 +1,4 @@
--Name: $dir$
+-Name: ${{ DIR }}
 -Suite: command line
 -Contents: test test/file_to_preserve.txt test/lhs.txt test/rhs.txt lunchtoast_test.ref lunchtoast.test test.toast report.ref
 -Description: 

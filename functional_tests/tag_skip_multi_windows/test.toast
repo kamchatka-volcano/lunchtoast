@@ -1,4 +1,4 @@
--Name: $dir$
+-Name: ${{ DIR }}
 -Suite: setting params
 -Contents: test/test_first.test test/test_second.test test/test_third.test test.toast report.ref
 -Tags: windows

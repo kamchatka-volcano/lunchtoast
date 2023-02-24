@@ -1,4 +1,4 @@
--Name: $dir$
+-Name: ${{ DIR }}
 -Contents: test/lf.txt test/lunchtoast.test report.ref
 -Tags: windows
 -Description: 

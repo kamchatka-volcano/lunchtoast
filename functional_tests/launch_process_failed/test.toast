@@ -1,4 +1,4 @@
--Name: $dir$
+-Name: ${{ DIR }}
 -Contents: test test/process.sh test/lunchtoast.test test.toast report.ref
 -Tags: linux
 -Description: 

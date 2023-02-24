@@ -7,6 +7,7 @@
 #include <sfun/utility.h>
 #include <fstream>
 #include <optional>
+#include <regex>
 #include <sstream>
 
 
@@ -39,8 +40,8 @@ std::string readFile(const fs::path& filePath)
 
 void processVariablesSubstitution(std::string& value, const std::string& varFileName, const std::string& varDirName)
 {
-    value = sfun::replace(value, "$filename$", varFileName);
-    value = sfun::replace(value, "$dir$", varDirName);
+    value = std::regex_replace(value,  std::regex{R"(\$\{\{\s*FILENAME\s*\}\})"}, varFileName);
+    value = std::regex_replace(value,  std::regex{R"(\$\{\{\s*DIR\s*\}\})"}, varDirName);
 }
 
 std::vector<fs::path> getDirectoryContent(const fs::path& dir)

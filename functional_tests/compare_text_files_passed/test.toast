@@ -1,4 +1,4 @@
--Name: $dir$
+-Name: ${{ DIR }}
 -Contents: test/crlf.txt test/lf.txt test/lunchtoast.test report.ref
 -Description: 
     GIVEN 2 text files (crlf.txt and lf.txt) with equal text by different line separators (\r\n and \n)
