@@ -3,6 +3,6 @@
 -Write test.txt:
 Hello world
 ---
--Assert content of test.txt:
+-Assert test.txt:
 Hello world
 ---

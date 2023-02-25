@@ -1,7 +1,7 @@
--Expect content of file.txt:
+-Expect file.txt:
 Hello world
 - Yes
 # No
 ---
 #Content of file from the same line
--Assert content of file2.txt:Hello world2
+-Assert file2.txt:Hello world2

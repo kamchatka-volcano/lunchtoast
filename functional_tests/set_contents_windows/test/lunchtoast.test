@@ -2,17 +2,17 @@
 -Write test.txt:
 Hello world
 ---
--Assert content of test.txt:
+-Assert test.txt:
 Hello world
 ---
 -Launch command: mkdir tmp
 -Launch command: echo "Hello world" > tmp/test.txt
 -Launch command: echo "Hello world" > data/test.txt
--Assert content of tmp/test.txt:
+-Assert tmp/test.txt:
 Hello world
 
 ---
--Assert content of data/test.txt:
+-Assert data/test.txt:
 Hello world
 
 ---

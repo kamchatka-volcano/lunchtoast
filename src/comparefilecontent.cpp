@@ -8,8 +8,8 @@ namespace lunchtoast {
 namespace fs = std::filesystem;
 
 CompareFileContent::CompareFileContent(fs::path filePath, std::string expectedFileContent)
-    : filePath_(std::move(filePath))
-    , expectedFileContent_(std::move(expectedFileContent))
+    : filePath_{std::move(filePath)}
+    , expectedFileContent_{std::move(expectedFileContent)}
 {
 }
 

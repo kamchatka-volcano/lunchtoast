@@ -8,7 +8,7 @@
 ---    
 -Launch unchecked: rm test/testdata/test.txt
 -Launch: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res --noCleanup
--Assert content of test/testdata/test.txt:
+-Assert test/testdata/test.txt:
 Hello world
 ---
 -Assert files equal: report.res report.ref

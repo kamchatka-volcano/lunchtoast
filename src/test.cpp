@@ -186,10 +186,6 @@ bool Test::createComparisonAction(
         createCompareFilesAction(actionType, encodedActionType, section.value);
         return true;
     }
-    if (sfun::startsWith(encodedActionType, "content of ")) {
-        createCompareFileContentAction(actionType, encodedActionType, section.value);
-        return true;
-    }
     if (encodedActionType == "exit code") {
         createCompareExitCodeAction(actionType, section.value);
         return true;
@@ -202,7 +198,8 @@ bool Test::createComparisonAction(
         actions_.push_back({CompareErrorOutput{launchActionResult_, section.value}, actionType});
         return true;
     }
-    return false;
+    createCompareFileContentAction(actionType, encodedActionType, section.value);
+    return true;
 }
 
 void Test::createLaunchAction(const Section& section)
@@ -237,7 +234,7 @@ void Test::createCompareFilesAction(
 {
     const auto filenameGroups = readFilenames(filenamesStr, directory_);
     if (filenameGroups.size() != 2)
-        throw TestConfigError{"Comparison of files require exactly two filenames or filename matching regular "
+        throw TestConfigError{"Comparison of files requires exactly two filenames or filename matching regular "
                               "expressions to be specified"};
     auto comparisonMode = sfun::startsWith(comparisonType, "data") ? ComparisonMode::Binary : ComparisonMode::Text;
     actions_.push_back({CompareFiles{filenameGroups[0], filenameGroups[1], comparisonMode}, actionType});
@@ -248,8 +245,8 @@ void Test::createCompareFileContentAction(
         const std::string& filenameStr,
         const std::string& expectedFileContent)
 {
-    const auto filename = std::string{sfun::trim(sfun::replace(filenameStr, "content of ", ""))};
-    actions_.push_back({CompareFileContent{fs::absolute(directory_) / filename, expectedFileContent}, actionType});
+    const auto filePath = fs::absolute(directory_) / sfun::makePath(filenameStr);
+    actions_.push_back({CompareFileContent{filePath, expectedFileContent}, actionType});
 }
 
 void Test::createCompareExitCodeAction(TestActionType actionType, const std::string& expectedExitCodeStr)

@@ -80,13 +80,13 @@ Hello world2
 
 #Assert content of, checks the content of file, specified in the first section's parameter, with the section's value. If they differ, the action is considered a failure and the test execution stops.
 # (note that this is the raw section, you must put '---' after the last line of the section's value text)
--Assert content of test.res:
+-Assert test.res:
 Hello world
 ---
 
 #Expect content of, checks the content of file, specified in the first section's parameter, with the section's value. If they differ, the test is considered a failure, but it continues to execute the next available actions.
 # (note that this is the raw section, you must put '---' after the last line of the section's value text)
--Expect content of test2.res:
+-Expect test2.res:
 Hello world2
 ---
 
