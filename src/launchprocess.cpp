@@ -6,7 +6,7 @@
 #include <sfun/path.h>
 #include <sfun/string_utils.h>
 #include <sfun/utility.h>
-#include <sfun/utfconv.h>
+#include <sfun/wstringconv.h>
 #include <boost/process.hpp>
 #include <filesystem>
 #include <utility>
@@ -44,7 +44,7 @@ auto osArgs(const std::vector<std::string_view>& args)
             std::back_inserter(result),
             [](const std::string_view& arg)
             {
-                return sfun::toUtf16(arg);
+                return sfun::toWString(arg);
             });
     return result;
 #endif

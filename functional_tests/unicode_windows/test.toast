@@ -1,5 +1,5 @@
 -Name: ${{ DIR }}
--Contents: test test/лхс.txt test/ланчтост.test test/рхс.txt test.toast report.ref
+-Contents: {test/🥸\.txt} test/ланчтост.test test/рхс.txt test.toast report.ref
 -Tags: windows
 -Description: 
     GIVEN 2 equal files (lhs.txt and rhs.txt)

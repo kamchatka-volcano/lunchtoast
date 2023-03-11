@@ -8,21 +8,6 @@
 #include <set>
 #include <string>
 
-namespace cmdlime {
-template<>
-struct StringConverter<std::filesystem::path> {
-    static std::optional<std::string> toString(const std::filesystem::path& coord)
-    {
-        return ::sfun::pathString(coord);
-    }
-
-    static std::optional<std::filesystem::path> fromString(const std::string& data)
-    {
-        return ::sfun::makePath(data);
-    }
-};
-} //namespace cmdlime
-
 namespace lunchtoast {
 
 struct EnsurePathExists {

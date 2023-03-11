@@ -5,7 +5,6 @@
 #include "testreporter.h"
 #include <cmdlime/commandlinereader.h>
 #include <fmt/format.h>
-#include <sfun/utfconv.h>
 #include <set>
 
 using namespace lunchtoast;
@@ -33,31 +32,19 @@ int mainApp(const CommandLine& commandLine)
         return 1;
 }
 
-#ifndef _WIN32
-int main(int argc, char** argv)
+#ifdef _WIN32
+int wmain(int argc, wchar_t** argv)
 {
     auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast"};
     cmdlineReader.setErrorOutputStream(std::cout);
     return cmdlineReader.exec<CommandLine>(argc, argv, mainApp);
 }
 #else
-int wmain(int argc, wchar_t** argv)
+int main(int argc, char** argv)
 {
-    auto wargs = std::vector<std::wstring>{argv, argv + argc};
-    wargs.erase(wargs.begin());
-    auto args = std::vector<std::string>{};
-    std::transform(
-            wargs.begin(),
-            wargs.end(),
-            std::back_inserter(args),
-            [](const std::wstring& arg)
-            {
-                return sfun::toUtf8(arg);
-            });
-
     auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast"};
     cmdlineReader.setErrorOutputStream(std::cout);
-    return cmdlineReader.exec<CommandLine>(args, mainApp);
+    return cmdlineReader.exec<CommandLine>(argc, argv, mainApp);
 }
 #endif
 
