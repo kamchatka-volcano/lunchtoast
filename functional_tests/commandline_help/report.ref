@@ -2,6 +2,8 @@ Usage: lunchtoast <testPath> [params] [flags]
 Arguments:
     <testPath> (path)             a test file or a directory containing tests
 Parameters:
+   -config=<path>                 a config file for setting variables
+                                    (optional, default: "")
    -report=<path>                 write a test report to the specified file
                                     (optional, default: "")
    -listFailedTests=<path>        write a list of failed tests to the 

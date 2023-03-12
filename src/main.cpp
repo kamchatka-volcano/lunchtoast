@@ -1,13 +1,18 @@
 #include "commandline.h"
+#include "config.h"
 #include "test.h"
 #include "testcontentsgenerator.h"
 #include "testlauncher.h"
 #include "testreporter.h"
 #include <cmdlime/commandlinereader.h>
+#include <figcone/configreader.h>
 #include <fmt/format.h>
+#include <filesystem>
+#include <optional>
 #include <set>
 
 using namespace lunchtoast;
+namespace fs = std::filesystem;
 
 int generateTestContents(const CommandLine& commandLine);
 int mainApp(const CommandLine& commandLine)
@@ -15,10 +20,18 @@ int mainApp(const CommandLine& commandLine)
     if (commandLine.saveContents)
         return generateTestContents(commandLine);
 
+    const auto cfg = [&]
+    {
+        if (commandLine.config.empty())
+            return Config{};
+        auto cfgReader = figcone::ConfigReader{};
+        return cfgReader.readShoalFile<Config>(commandLine.config);
+    }();
+
     auto allTestsPassed = false;
     try {
         const auto testReporter = TestReporter{commandLine.report, commandLine.width};
-        auto testLauncher = TestLauncher{testReporter, commandLine};
+        auto testLauncher = TestLauncher{testReporter, commandLine, cfg};
         allTestsPassed = testLauncher.process();
     }
     catch (const std::exception& e) {

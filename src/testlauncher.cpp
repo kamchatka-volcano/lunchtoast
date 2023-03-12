@@ -1,5 +1,6 @@
 #include "testlauncher.h"
 #include "commandline.h"
+#include "config.h"
 #include "errors.h"
 #include "sectionsreader.h"
 #include "test.h"
@@ -16,8 +17,9 @@
 namespace lunchtoast {
 namespace fs = std::filesystem;
 
-TestLauncher::TestLauncher(const TestReporter& reporter, const CommandLine& commandLine)
+TestLauncher::TestLauncher(const TestReporter& reporter, const CommandLine& commandLine, const Config& cfg)
     : reporter_{reporter}
+    , config_{cfg}
     , shellCommand_{commandLine.shell}
     , cleanup_{!commandLine.noCleanup}
     , selectedTags_{commandLine.select}
@@ -96,7 +98,7 @@ std::vector<std::filesystem::path> TestLauncher::processSuite(const std::string&
     for (const auto& testCfg : suite.tests) {
         testNumber++;
         try {
-            auto test = Test{testCfg.path, shellCommand_, cleanup_};
+            auto test = Test{testCfg.path, testCfg.vars, shellCommand_, cleanup_};
             if (!testCfg.isEnabled) {
                 reporter().reportDisabledTest(test, suiteName, testNumber, testsCount);
                 continue;
@@ -171,6 +173,32 @@ bool isTestSelected(
     return std::none_of(skippedTags.begin(), skippedTags.end(), isTestTaggedWith);
 }
 
+std::unordered_map<std::string, std::string> makeTestVariables(
+        const Config& config,
+        const std::set<std::string>& tags,
+        const std::string& varFileName,
+        const std::string& varDirName)
+{
+    auto vars = std::unordered_map<std::string, std::string>{};
+    vars["FILENAME"] = varFileName;
+    vars["DIR"] = varDirName;
+    for (const auto& [varName, varValue] : config.vars)
+        vars[varName] = varValue;
+    for (const auto& tag : tags) {
+        auto itTagVars = std::find_if(
+                config.tagVars.cbegin(),
+                config.tagVars.cend(),
+                [&](const auto& tagVarsSet)
+                {
+                    return tagVarsSet.tag == tag;
+                });
+        if (itTagVars != config.tagVars.cend())
+            for (const auto& [varName, varValue] : itTagVars->vars)
+                vars[varName] = varValue;
+    }
+    return vars;
+}
+
 } //namespace
 
 void TestLauncher::addTest(const fs::path& testFile)
@@ -183,26 +211,26 @@ void TestLauncher::addTest(const fs::path& testFile)
     auto isEnabled = (enabledStr.empty() || enabledStr == "true");
     stream.clear();
     stream.seekg(0, std::ios::beg);
-    auto suiteName = getSectionValue("Suite", sections);
-    processVariablesSubstitution(
-            suiteName,
-            sfun::pathString(testFile.stem()),
-            sfun::pathString(testFile.parent_path().stem()));
 
     auto tagsStr = getSectionValue("Tags", sections);
     auto tags = sfun::split(tagsStr, ",");
     auto tagsSet = std::set<std::string>{tags.begin(), tags.end()};
-
     if (!isTestSelected(tagsSet, selectedTags_, skippedTags_))
         return;
 
+    auto testVars = makeTestVariables(
+            config_,
+            tagsSet,
+            sfun::pathString(testFile.stem()),
+            sfun::pathString(testFile.parent_path().stem()));
+    const auto suiteName = processVariablesSubstitution(getSectionValue("Suite", sections), testVars);
     if (suiteName.empty()) {
-        defaultSuite_.tests.push_back({testFile, isEnabled});
+        defaultSuite_.tests.push_back({testFile, isEnabled, testVars});
         if (!isEnabled)
             defaultSuite_.disabledTestsCounter++;
     }
     else {
-        suites_[suiteName].tests.push_back({testFile, isEnabled});
+        suites_[suiteName].tests.push_back({testFile, isEnabled, testVars});
         if (!isEnabled)
             suites_[suiteName].disabledTestsCounter++;
     }

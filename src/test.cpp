@@ -13,20 +13,25 @@
 #include <sfun/functional.h>
 #include <sfun/path.h>
 #include <sfun/string_utils.h>
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 
 namespace lunchtoast {
 namespace fs = std::filesystem;
 
-Test::Test(const fs::path& configPath, std::string shellCommand, bool cleanup)
+Test::Test(
+        const fs::path& configPath,
+        const std::unordered_map<std::string, std::string>& vars,
+        std::string shellCommand,
+        bool cleanup)
     : name_(sfun::pathString(configPath.stem()))
     , directory_(configPath.parent_path())
     , shellCommand_(std::move(shellCommand))
     , isEnabled_(true)
     , cleanup_(cleanup)
 {
-    readConfig(configPath);
+    readConfig(configPath, vars);
     postProcessCleanupConfig(configPath);
 }
 
@@ -140,14 +145,24 @@ bool isValidUnusedSection(const Section& section)
 }
 } //namespace
 
-void Test::readConfig(const fs::path& path)
+void Test::readConfig(const fs::path& path, const std::unordered_map<std::string, std::string>& vars)
 {
     auto fileStream = std::ifstream{path, std::ios::binary};
     if (!fileStream.is_open())
         throw TestConfigError{fmt::format("Test config file {} doesn't exist", homePathString(path))};
 
     try {
-        const auto sections = readSections(fileStream);
+        auto sections = readSections(fileStream);
+        std::transform(
+                sections.begin(),
+                sections.end(),
+                sections.begin(),
+                [&](Section& section)
+                {
+                    section.value = processVariablesSubstitution(section.value, vars);
+                    return section;
+                });
+
         if (sections.empty())
             throw TestConfigError{fmt::format("Test config file {} is empty or invalid", homePathString(path))};
         for (const auto& section : sections) {
@@ -165,9 +180,6 @@ void Test::readConfig(const fs::path& path)
     }
 
     checkParams();
-    processVariablesSubstitution(name_, sfun::pathString(path.stem()), sfun::pathString(directory_.stem()));
-    processVariablesSubstitution(description_, sfun::pathString(path.stem()), sfun::pathString(directory_.stem()));
-    processVariablesSubstitution(suite_, sfun::pathString(path.stem()), sfun::pathString(directory_.stem()));
 }
 
 void Test::checkParams()

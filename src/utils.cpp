@@ -38,10 +38,11 @@ std::string readFile(const fs::path& filePath)
     return buffer.str();
 }
 
-void processVariablesSubstitution(std::string& value, const std::string& varFileName, const std::string& varDirName)
+std::string processVariablesSubstitution(std::string value, const std::unordered_map<std::string, std::string>& vars)
 {
-    value = std::regex_replace(value,  std::regex{R"(\$\{\{\s*FILENAME\s*\}\})"}, varFileName);
-    value = std::regex_replace(value,  std::regex{R"(\$\{\{\s*DIR\s*\}\})"}, varDirName);
+    for (const auto& [varName, varValue] : vars)
+        value = std::regex_replace(value, std::regex{R"(\$\{\{\s*)" + varName + R"(\s*\}\})"}, varValue);
+    return value;
 }
 
 std::vector<fs::path> getDirectoryContent(const fs::path& dir)

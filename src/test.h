@@ -8,13 +8,18 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace lunchtoast {
 
 class Test {
 public:
-    explicit Test(const std::filesystem::path& configPath, std::string shellCommand, bool cleanup);
+    explicit Test(
+            const std::filesystem::path& configPath,
+            const std::unordered_map<std::string, std::string>& vars,
+            std::string shellCommand,
+            bool cleanup);
     TestResult process();
 
     const std::string& suite() const;
@@ -22,7 +27,7 @@ public:
     const std::string& description() const;
 
 private:
-    void readConfig(const std::filesystem::path& path);
+    void readConfig(const std::filesystem::path& path, const std::unordered_map<std::string, std::string>& vars);
     bool readParamFromSection(const Section& section);
     bool readActionFromSection(const Section& section);
     void createLaunchAction(const Section& section);

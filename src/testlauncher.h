@@ -11,10 +11,11 @@ class Test;
 class TestResult;
 class TestReporter;
 struct CommandLine;
+struct Config;
 
 class TestLauncher {
 public:
-    TestLauncher(const TestReporter&, const CommandLine&);
+    TestLauncher(const TestReporter&, const CommandLine&, const Config&);
     bool process();
 
 private:
@@ -27,6 +28,7 @@ private:
     TestSuite defaultSuite_;
     std::map<std::string, TestSuite> suites_;
     std::reference_wrapper<const TestReporter> reporter_;
+    std::reference_wrapper<const Config> config_;
     std::string shellCommand_;
     bool cleanup_;
     std::vector<std::string> selectedTags_;

@@ -14,6 +14,11 @@ SealLake_Import(cmdlime 2.4.0
         GIT_REPOSITORY https://github.com/kamchatka-volcano/cmdlime
         GIT_TAG v2.4.0
 )
+set(FIGCONE_USE_SHOAL ON)
+SealLake_Import(figcone 2.4.4
+        GIT_REPOSITORY https://github.com/kamchatka-volcano/figcone
+        GIT_TAG v2.4.4
+)
 SealLake_Import(fmt 9.1.0
         GIT_REPOSITORY https://github.com/fmtlib/fmt
         GIT_TAG 9.1.0
@@ -66,6 +71,7 @@ SealLake_Executable(
             spdlog::spdlog
             sfun::sfun
             cmdlime::cmdlime
+            figcone::figcone
             fmt::fmt
             Microsoft.GSL::GSL
             sago::platform_folders
