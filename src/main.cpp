@@ -20,13 +20,11 @@ int mainApp(const CommandLine& commandLine)
     if (commandLine.saveContents)
         return generateTestContents(commandLine);
 
-    const auto cfg = [&]
-    {
-        if (commandLine.config.empty())
-            return Config{};
+    auto cfg = Config{};
+    if (!commandLine.config.empty()) {
         auto cfgReader = figcone::ConfigReader{};
-        return cfgReader.readShoalFile<Config>(commandLine.config);
-    }();
+        cfg = cfgReader.readShoalFile<Config>(commandLine.config);
+    }
 
     auto allTestsPassed = false;
     try {
