@@ -1,4 +1,0 @@
--Launch: echo "Hello world" >&2
--Expect error output:
-Hello moon
----

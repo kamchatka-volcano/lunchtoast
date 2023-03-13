@@ -1,0 +1,2 @@
+#vars:
+  shellParam = '-shell="msys2 -c"'

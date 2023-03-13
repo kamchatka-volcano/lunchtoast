@@ -100,7 +100,7 @@ jobs:
       - name: Launch tests
         id: launch_tests
         working-directory: ${{github.workspace}}
-        run: master/lunchtoast.exe functional_tests -skip=linux -shell="msys2 -c" -collectFailedTests=failed_tests
+        run: master/lunchtoast.exe functional_tests -skip=linux -shell="msys2 -c" -collectFailedTests=failed_tests -config="windows_vars.shoal"
       - name: Upload failed tests
         if: failure() && steps.launch_tests.outcome != 'success' && steps.pre_launch_tests.outcome == 'success'
         uses: actions/upload-artifact@v3
@@ -137,7 +137,7 @@ jobs:
       - name: Launch tests
         id: launch_tests
         working-directory: ${{github.workspace}}/
-        run: master/lunchtoast functional_tests/ -skip=windows -collectFailedTests=failed_tests
+        run: master/lunchtoast functional_tests/ -skip=windows -collectFailedTests=failed_tests -config=linux_vars.shoal
       - name: Upload failed tests
         if: failure() && steps.launch_tests.outcome != 'success' && steps.pre_launch_tests.outcome == 'success'
         uses: actions/upload-artifact@v3

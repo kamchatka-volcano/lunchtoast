@@ -1,9 +1,0 @@
-################## [ 1 / 1 ] ###################
-Name: lunchtoast
-Failure: Process exit code '2' isn't equal to the expected '0'
-                              Result:     FAILED
- 
-##################  SUMMARY  ###################
-Default:                     0 out of 1 passed, 1 failed
----
-Total:                       0 out of 1 passed, 1 failed
