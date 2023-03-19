@@ -4,6 +4,7 @@
 #include "section.h"
 #include "testaction.h"
 #include "testresult.h"
+#include "useraction.h"
 #include <filesystem>
 #include <memory>
 #include <set>
@@ -18,6 +19,7 @@ public:
     explicit Test(
             const std::filesystem::path& configPath,
             const std::unordered_map<std::string, std::string>& vars,
+            std::vector<UserAction> userActions,
             std::string shellCommand,
             bool cleanup);
     TestResult process();
@@ -29,7 +31,7 @@ public:
 private:
     void readConfig(const std::filesystem::path& path, const std::unordered_map<std::string, std::string>& vars);
     bool readParamFromSection(const Section& section);
-    bool readActionFromSection(const Section& section);
+    bool readActionFromSection(const Section& section, const std::unordered_map<std::string, std::string>& vars);
     void createLaunchAction(const Section& section);
     void createWriteAction(const Section& section);
     void createCompareFilesAction(
@@ -40,7 +42,7 @@ private:
             TestActionType actionType,
             const std::string& filenameStr,
             const std::string& expectedFileContent);
-    bool createComparisonAction(
+    void createComparisonAction(
             TestActionType actionType,
             const std::string& encodedActionType,
             const Section& section);
@@ -55,6 +57,7 @@ private:
 
 private:
     std::vector<TestAction> actions_;
+    std::vector<UserAction> userActions_;
     std::string name_;
     std::string description_;
     std::filesystem::path directory_;

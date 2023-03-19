@@ -23,9 +23,11 @@ namespace fs = std::filesystem;
 Test::Test(
         const fs::path& configPath,
         const std::unordered_map<std::string, std::string>& vars,
+        std::vector<UserAction> userActions,
         std::string shellCommand,
         bool cleanup)
-    : name_(sfun::pathString(configPath.stem()))
+    : userActions_{std::move(userActions)}
+    , name_(sfun::pathString(configPath.stem()))
     , directory_(configPath.parent_path())
     , shellCommand_(std::move(shellCommand))
     , isEnabled_(true)
@@ -112,8 +114,23 @@ bool Test::readParamFromSection(const Section& section)
     return false;
 }
 
-bool Test::readActionFromSection(const Section& section)
+bool Test::readActionFromSection(const Section& section, const std::unordered_map<std::string, std::string>& vars)
 {
+    for (const auto& userAction : userActions_) {
+        auto command = userAction.makeCommand(section.name, vars, section.value);
+        if (command.has_value()) {
+            actions_.push_back(
+                    {LaunchProcess{
+                             command.value(),
+                             directory_,
+                             shellCommand_,
+                             userAction.makeProcessResultCheckModeSet(vars, section.value),
+                             nextAction_},
+                     userAction.actionType()});
+            return true;
+        }
+    }
+
     if (sfun::startsWith(section.name, "Launch")) {
         createLaunchAction(section);
         return true;
@@ -124,11 +141,13 @@ bool Test::readActionFromSection(const Section& section)
     }
     if (sfun::startsWith(section.name, "Assert")) {
         auto actionType = sfun::trim(sfun::after(section.name, "Assert"));
-        return createComparisonAction(TestActionType::Assertion, std::string{actionType}, section);
+        createComparisonAction(TestActionType::Assertion, std::string{actionType}, section);
+        return true;
     }
     if (sfun::startsWith(section.name, "Expect")) {
         auto actionType = sfun::trim(sfun::after(section.name, "Expect"));
-        return createComparisonAction(TestActionType::Expectation, std::string{actionType}, section);
+        createComparisonAction(TestActionType::Expectation, std::string{actionType}, section);
+        return true;
     }
     return false;
 }
@@ -168,7 +187,7 @@ void Test::readConfig(const fs::path& path, const std::unordered_map<std::string
         for (const auto& section : sections) {
             if (readParamFromSection(section))
                 continue;
-            if (readActionFromSection(section))
+            if (readActionFromSection(section, vars))
                 continue;
             if (isValidUnusedSection(section))
                 continue;
@@ -188,47 +207,45 @@ void Test::checkParams()
         throw TestConfigError{fmt::format("Specified directory '{}' doesn't exist", homePathString(directory_))};
 }
 
-bool Test::createComparisonAction(
+void Test::createComparisonAction(
         TestActionType actionType,
         const std::string& encodedActionType,
         const Section& section)
 {
     if (encodedActionType == "files equal" || encodedActionType == "text files equal" ||
-        encodedActionType == "data files equal") {
+        encodedActionType == "data files equal")
         createCompareFilesAction(actionType, encodedActionType, section.value);
-        return true;
-    }
-    if (encodedActionType == "exit code") {
+    else if (encodedActionType == "exit code")
         createCompareExitCodeAction(actionType, section.value);
-        return true;
-    }
-    if (encodedActionType == "output") {
+    else if (encodedActionType == "output")
         actions_.push_back({CompareOutput{launchActionResult_, section.value}, actionType});
-        return true;
-    }
-    if (encodedActionType == "error output") {
+    else if (encodedActionType == "error output")
         actions_.push_back({CompareErrorOutput{launchActionResult_, section.value}, actionType});
-        return true;
-    }
-    createCompareFileContentAction(actionType, encodedActionType, section.value);
-    return true;
+    else
+        createCompareFileContentAction(actionType, encodedActionType, section.value);
 }
 
 void Test::createLaunchAction(const Section& section)
 {
     const auto parts = sfun::split(section.name);
-    auto uncheckedResult = std::find(parts.begin(), parts.end(), "unchecked") != parts.end();
-    auto isShellCommand = std::find(parts.begin(), parts.end(), "process") == parts.end();
 
-    const auto& command = section.value;
     auto shellCommand = [&]() -> std::optional<std::string>
     {
-        if (isShellCommand)
+        if (std::find(parts.begin(), parts.end(), "process") == parts.end())
             return shellCommand_;
         return std::nullopt;
     };
+
+    auto checkModeSet = [&]()
+    {
+        auto result = std::set<ProcessResultCheckMode>{};
+        if (std::find(parts.begin(), parts.end(), "unchecked") == parts.end())
+            result.emplace(ProcessResultCheckMode::ExitCode{0});
+        return result;
+    };
+
     actions_.push_back(
-            {LaunchProcess{command, directory_, shellCommand(), uncheckedResult, nextAction_},
+            {LaunchProcess{section.value, directory_, shellCommand(), checkModeSet(), nextAction_},
              TestActionType::RequiredOperation});
 }
 

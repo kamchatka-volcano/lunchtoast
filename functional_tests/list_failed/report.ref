@@ -1,10 +1,10 @@
 ################## [ 1 / 3 ] ###################
 Name: failed
-Failure: Launched process 'unknown_process' returned non-zero exit code
+Failure: Launched process 'unknown_process' returned unexpected exit code 127, expected exit code: 0
                               Result:     FAILED
 ################## [ 2 / 3 ] ###################
 Name: failed2
-Failure: Launched process 'unknown_process' returned non-zero exit code
+Failure: Launched process 'unknown_process' returned unexpected exit code 127, expected exit code: 0
                               Result:     FAILED
 ################## [ 3 / 3 ] ###################
 Name: lunchtoast

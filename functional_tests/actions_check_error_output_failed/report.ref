@@ -1,0 +1,9 @@
+################## [ 1 / 1 ] ###################
+Name: lunchtoast
+Failure: Launched process 'echo Hello world >&2' returned unexpected error output 'Hello world', expected error output: 'Hello moon'
+                              Result:     FAILED
+ 
+##################  SUMMARY  ###################
+Default:                     0 out of 1 passed, 1 failed
+---
+Total:                       0 out of 1 passed, 1 failed

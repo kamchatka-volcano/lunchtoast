@@ -5,16 +5,11 @@
 #include "comparefiles.h"
 #include "compareoutput.h"
 #include "launchprocess.h"
+#include "testactiontype.h"
 #include "writefile.h"
 #include <variant>
 
 namespace lunchtoast {
-
-enum class TestActionType {
-    RequiredOperation,
-    Expectation,
-    Assertion
-};
 
 class TestAction {
 public:

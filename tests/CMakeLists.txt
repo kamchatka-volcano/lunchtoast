@@ -4,6 +4,8 @@ project(test_lunchtoast)
 set(SRC
     test_sectionsreader.cpp
     test_utils.cpp
+    test_useractionformatparser.cpp
+    ../src/useractionformatparser.cpp
     ../src/sectionsreader.cpp
     ../src/linestream.cpp
     ../src/utils.cpp

@@ -1,3 +1,4 @@
+#include "assert_exception.h"
 #include <errors.h>
 #include <sectionsreader.h>
 #include <fmt/format.h>
@@ -32,23 +33,6 @@ void testSectionReader(const std::string& input, const std::vector<lunchtoast::S
     auto stream = std::istringstream{input};
     auto sections = lunchtoast::readSections(stream);
     EXPECT_EQ(sections, expectedSections);
-}
-
-template<typename ExceptionType>
-void assert_exception(
-        const std::function<void()>& throwingCode,
-        const std::function<void(const ExceptionType&)>& exceptionContentChecker)
-{
-    try {
-        throwingCode();
-        FAIL() << "exception wasn't thrown!";
-    }
-    catch (const ExceptionType& e) {
-        exceptionContentChecker(e);
-    }
-    catch (...) {
-        FAIL() << "Unexpected exception was thrown";
-    }
 }
 
 TEST(SectionsReader, Basic)

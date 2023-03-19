@@ -1,6 +1,6 @@
 ################## [ 1 / 1 ] ###################
 Name: lunchtoast
-Failure: Launched process 'process.bat' returned non-zero exit code
+Failure: Launched process 'process.bat' returned unexpected exit code 1, expected exit code: 0
                               Result:     FAILED
  
 ##################  SUMMARY  ###################

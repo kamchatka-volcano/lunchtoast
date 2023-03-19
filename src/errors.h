@@ -16,4 +16,11 @@ struct TestConfigError : public std::runtime_error {
     }
 };
 
+struct ActionFormatError : public std::runtime_error {
+    explicit ActionFormatError(std::string_view formatString, std::string_view errorMessage)
+        : std::runtime_error{fmt::format("Action format '{}' is invalid: {}", formatString, errorMessage)}
+    {
+    }
+};
+
 } //namespace lunchtoast

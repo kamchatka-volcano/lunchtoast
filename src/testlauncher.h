@@ -1,5 +1,6 @@
 #pragma once
 #include "testsuite.h"
+#include "useraction.h"
 #include <filesystem>
 #include <functional>
 #include <map>
@@ -29,6 +30,7 @@ private:
     std::map<std::string, TestSuite> suites_;
     std::reference_wrapper<const TestReporter> reporter_;
     std::reference_wrapper<const Config> config_;
+    std::vector<UserAction> userActions_;
     std::string shellCommand_;
     bool cleanup_;
     std::vector<std::string> selectedTags_;

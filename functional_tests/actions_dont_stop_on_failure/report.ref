@@ -1,0 +1,9 @@
+################## [ 1 / 1 ] ###################
+Name: lunchtoast
+Failure: Launched process '[ "$(cat lhs.txt)" = "Hello moon" ]' returned unexpected exit code 1, expected exit code: 0
+                              Result:     FAILED
+ 
+##################  SUMMARY  ###################
+Default:                     0 out of 1 passed, 1 failed
+---
+Total:                       0 out of 1 passed, 1 failed

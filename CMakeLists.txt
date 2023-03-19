@@ -15,9 +15,9 @@ SealLake_Import(cmdlime 2.4.0
         GIT_TAG v2.4.0
 )
 set(FIGCONE_USE_SHOAL ON)
-SealLake_Import(figcone 2.4.5
+SealLake_Import(figcone 2.4.6
         GIT_REPOSITORY https://github.com/kamchatka-volcano/figcone
-        GIT_TAG v2.4.5
+        GIT_TAG v2.4.6
 )
 SealLake_Import(fmt 9.1.0
         GIT_REPOSITORY https://github.com/fmtlib/fmt
@@ -56,6 +56,8 @@ set(SRC
     src/testlauncher.cpp
     src/testreporter.cpp
     src/testresult.cpp
+    src/useraction.cpp
+    src/useractionformatparser.cpp
     src/utils.cpp
     src/writefile.cpp
     )

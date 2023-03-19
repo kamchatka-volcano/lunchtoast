@@ -5,6 +5,7 @@
 #include "sectionsreader.h"
 #include "test.h"
 #include "testreporter.h"
+#include "useraction.h"
 #include "utils.h"
 #include <sfun/path.h>
 #include <sfun/string_utils.h>
@@ -15,11 +16,29 @@
 #include <set>
 
 namespace lunchtoast {
+
+namespace {
+std::vector<UserAction> makeUserActions(const Config& cfg)
+{
+    auto result = std::vector<UserAction>{};
+    std::transform(
+            cfg.actions.cbegin(),
+            cfg.actions.cend(),
+            std::back_inserter(result),
+            [](const auto& action)
+            {
+                return UserAction{action};
+            });
+    return result;
+}
+} //namespace
+
 namespace fs = std::filesystem;
 
 TestLauncher::TestLauncher(const TestReporter& reporter, const CommandLine& commandLine, const Config& cfg)
     : reporter_{reporter}
     , config_{cfg}
+    , userActions_{makeUserActions(cfg)}
     , shellCommand_{commandLine.shell}
     , cleanup_{!commandLine.noCleanup}
     , selectedTags_{commandLine.select}
@@ -98,7 +117,7 @@ std::vector<std::filesystem::path> TestLauncher::processSuite(const std::string&
     for (const auto& testCfg : suite.tests) {
         testNumber++;
         try {
-            auto test = Test{testCfg.path, testCfg.vars, shellCommand_, cleanup_};
+            auto test = Test{testCfg.path, testCfg.vars, userActions_, shellCommand_, cleanup_};
             if (!testCfg.isEnabled) {
                 reporter().reportDisabledTest(test, suiteName, testNumber, testsCount);
                 continue;
@@ -218,11 +237,12 @@ void TestLauncher::addTest(const fs::path& testFile)
     if (!isTestSelected(tagsSet, selectedTags_, skippedTags_))
         return;
 
-    auto testVars = makeTestVariables(
+    const auto testVars = makeTestVariables(
             config_,
             tagsSet,
             sfun::pathString(testFile.stem()),
             sfun::pathString(testFile.parent_path().stem()));
+
     const auto suiteName = processVariablesSubstitution(getSectionValue("Suite", sections), testVars);
     if (suiteName.empty()) {
         defaultSuite_.tests.push_back({testFile, isEnabled, testVars});

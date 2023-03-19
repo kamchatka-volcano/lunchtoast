@@ -32,6 +32,10 @@ int mainApp(const CommandLine& commandLine)
         auto testLauncher = TestLauncher{testReporter, commandLine, cfg};
         allTestsPassed = testLauncher.process();
     }
+    catch (const std::runtime_error& e) {
+        fmt::print(e.what());
+        return -1;
+    }
     catch (const std::exception& e) {
         fmt::print("Unknown error occurred during test processing: {}\n", e.what());
         return -1;

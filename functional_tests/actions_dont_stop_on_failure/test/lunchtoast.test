@@ -1,0 +1,11 @@
+-Expect text of lhs.txt:
+Hello moon
+---
+
+-Write test.txt:
+TEST
+---
+
+-Assert text of lhs.txt:
+Hello world
+---
