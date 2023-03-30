@@ -46,6 +46,28 @@ TEST(SectionsReader, Basic)
             {{"Name", "foo", "-Name:foo\n#TEST COMMENT\n"}, {"Value", "bar", "-Value:\nbar\n---\n"}});
 }
 
+TEST(SectionsReader, BasicCRLF)
+{
+    testSectionReader(
+            "-Name:foo\r\n"
+            "#TEST COMMENT\r\n"
+            "-Value:\r\n"
+            "bar\r\n"
+            "---\r\n",
+            {{"Name", "foo", "-Name:foo\n#TEST COMMENT\n"}, {"Value", "bar", "-Value:\nbar\n---\n"}});
+}
+
+TEST(SectionsReader, BasicCR)
+{
+    testSectionReader(
+            "-Name:foo\r"
+            "#TEST COMMENT\r"
+            "-Value:\r"
+            "bar\r"
+            "---\r",
+            {{"Name", "foo", "-Name:foo\n#TEST COMMENT\n"}, {"Value", "bar", "-Value:\nbar\n---\n"}});
+}
+
 TEST(SectionsReader, Comments)
 {
     testSectionReader(
@@ -103,6 +125,31 @@ TEST(SectionsReader, MultilineSectionEmpty)
 TEST(SectionsReader, SingleLineSection)
 {
     testSectionReader("-Name:foo", {{"Name", "foo", "-Name:foo"}});
+}
+
+TEST(SectionsReader, EmptySection)
+{
+    testSectionReader("-Name", {{"Name", "", "-Name"}});
+}
+
+TEST(SectionsReader, NameWithColon)
+{
+    testSectionReader("-Name`00:01`: value", {{"Name`00:01`", "value", "-Name`00:01`: value"}});
+}
+
+TEST(SectionsReader, NameWithColon2)
+{
+    testSectionReader("-Name\'00:01\': value", {{"Name\'00:01\'", "value", "-Name\'00:01\': value"}});
+}
+
+TEST(SectionsReader, NameWithColon3)
+{
+    testSectionReader("-Name\"00:01\": value", {{"Name\"00:01\"", "value", "-Name\"00:01\": value"}});
+}
+
+TEST(SectionsReader, EmptySectionWithColon)
+{
+    testSectionReader("-Name`00:01`", {{"Name`00:01`", "", "-Name`00:01`"}});
 }
 
 TEST(SectionsReader, ErrorTextOutsideOfSections)
@@ -209,23 +256,6 @@ TEST(SectionsReader, ErrorSectionNameEndsWithWhitespace)
                 ASSERT_EQ(
                         std::string{e.what()},
                         "line 1: A section name can't start or end with whitespace characters");
-            });
-}
-
-TEST(SectionsReader, ErrorSectionWithoutColon)
-{
-    assert_exception<lunchtoast::TestConfigError>(
-            []
-            {
-                testSectionReader(
-                        "-Test:foo\n"
-                        "-Foo\n"
-                        "-Value: bar",
-                        {});
-            },
-            [](const auto& e)
-            {
-                ASSERT_EQ(std::string{e.what()}, "line 2: A section must contain ':' after its name");
             });
 }
 
