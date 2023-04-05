@@ -1,4 +1,5 @@
 #pragma once
+#include "useraction.h"
 #include <filesystem>
 #include <set>
 #include <string>
@@ -11,6 +12,7 @@ struct TestCfg {
     std::filesystem::path path;
     bool isEnabled;
     std::unordered_map<std::string, std::string> vars;
+    std::vector<UserAction> userActions;
 };
 
 struct TestSuite {

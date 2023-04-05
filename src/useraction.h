@@ -2,6 +2,7 @@
 #include "config.h"
 #include "processresultcheckmode.h"
 #include "testactiontype.h"
+#include <filesystem>
 #include <optional>
 #include <regex>
 #include <set>

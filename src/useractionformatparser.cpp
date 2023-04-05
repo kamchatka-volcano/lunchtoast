@@ -1,5 +1,6 @@
 #include "useractionformatparser.h"
 #include "errors.h"
+#include "utils.h"
 #include <fmt/format.h>
 #include <sfun/contract.h>
 #include <sfun/functional.h>
@@ -26,97 +27,6 @@ struct ParamToken {
 
 using Token = std::variant<StringToken, WhitespaceToken, ParamToken>;
 
-class StringStream {
-public:
-    explicit StringStream(const std::string& str)
-        : stream_{str}
-    {
-    }
-
-    template<int size = 1>
-    auto read()
-    {
-        static_assert(size > 0);
-
-        auto ch = char{};
-        if constexpr (size == 1) {
-            if (!stream_.get(ch))
-                return std::optional<char>{};
-            else
-                return std::optional<char>{ch};
-        }
-        else {
-            auto result = std::string{};
-            for (auto i = 0; i < size; ++i) {
-                if (!stream_.get(ch))
-                    return std::optional<std::string>{};
-                result.push_back(ch);
-            }
-            return std::optional<std::string>{result};
-        }
-    }
-
-    template<int size = 1>
-    auto peek()
-    {
-        static_assert(size > 0);
-        auto ch = char{};
-        auto pos = stream_.tellg();
-        auto restorePosition = gsl::finally(
-                [&]
-                {
-                    stream_.seekg(pos);
-                });
-
-        if constexpr (size == 1) {
-            if (!stream_.get(ch)) {
-                stream_.clear();
-                return std::optional<char>{};
-            }
-            return std::optional<char>{ch};
-        }
-        else {
-            auto result = std::string{};
-            for (auto i = 0; i < size; ++i) {
-                if (!stream_.get(ch)) {
-                    stream_.clear();
-                    return std::optional<std::string>{};
-                }
-                result.push_back(ch);
-            }
-            return std::optional<std::string>{result};
-        }
-    }
-
-    template<int size = 1>
-    void skip()
-    {
-        static_assert(size > 0);
-        read<size>();
-    }
-
-    bool atEnd()
-    {
-        return !peek().has_value();
-    }
-
-    std::string readUntil(std::function<bool(char ch)> pred)
-    {
-        auto result = std::string();
-        while (!atEnd()) {
-            auto ch = peek().value();
-            if (!pred(ch))
-                break;
-            result.push_back(ch);
-            skip();
-        }
-        return result;
-    }
-
-private:
-    std::stringstream stream_;
-};
-
 namespace {
 
 std::vector<Token> parseUserActionFormat(const std::string& format)
@@ -126,7 +36,7 @@ std::vector<Token> parseUserActionFormat(const std::string& format)
     while (!stream.atEnd()) {
         auto ch = stream.read().value();
         if (ch == '%') {
-            auto param = stream.readUntil(sfun::isdigit);
+            auto param = stream.readUntil(std::not_fn(sfun::isdigit));
             if (!param.empty()) {
                 if (!result.empty() && std::holds_alternative<StringToken>(result.back())) {
                     auto& str = std::get<StringToken>(result.back()).value;

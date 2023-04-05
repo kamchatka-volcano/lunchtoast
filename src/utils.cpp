@@ -1,18 +1,80 @@
 #include "utils.h"
+#include "errors.h"
 #include <platform_folders.h>
 #include <fmt/format.h>
 #include <sfun/contract.h>
 #include <sfun/path.h>
 #include <sfun/string_utils.h>
 #include <sfun/utility.h>
+#include <gsl/util>
 #include <fstream>
 #include <optional>
 #include <regex>
-#include <sstream>
-
 
 namespace lunchtoast {
 namespace fs = std::filesystem;
+
+StringStream::StringStream(const std::string& str)
+    : stream_{str}
+{
+}
+
+std::optional<char> StringStream::read()
+{
+    auto ch = char{};
+    if (!stream_.get(ch))
+        return std::nullopt;
+    return ch;
+}
+
+std::optional<char> StringStream::peek()
+{
+    auto ch = char{};
+    auto pos = stream_.tellg();
+    auto restorePosition = gsl::finally(
+            [&]
+            {
+                stream_.seekg(pos);
+            });
+
+    if (!stream_.get(ch)) {
+        stream_.clear();
+        return std::nullopt;
+    }
+    return ch;
+}
+
+void StringStream::skip()
+{
+    [[maybe_unused]] auto res = read();
+}
+
+bool StringStream::atEnd()
+{
+    return !peek().has_value();
+}
+
+std::string StringStream::readUntil(std::function<bool(char ch)> pred)
+{
+    auto discard = false;
+    return readUntil(pred, discard);
+}
+
+std::string StringStream::readUntil(std::function<bool(char ch)> pred, bool& stoppedAtEnd)
+{
+    auto result = std::string();
+    while (!atEnd()) {
+        auto ch = peek().value();
+        if (pred(ch)) {
+            stoppedAtEnd = false;
+            return result;
+        }
+        result.push_back(ch);
+        skip();
+    }
+    stoppedAtEnd = true;
+    return result;
+}
 
 std::string readTextFile(const fs::path& filePath)
 {
@@ -91,52 +153,37 @@ std::string toLower(std::string_view str)
     return result;
 }
 
-std::vector<std::string_view> splitCommand(std::string_view str)
+std::vector<std::string> splitCommand(const std::string& str)
 {
-    if (str.empty())
-        return std::vector<std::string_view>{str};
+    auto result = std::vector<std::string>{};
+    auto stream = StringStream{str};
+    auto prevCh = char{};
+    while (!stream.atEnd()) {
+        auto ch = stream.read().value();
+        if (ch == '\"' || ch == '\'' || ch == '`') {
+            auto stoppedAtEnd = false;
+            auto quotedText = stream.readUntil(
+                    [quotationMark = ch](char ch)
+                    {
+                        return ch == quotationMark;
+                    },
+                    stoppedAtEnd);
+            if (stoppedAtEnd)
+                throw TestConfigError{fmt::format("Command '{}' has an unclosed quotation mark", str)};
 
-    auto result = std::vector<std::string_view>{};
-    auto pos = sfun::index_t{};
-    auto partPos = std::optional<sfun::index_t>{};
-
-    auto insideString = false;
-    auto isQuotationAtStart = true;
-    auto addCommandPart = [&]
-    {
-        sfunPrecondition(partPos.has_value());
-        result.emplace_back(
-                std::next(str.data(), *partPos),
-                static_cast<std::size_t>(pos - *partPos + (isQuotationAtStart ? 0 : 1)));
-        partPos = std::nullopt;
-    };
-    for (; pos < sfun::ssize(str); ++pos) {
-        if (!insideString && sfun::isspace(str.at(pos))) {
-            if (partPos.has_value())
-                addCommandPart();
-            continue;
+            if (!prevCh || sfun::isspace(prevCh))
+                result.emplace_back(std::move(quotedText));
+            else
+                result.back() += quotedText;
+            stream.skip();
         }
-        if (str.at(pos) == '"') {
-            if (insideString)
-                addCommandPart();
-            else {
-                isQuotationAtStart = !partPos.has_value();
-                if (pos != sfun::ssize(str) - 1 && sfun::isspace(str.at(pos + 1)))
-                    partPos = pos + 1;
-            }
-
-            insideString = !insideString;
-            continue;
+        else if (!sfun::isspace(ch)) {
+            if (!prevCh || sfun::isspace(prevCh))
+                result.emplace_back();
+            result.back() += ch;
         }
-        if (!sfun::isspace(str.at(pos)) && !partPos.has_value())
-            partPos = pos;
+        prevCh = ch;
     }
-    if (insideString)
-        return {};
-
-    if (partPos.has_value())
-        addCommandPart();
-
     return result;
 }
 

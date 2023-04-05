@@ -21,20 +21,20 @@ namespace lunchtoast {
 namespace fs = std::filesystem;
 
 Test::Test(
-        const fs::path& configPath,
+        const fs::path& testCasePath,
         const std::unordered_map<std::string, std::string>& vars,
         std::vector<UserAction> userActions,
         std::string shellCommand,
         bool cleanup)
     : userActions_{std::move(userActions)}
-    , name_(sfun::pathString(configPath.stem()))
-    , directory_(configPath.parent_path())
+    , name_(sfun::pathString(testCasePath.stem()))
+    , directory_(testCasePath.parent_path())
     , shellCommand_(std::move(shellCommand))
     , isEnabled_(true)
     , cleanup_(cleanup)
 {
-    readConfig(configPath, vars);
-    postProcessCleanupConfig(configPath);
+    readTestCase(testCasePath, vars);
+    postProcessCleanupConfig(testCasePath);
 }
 
 TestResult Test::process()
@@ -164,11 +164,11 @@ bool isValidUnusedSection(const Section& section)
 }
 } //namespace
 
-void Test::readConfig(const fs::path& path, const std::unordered_map<std::string, std::string>& vars)
+void Test::readTestCase(const fs::path& path, const std::unordered_map<std::string, std::string>& vars)
 {
     auto fileStream = std::ifstream{path, std::ios::binary};
     if (!fileStream.is_open())
-        throw TestConfigError{fmt::format("Test config file {} doesn't exist", homePathString(path))};
+        throw TestConfigError{fmt::format("Test case file {} doesn't exist", homePathString(path))};
 
     try {
         auto sections = readSections(fileStream);
@@ -183,7 +183,7 @@ void Test::readConfig(const fs::path& path, const std::unordered_map<std::string
                 });
 
         if (sections.empty())
-            throw TestConfigError{fmt::format("Test config file {} is empty or invalid", homePathString(path))};
+            throw TestConfigError{fmt::format("Test case file {} is empty or invalid", homePathString(path))};
         for (const auto& section : sections) {
             if (readParamFromSection(section))
                 continue;
@@ -356,7 +356,7 @@ bool Test::readParam(bool& param, const std::string& paramName, const Section& s
     return true;
 }
 
-void Test::postProcessCleanupConfig(const fs::path& configPath)
+void Test::postProcessCleanupConfig(const fs::path& testCasePath)
 {
     if (contents_.empty()) {
         auto pathList = getDirectoryContent(directory_);
@@ -370,7 +370,7 @@ void Test::postProcessCleanupConfig(const fs::path& configPath)
                 });
         return;
     }
-    contents_.emplace_back(sfun::pathString(fs::relative(configPath, directory_)), directory_);
+    contents_.emplace_back(sfun::pathString(fs::relative(testCasePath, directory_)), directory_);
 }
 
 } //namespace lunchtoast

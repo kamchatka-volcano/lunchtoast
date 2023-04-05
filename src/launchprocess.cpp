@@ -33,7 +33,7 @@ LaunchProcess::LaunchProcess(
 }
 
 namespace {
-auto osArgs(const std::vector<std::string_view>& args)
+auto osArgs(const std::vector<std::string>& args)
 {
 #ifndef _WIN32
     return args;
@@ -43,7 +43,7 @@ auto osArgs(const std::vector<std::string_view>& args)
             args.begin(),
             args.end(),
             std::back_inserter(result),
-            [](const std::string_view& arg)
+            [](const std::string& arg)
             {
                 return sfun::toWString(arg);
             });
@@ -51,17 +51,31 @@ auto osArgs(const std::vector<std::string_view>& args)
 #endif
 }
 
-std::optional<std::tuple<std::string_view, std::vector<std::string_view>>> parseCommand(
+std::vector<std::string> toStringList(const std::vector<std::string_view>& stringViewList)
+{
+    auto result = std::vector<std::string>{};
+    std::transform(
+            stringViewList.begin(),
+            stringViewList.end(),
+            std::back_inserter(result),
+            [](const auto& strView)
+            {
+                return std::string{strView};
+            });
+    return result;
+}
+
+std::tuple<std::string, std::vector<std::string>> parseCommand(
         const std::optional<std::string>& shellCommand,
         const std::string& command)
 {
     auto cmdParts = shellCommand.has_value() ? splitCommand(shellCommand.value()) : splitCommand(command);
     if (cmdParts.empty())
-        return std::nullopt;
+        throw TestConfigError{"Can't launch the process with an empty command"};
 
     auto processCmd = cmdParts[0];
     cmdParts.erase(cmdParts.begin());
-    auto processCmdParts = sfun::split(processCmd);
+    auto processCmdParts = toStringList(sfun::split(processCmd));
     if (sfun::ssize(processCmdParts) > 1) {
         processCmd = processCmdParts[0];
         std::copy(processCmdParts.begin() + 1, processCmdParts.end(), std::inserter(cmdParts, cmdParts.begin()));
@@ -109,7 +123,7 @@ auto makeCheckModeVisitor(const LaunchProcessResult& result, const std::string& 
 
 LaunchProcessResult startProcess(
         const boost::filesystem::path& cmd,
-        const std::vector<std::string_view>& cmdArgs,
+        const std::vector<std::string>& cmdArgs,
         const std::filesystem::path& workingDir)
 {
     auto stdoutStream = proc::ipstream{};
@@ -142,10 +156,7 @@ LaunchProcessResult startProcess(
 TestActionResult LaunchProcess::operator()()
 {
     auto res = parseCommand(shellCommand_, command_);
-    if (!res)
-        return TestActionResult::Failure("Can't launch an empty shell command");
-
-    auto& [cmdName, cmdArgs] = res.value();
+    auto& [cmdName, cmdArgs] = res;
 
     auto paths = boost::this_process::path();
     paths.emplace_back(workingDir_);

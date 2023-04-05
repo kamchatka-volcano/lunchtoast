@@ -7,6 +7,7 @@
 #include "testreporter.h"
 #include "useraction.h"
 #include "utils.h"
+#include <figcone/configreader.h>
 #include <sfun/path.h>
 #include <sfun/string_utils.h>
 #include <sfun/utility.h>
@@ -31,9 +32,12 @@ std::vector<UserAction> makeUserActions(const Config& cfg)
             });
     return result;
 }
+
 } //namespace
 
 namespace fs = std::filesystem;
+
+constexpr auto defaultConfigFilename = std::string_view{"lunchtoast.cfg"};
 
 TestLauncher::TestLauncher(const TestReporter& reporter, const CommandLine& commandLine, const Config& cfg)
     : reporter_{reporter}
@@ -46,7 +50,12 @@ TestLauncher::TestLauncher(const TestReporter& reporter, const CommandLine& comm
     , listOfFailedTests_{commandLine.listFailedTests}
     , dirWithFailedTests_{commandLine.collectFailedTests}
 {
-    collectTests(commandLine.testPath, commandLine.ext);
+    auto configList = std::vector<fs::path>{};
+    if (fs::is_regular_file(commandLine.testPath) &&
+        fs::exists(commandLine.testPath.parent_path() / defaultConfigFilename))
+        configList.emplace_back(commandLine.testPath.parent_path() / defaultConfigFilename);
+
+    collectTests(commandLine.testPath, commandLine.ext, configList);
 }
 
 const TestReporter& TestLauncher::reporter()
@@ -117,7 +126,7 @@ std::vector<std::filesystem::path> TestLauncher::processSuite(const std::string&
     for (const auto& testCfg : suite.tests) {
         testNumber++;
         try {
-            auto test = Test{testCfg.path, testCfg.vars, userActions_, shellCommand_, cleanup_};
+            auto test = Test{testCfg.path, testCfg.vars, testCfg.userActions, shellCommand_, cleanup_};
             if (!testCfg.isEnabled) {
                 reporter().reportDisabledTest(test, suiteName, testNumber, testsCount);
                 continue;
@@ -138,13 +147,18 @@ std::vector<std::filesystem::path> TestLauncher::processSuite(const std::string&
     return failedTests;
 }
 
-void TestLauncher::collectTests(const fs::path& testPath, const std::string& testFileExt)
+void TestLauncher::collectTests(
+        const fs::path& testPath,
+        const std::string& testFileExt,
+        std::vector<fs::path> configList)
 {
     if (fs::is_directory(testPath)) {
         if (testFileExt.empty())
             throw std::runtime_error{"To launch all tests in the directory, test extension must be specified"};
+        if (fs::exists(testPath / defaultConfigFilename))
+            configList.emplace_back(testPath / defaultConfigFilename);
 
-        auto end = fs::directory_iterator{};
+        const auto end = fs::directory_iterator{};
         auto dirSet = std::set<fs::path>{};
         auto fileSet = std::set<fs::path>{};
         for (auto it = fs::directory_iterator{testPath}; it != end; ++it)
@@ -154,12 +168,12 @@ void TestLauncher::collectTests(const fs::path& testPath, const std::string& tes
                 fileSet.insert(it->path());
 
         for (const auto& dirPath : dirSet)
-            collectTests(dirPath, testFileExt);
+            collectTests(dirPath, testFileExt, configList);
         for (const auto& filePath : fileSet)
-            addTest(fs::canonical(filePath));
+            addTest(fs::canonical(filePath), configList);
     }
     else
-        addTest(fs::canonical(testPath));
+        addTest(fs::canonical(testPath), configList);
 }
 
 namespace {
@@ -218,9 +232,44 @@ std::unordered_map<std::string, std::string> makeTestVariables(
     return vars;
 }
 
+std::unordered_map<std::string, std::string> makeTestVariables(
+        const std::vector<fs::path>& configList,
+        const std::set<std::string>& tags,
+        const std::string& varFileName,
+        const std::string& varDirName)
+{
+    auto result = std::unordered_map<std::string, std::string>{};
+    auto configReader = figcone::ConfigReader{};
+    for (const auto& configPath : configList) {
+        auto cfg = configReader.readShoalFile<Config>(configPath);
+        const auto cfgVars = makeTestVariables(cfg, tags, varFileName, varDirName);
+        for (const auto& [cfgVarName, cfgVarValue] : cfgVars)
+            result.insert_or_assign(cfgVarName, cfgVarValue);
+    }
+    return result;
+}
+
+std::vector<UserAction> makeUserActions(const std::vector<std::filesystem::path>& cfgList)
+{
+    auto result = std::vector<UserAction>{};
+    auto configReader = figcone::ConfigReader{};
+    for (const auto& configPath : cfgList) {
+        auto cfg = configReader.readShoalFile<Config>(configPath);
+        std::transform(
+                cfg.actions.cbegin(),
+                cfg.actions.cend(),
+                std::inserter(result, result.begin()),
+                [](const auto& action)
+                {
+                    return UserAction{action};
+                });
+    }
+    return result;
+}
+
 } //namespace
 
-void TestLauncher::addTest(const fs::path& testFile)
+void TestLauncher::addTest(const fs::path& testFile, const std::vector<std::filesystem::path>& configList)
 {
     auto stream = std::ifstream{testFile, std::ios::binary};
     auto error = SectionReadingError{};
@@ -237,20 +286,37 @@ void TestLauncher::addTest(const fs::path& testFile)
     if (!isTestSelected(tagsSet, selectedTags_, skippedTags_))
         return;
 
-    const auto testVars = makeTestVariables(
-            config_,
-            tagsSet,
-            sfun::pathString(testFile.stem()),
-            sfun::pathString(testFile.parent_path().stem()));
+    const auto testVars = [&]
+    {
+        auto result = makeTestVariables(
+                configList,
+                tagsSet,
+                sfun::pathString(testFile.stem()),
+                sfun::pathString(testFile.parent_path().stem()));
+        auto cmdLineConfigVariables = makeTestVariables(
+                config_,
+                tagsSet,
+                sfun::pathString(testFile.stem()),
+                sfun::pathString(testFile.parent_path().stem()));
+        std::copy(cmdLineConfigVariables.begin(), cmdLineConfigVariables.end(), std::inserter(result, result.begin()));
+        return result;
+    }();
+
+    const auto userActions = [&]
+    {
+        auto result = makeUserActions(configList);
+        std::copy(userActions_.begin(), userActions_.end(), std::inserter(result, result.begin()));
+        return result;
+    }();
 
     const auto suiteName = processVariablesSubstitution(getSectionValue("Suite", sections), testVars);
     if (suiteName.empty()) {
-        defaultSuite_.tests.push_back({testFile, isEnabled, testVars});
+        defaultSuite_.tests.push_back({testFile, isEnabled, testVars, userActions});
         if (!isEnabled)
             defaultSuite_.disabledTestsCounter++;
     }
     else {
-        suites_[suiteName].tests.push_back({testFile, isEnabled, testVars});
+        suites_[suiteName].tests.push_back({testFile, isEnabled, testVars, userActions});
         if (!isEnabled)
             suites_[suiteName].disabledTestsCounter++;
     }

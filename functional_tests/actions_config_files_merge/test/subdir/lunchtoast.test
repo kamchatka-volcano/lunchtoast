@@ -1,0 +1,7 @@
+-Assert text of lhs.txt:
+Hello world2
+---
+
+-Check text of lhs.txt:
+Hello world
+---

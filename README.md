@@ -1,6 +1,5 @@
 # 🍞lunchtoast
 
-
 **lunchtoast** - is a command line functional testing automation tool, written in C++17.  
 It's spartan in its nature and gets the job done by launching processes and shell commands and comparing results with reference files.  
 

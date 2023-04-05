@@ -1,0 +1,6 @@
+-Assert lhs.txt:
+Hello ${{greetName}}
+---
+-Assert multiline.txt:
+Hello ${{multilineText}}
+---
