@@ -1,5 +1,5 @@
 -Name: ${{ DIR }}
--Contents: {test/.*} test.toast report.ref actions.cfg
+-Contents: {test/.*} {.*\.ref} actions.cfg
 -Description: 
     GIVEN action 'Ensure error output' is declared in actions.cfg
     WHEN comparing unexpected error output using this action

@@ -20,6 +20,7 @@ public:
             std::filesystem::path workingDir,
             std::optional<std::string> shellCommand,
             std::set<ProcessResultCheckMode> checkModeSet,
+            int actionIndex,
             std::optional<TestAction>& nextAction);
     TestActionResult operator()();
     LaunchProcessResult result() const;
@@ -30,6 +31,7 @@ private:
     std::optional<std::string> shellCommand_;
     std::set<ProcessResultCheckMode> checkModeSet_;
     LaunchProcessResult result_;
+    int actionIndex_;
     gsl::not_null<std::optional<TestAction>*> nextAction_;
 };
 

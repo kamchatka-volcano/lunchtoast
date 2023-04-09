@@ -1,6 +1,6 @@
 ################## [ 1 / 1 ] ###################
 Name: lunchtoast
-Failure: Launched process 'cat test.res' returned unexpected exit code 1, expected exit code: 0
+Failure: Launched process 'cat test.res' returned unexpected exit code 1. More info in launch_failure_0.txt
                               Result:     FAILED
  
 ##################  SUMMARY  ###################

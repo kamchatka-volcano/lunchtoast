@@ -9,4 +9,5 @@ failed_tests/test/failed2/failed2.test
 failed_tests/test/failed2/lhs.txt
 failed_tests/test/failed2/rhs.txt
 failed_tests/test/failed.test
+failed_tests/test/launch_failure_0.txt
 failed_tests/test/lunchtoast.test

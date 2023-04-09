@@ -10,6 +10,7 @@
 #include <sfun/wstringconv.h>
 #include <boost/process.hpp>
 #include <filesystem>
+#include <fstream>
 #include <utility>
 
 namespace lunchtoast {
@@ -22,11 +23,13 @@ LaunchProcess::LaunchProcess(
         fs::path workingDir,
         std::optional<std::string> shellCommand,
         std::set<ProcessResultCheckMode> checkModeSet,
+        int actionIndex,
         std::optional<TestAction>& nextAction)
     : command_{std::move(command)}
     , workingDir_{std::move(workingDir)}
     , shellCommand_{std::move(shellCommand)}
     , checkModeSet_{std::move(checkModeSet)}
+    , actionIndex_{actionIndex}
     , nextAction_{&nextAction}
 {
     auto paths = boost::this_process::path();
@@ -86,37 +89,40 @@ std::tuple<std::string, std::vector<std::string>> parseCommand(
     return std::tuple{processCmd, cmdParts};
 }
 
-auto makeCheckModeVisitor(const LaunchProcessResult& result, const std::string& command)
+std::string failureReportFilename(int actionIndex)
+{
+    return fmt::format("launch_failure_{}.txt", actionIndex);
+}
+
+auto makeCheckModeVisitor(const LaunchProcessResult& result, const std::string& command, int actionIndex)
 {
     return sfun::overloaded{
-            [&](const ProcessResultCheckMode::ExitCode& exitCode)
+            [&, actionIndex = actionIndex](const ProcessResultCheckMode::ExitCode& exitCode)
             {
                 if (result.exitCode != exitCode.value)
                     return TestActionResult::Failure(fmt::format(
-                            "Launched process '{}' returned unexpected exit code {}, expected exit code: {}",
+                            "Launched process '{}' returned unexpected exit code {}. More info in {}",
                             command,
                             result.exitCode,
-                            exitCode.value));
+                            failureReportFilename(actionIndex)));
                 return TestActionResult::Success();
             },
-            [&](const ProcessResultCheckMode::Output& output)
+            [&, actionIndex = actionIndex](const ProcessResultCheckMode::Output& output)
             {
                 if (result.output != output.value)
                     return TestActionResult::Failure(fmt::format(
-                            "Launched process '{}' returned unexpected output '{}', expected output: '{}'",
+                            "Launched process '{}' returned unexpected output. More info in {}",
                             command,
-                            result.output,
-                            output.value));
+                            failureReportFilename(actionIndex)));
                 return TestActionResult::Success();
             },
-            [&](const ProcessResultCheckMode::ErrorOutput& output)
+            [&, actionIndex = actionIndex](const ProcessResultCheckMode::ErrorOutput& output)
             {
                 if (result.errorOutput != output.value)
                     return TestActionResult::Failure(fmt::format(
-                            "Launched process '{}' returned unexpected error output '{}', expected error output: '{}'",
+                            "Launched process '{}' returned unexpected error output. More info in {}",
                             command,
-                            result.errorOutput,
-                            output.value));
+                            failureReportFilename(actionIndex)));
                 return TestActionResult::Success();
             }};
 }
@@ -151,6 +157,60 @@ LaunchProcessResult startProcess(
     return result;
 }
 
+struct ExpectedLaunchProcessResult {
+    std::optional<int> exitCode;
+    std::optional<std::string> output;
+    std::optional<std::string> errorOutput;
+};
+
+auto makeCheckModeVisitorSettingExpectedResult(ExpectedLaunchProcessResult& expectedResult)
+{
+    return sfun::overloaded{
+            [&](const ProcessResultCheckMode::ExitCode& exitCode)
+            {
+                expectedResult.exitCode = exitCode.value;
+            },
+            [&](const ProcessResultCheckMode::Output& output)
+            {
+                expectedResult.output = output.value;
+            },
+            [&](const ProcessResultCheckMode::ErrorOutput& output)
+            {
+                expectedResult.errorOutput = output.value;
+            }};
+}
+
+std::string generateLaunchFailureReport(
+        std::string_view command,
+        const LaunchProcessResult& result,
+        std::set<ProcessResultCheckMode>& checkModeSet)
+{
+    auto expectedResult = ExpectedLaunchProcessResult{};
+    auto updateExpectedResult = makeCheckModeVisitorSettingExpectedResult(expectedResult);
+    for (const auto& checkMode : checkModeSet)
+        std::visit(updateExpectedResult, checkMode.value);
+
+    auto report = fmt::format("-Command: {}\n", command);
+
+    report += fmt::format("-Exit code: {}\n", result.exitCode);
+    if (expectedResult.exitCode.has_value())
+        report += fmt::format("-Expected exit code: {}\n", expectedResult.exitCode.value());
+
+    report += fmt::format("-Output:\n{}---\n", result.output.empty() ? "" : result.output + "\n");
+    if (expectedResult.output.has_value())
+        report += fmt::format(
+                "-Expected output:\n{}---\n",
+                expectedResult.output.value().empty() ? "" : expectedResult.output.value() + "\n");
+
+    report += fmt::format("-Error output:\n{}---\n", result.errorOutput.empty() ? "" : result.errorOutput + "\n");
+    if (expectedResult.errorOutput.has_value())
+        report += fmt::format(
+                "-Expected error output:\n{}---\n",
+                expectedResult.errorOutput.value().empty() ? "" : expectedResult.errorOutput.value() + "\n");
+
+    return report;
+}
+
 } //namespace
 
 TestActionResult LaunchProcess::operator()()
@@ -173,9 +233,14 @@ TestActionResult LaunchProcess::operator()()
         return TestActionResult::Success();
 
     for (const auto& checkMode : checkModeSet_) {
-        auto result = std::visit(makeCheckModeVisitor(result_, command_), checkMode.value);
-        if (!result.isSuccessful())
+        auto result = std::visit(makeCheckModeVisitor(result_, command_, actionIndex_), checkMode.value);
+        if (!result.isSuccessful()) {
+            auto failureReport =
+                    generateLaunchFailureReport(cmd.string() + " " + sfun::join(cmdArgs, " "), result_, checkModeSet_);
+            auto failureReportFile = std::ofstream{workingDir_ / failureReportFilename(actionIndex_)};
+            failureReportFile << failureReport;
             return result;
+        }
     }
     return TestActionResult::Success();
 }

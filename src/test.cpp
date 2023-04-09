@@ -13,6 +13,7 @@
 #include <sfun/functional.h>
 #include <sfun/path.h>
 #include <sfun/string_utils.h>
+#include <gsl/util>
 #include <algorithm>
 #include <fstream>
 #include <sstream>
@@ -114,6 +115,19 @@ bool Test::readParamFromSection(const Section& section)
     return false;
 }
 
+namespace {
+int countLaunchProcessActions(const std::vector<TestAction>& actions)
+{
+    return gsl::narrow_cast<int>(std::count_if(
+            actions.begin(),
+            actions.end(),
+            [](const auto& action)
+            {
+                return action.template is<LaunchProcess>();
+            }));
+}
+} //namespace
+
 bool Test::readActionFromSection(const Section& section, const std::unordered_map<std::string, std::string>& vars)
 {
     for (const auto& userAction : userActions_) {
@@ -125,6 +139,7 @@ bool Test::readActionFromSection(const Section& section, const std::unordered_ma
                              directory_,
                              shellCommand_,
                              userAction.makeProcessResultCheckModeSet(vars, section.value),
+                             countLaunchProcessActions(actions_),
                              nextAction_},
                      userAction.actionType()});
             return true;
@@ -245,7 +260,13 @@ void Test::createLaunchAction(const Section& section)
     };
 
     actions_.push_back(
-            {LaunchProcess{section.value, directory_, shellCommand(), checkModeSet(), nextAction_},
+            {LaunchProcess{
+                     section.value,
+                     directory_,
+                     shellCommand(),
+                     checkModeSet(),
+                     countLaunchProcessActions(actions_),
+                     nextAction_},
              TestActionType::RequiredOperation});
 }
 

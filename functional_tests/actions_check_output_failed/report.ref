@@ -1,6 +1,6 @@
 ################## [ 1 / 1 ] ###################
 Name: lunchtoast
-Failure: Launched process 'cat lhs.txt' returned unexpected output 'Hello moon', expected output: 'Hello world'
+Failure: Launched process 'cat lhs.txt' returned unexpected output. More info in launch_failure_0.txt
                               Result:     FAILED
  
 ##################  SUMMARY  ###################

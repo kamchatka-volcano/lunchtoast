@@ -4,7 +4,7 @@ Failure: Files lhs.txt and rhs.txt equality check has failed, files lhs.txt and 
                               Result:     FAILED
 ################## [ 2 / 3 ] ###################
 Name: failed
-Failure: Launched process 'unknown_process' returned unexpected exit code 127, expected exit code: 0
+Failure: Launched process 'unknown_process' returned unexpected exit code 127. More info in launch_failure_0.txt
                               Result:     FAILED
 ################## [ 3 / 3 ] ###################
 Name: lunchtoast

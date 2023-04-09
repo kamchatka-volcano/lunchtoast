@@ -1,6 +1,6 @@
 ################## [ 1 / 1 ] ###################
 Name: lunchtoast
-Failure: Launched process 'ls --dummy' returned unexpected exit code 2, expected exit code: 0
+Failure: Launched process 'ls --dummy' returned unexpected exit code 2. More info in launch_failure_0.txt
                               Result:     FAILED
  
 ##################  SUMMARY  ###################
