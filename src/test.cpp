@@ -1,9 +1,6 @@
 #include "test.h"
-#include "compareerroroutput.h"
-#include "compareexitcode.h"
 #include "comparefilecontent.h"
 #include "comparefiles.h"
-#include "compareoutput.h"
 #include "errors.h"
 #include "launchprocess.h"
 #include "sectionsreader.h"
@@ -68,14 +65,6 @@ TestResult Test::process()
     };
 
     for (auto actionIt = actions_.begin(); actionIt != actions_.end(); ++actionIt) {
-        nextAction_ = [&]() -> std::optional<TestAction>
-        {
-            auto nextActionIt = std::next(actionIt);
-            if (nextActionIt == actions_.end())
-                return std::nullopt;
-            return *nextActionIt;
-        }();
-
         actionIt->process(onActionSuccessful, onActionFailed, onActionError);
 
         if (runtimeError)
@@ -98,21 +87,26 @@ TestResult Test::process()
         return TestResult::Failure(failedActionsMessages);
 }
 
-bool Test::readParamFromSection(const Section& section)
+std::vector<Section> Test::readParam(const std::vector<Section>& sections)
 {
+    if (sections.empty())
+        return {};
+
+    const auto& section = sections.front();
     if (readParam(name_, "Name", section))
-        return true;
+        return {std::next(sections.begin()), sections.end()};
     if (readParam(suite_, "Suite", section))
-        return true;
+        return {std::next(sections.begin()), sections.end()};
     if (readParam(description_, "Description", section))
-        return true;
+        return {std::next(sections.begin()), sections.end()};
     if (readParam(directory_, "Directory", section))
-        return true;
+        return {std::next(sections.begin()), sections.end()};
     if (readParam(isEnabled_, "Enabled", section))
-        return true;
+        return {std::next(sections.begin()), sections.end()};
     if (readParam(contents_, "Contents", section))
-        return true;
-    return false;
+        return {std::next(sections.begin()), sections.end()};
+
+    return sections;
 }
 
 namespace {
@@ -128,8 +122,14 @@ int countLaunchProcessActions(const std::vector<TestAction>& actions)
 }
 } //namespace
 
-bool Test::readActionFromSection(const Section& section, const std::unordered_map<std::string, std::string>& vars)
+std::vector<Section> Test::readAction(
+        const std::vector<Section>& sections,
+        const std::unordered_map<std::string, std::string>& vars)
 {
+    if (sections.empty())
+        return sections;
+
+    const auto& section = sections.front();
     for (const auto& userAction : userActions_) {
         auto command = userAction.makeCommand(section.name, vars, section.value);
         if (command.has_value()) {
@@ -139,43 +139,45 @@ bool Test::readActionFromSection(const Section& section, const std::unordered_ma
                              directory_,
                              shellCommand_,
                              userAction.makeProcessResultCheckModeSet(vars, section.value),
-                             countLaunchProcessActions(actions_),
-                             nextAction_},
+                             countLaunchProcessActions(actions_)},
                      userAction.actionType()});
-            return true;
+            return {std::next(sections.begin()), sections.end()};
         }
     }
 
     if (sfun::startsWith(section.name, "Launch")) {
-        createLaunchAction(section);
-        return true;
+        return createLaunchAction(section, {std::next(sections.begin()), sections.end()});
     }
     if (sfun::startsWith(section.name, "Write")) {
         createWriteAction(section);
-        return true;
+        return {std::next(sections.begin()), sections.end()};
     }
     if (sfun::startsWith(section.name, "Assert")) {
         auto actionType = sfun::trim(sfun::after(section.name, "Assert"));
         createComparisonAction(TestActionType::Assertion, std::string{actionType}, section);
-        return true;
+        return {std::next(sections.begin()), sections.end()};
     }
     if (sfun::startsWith(section.name, "Expect")) {
         auto actionType = sfun::trim(sfun::after(section.name, "Expect"));
         createComparisonAction(TestActionType::Expectation, std::string{actionType}, section);
-        return true;
+        return {std::next(sections.begin()), sections.end()};
     }
-    return false;
+    return sections;
 }
 
 namespace {
-bool isValidUnusedSection(const Section& section)
+std::vector<Section> readValidUnusedSection(const std::vector<Section>& sections)
 {
-    if (section.name == "Section separator")
-        return true;
-    if (section.name == "Tags")
-        return true;
+    if (sections.empty())
+        return {};
 
-    return false;
+    const auto& section = sections.front();
+    if (section.name == "Section separator")
+        return {std::next(sections.begin()), sections.end()};
+    if (section.name == "Tags")
+        return {std::next(sections.begin()), sections.end()};
+
+    return sections;
 }
 } //namespace
 
@@ -199,15 +201,16 @@ void Test::readTestCase(const fs::path& path, const std::unordered_map<std::stri
 
         if (sections.empty())
             throw TestConfigError{fmt::format("Test case file {} is empty or invalid", homePathString(path))};
-        for (const auto& section : sections) {
-            if (readParamFromSection(section))
-                continue;
-            if (readActionFromSection(section, vars))
-                continue;
-            if (isValidUnusedSection(section))
-                continue;
-            throw TestConfigError{fmt::format("Unsupported section name: {}", section.name)};
+
+        auto sectionsCount = sfun::ssize_t{0};
+        while (sfun::ssize(sections) != sectionsCount) {
+            sectionsCount = sfun::ssize(sections);
+            sections = readParam(sections);
+            sections = readAction(sections, vars);
+            sections = readValidUnusedSection(sections);
         }
+        if (!sections.empty())
+            throw TestConfigError{fmt::format("Unsupported section name: {}", sections.front().name)};
     }
     catch (const std::exception& e) {
         throw TestConfigError{e.what()};
@@ -230,17 +233,80 @@ void Test::createComparisonAction(
     if (encodedActionType == "files equal" || encodedActionType == "text files equal" ||
         encodedActionType == "data files equal")
         createCompareFilesAction(actionType, encodedActionType, section.value);
-    else if (encodedActionType == "exit code")
-        createCompareExitCodeAction(actionType, section.value);
-    else if (encodedActionType == "output")
-        actions_.push_back({CompareOutput{launchActionResult_, section.value}, actionType});
-    else if (encodedActionType == "error output")
-        actions_.push_back({CompareErrorOutput{launchActionResult_, section.value}, actionType});
     else
         createCompareFileContentAction(actionType, encodedActionType, section.value);
 }
+namespace {
+std::tuple<std::set<ProcessResultCheckMode>, TestActionType> getResultCheckMode(const std::vector<Section>& sections)
+{
+    auto makeExitCodeCheck = [](const std::string& str)
+    {
+        if (sfun::trim(str) == "*" || sfun::trim(str) == "any")
+            return ProcessResultCheckMode::ExitCode{};
+        try {
+            return ProcessResultCheckMode::ExitCode{std::stoi(str)};
+        }
+        catch (...) {
+            throw TestConfigError{fmt::format("Invalid exit code '{}', value must be integer", str)};
+        }
+    };
 
-void Test::createLaunchAction(const Section& section)
+    auto checkModes = std::vector<ProcessResultCheckMode>{};
+    auto actionType = std::optional<TestActionType>();
+
+    auto updateActionType = [&](TestActionType newActionType)
+    {
+        if (!actionType.has_value())
+            actionType = newActionType;
+        else {
+            if (actionType.value() != newActionType)
+                throw TestConfigError{"Launched process action result checks must use either Assert or Expect"};
+        }
+    };
+
+    for (const auto& section : sections) {
+        if (section.name == "Assert exit code") {
+            checkModes.emplace_back(makeExitCodeCheck(section.value));
+            updateActionType(TestActionType::Assertion);
+        }
+        else if (section.name == "Expect exit code") {
+            checkModes.emplace_back(makeExitCodeCheck(section.value));
+            updateActionType(TestActionType::Expectation);
+        }
+        else if (section.name == "Assert output") {
+            checkModes.emplace_back(ProcessResultCheckMode::Output{section.value});
+            updateActionType(TestActionType::Assertion);
+        }
+        else if (section.name == "Expect output") {
+            checkModes.emplace_back(ProcessResultCheckMode::Output{section.value});
+            updateActionType(TestActionType::Expectation);
+        }
+        else if (section.name == "Assert error output") {
+            checkModes.emplace_back(ProcessResultCheckMode::ErrorOutput{section.value});
+            updateActionType(TestActionType::Assertion);
+        }
+        else if (section.name == "Expect error output") {
+            checkModes.emplace_back(ProcessResultCheckMode::ErrorOutput{section.value});
+            updateActionType(TestActionType::Expectation);
+        }
+        else
+            break;
+    }
+    if (checkModes.size() > 3)
+        throw TestConfigError{
+                "Launched process action supports maximum 3 result checks (exit code, output and error output)"};
+
+    auto result = std::set<ProcessResultCheckMode>{checkModes.begin(), checkModes.end()};
+    if (checkModes.size() != result.size())
+        throw TestConfigError{
+                "Launched process action result checks type must be unique (exit code, output and error output)"};
+
+    return {result, actionType.has_value() ? actionType.value() : TestActionType::Assertion};
+}
+
+} //namespace
+
+std::vector<Section> Test::createLaunchAction(const Section& section, const std::vector<Section>& nextSections)
 {
     const auto parts = sfun::split(section.name);
 
@@ -251,23 +317,25 @@ void Test::createLaunchAction(const Section& section)
         return std::nullopt;
     };
 
-    auto checkModeSet = [&]()
-    {
-        auto result = std::set<ProcessResultCheckMode>{};
-        if (std::find(parts.begin(), parts.end(), "unchecked") == parts.end())
-            result.emplace(ProcessResultCheckMode::ExitCode{0});
-        return result;
-    };
+    auto [checkModeSet, actionType] = getResultCheckMode(nextSections);
+    auto foundCheckModesCount = sfun::ssize(checkModeSet);
 
+    if (checkModeSet.empty()) {
+        checkModeSet.emplace(ProcessResultCheckMode::ExitCode{0});
+        actionType = TestActionType::Assertion;
+    }
     actions_.push_back(
             {LaunchProcess{
                      section.value,
                      directory_,
                      shellCommand(),
-                     checkModeSet(),
-                     countLaunchProcessActions(actions_),
-                     nextAction_},
-             TestActionType::RequiredOperation});
+                     checkModeSet,
+                     countLaunchProcessActions(actions_)},
+             actionType});
+
+    if (nextSections.empty())
+        return {};
+    return {std::next(nextSections.begin(), foundCheckModesCount), nextSections.end()};
 }
 
 void Test::createWriteAction(const Section& section)
@@ -297,18 +365,6 @@ void Test::createCompareFileContentAction(
 {
     const auto filePath = fs::absolute(directory_) / sfun::makePath(filenameStr);
     actions_.push_back({CompareFileContent{filePath, expectedFileContent}, actionType});
-}
-
-void Test::createCompareExitCodeAction(TestActionType actionType, const std::string& expectedExitCodeStr)
-{
-    auto expectedExitCode = 0;
-    try {
-        expectedExitCode = std::stoi(expectedExitCodeStr);
-    }
-    catch (...) {
-        throw TestConfigError{"Process exit code must be an integer"};
-    }
-    actions_.push_back({CompareExitCode{launchActionResult_, expectedExitCode}, actionType});
 }
 
 void Test::cleanTestFiles()

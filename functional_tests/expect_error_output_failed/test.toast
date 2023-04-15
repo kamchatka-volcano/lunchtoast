@@ -5,6 +5,7 @@
     WHEN launching a shell command outputting "Hello world" to stderr
     THEN the test should fail
 ---    
--Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res ${{shellParam}}
+-Launch: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res ${{shellParam}}
+-Assert exit code: 1
 -Expect files equal: report.res report.ref
 

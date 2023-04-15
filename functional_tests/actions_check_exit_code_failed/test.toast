@@ -1,5 +1,5 @@
 -Name: ${{ DIR }}
--Contents: {test/.*} test.toast report.ref actions.cfg
+-Contents: {.*\.test} test.toast report.ref actions.cfg
 -Description: 
     GIVEN action 'Ensure command works' is declared in actions.cfg
     WHEN invoking incorrect ls command using this action

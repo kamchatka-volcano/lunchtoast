@@ -14,14 +14,12 @@ class TestAction;
 
 class LaunchProcess {
 public:
-
     LaunchProcess(
             std::string command,
             std::filesystem::path workingDir,
             std::optional<std::string> shellCommand,
             std::set<ProcessResultCheckMode> checkModeSet,
-            int actionIndex,
-            std::optional<TestAction>& nextAction);
+            int actionIndex);
     TestActionResult operator()();
     LaunchProcessResult result() const;
 
@@ -32,7 +30,6 @@ private:
     std::set<ProcessResultCheckMode> checkModeSet_;
     LaunchProcessResult result_;
     int actionIndex_;
-    gsl::not_null<std::optional<TestAction>*> nextAction_;
 };
 
 } //namespace lunchtoast

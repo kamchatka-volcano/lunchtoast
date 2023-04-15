@@ -1,0 +1,12 @@
+-Command: /usr/bin/sh -c -e cat lhs.txt
+-Exit code: 0
+-Expected exit code: 0
+-Output:
+Hello world
+
+---
+-Expected output:
+Hello world
+---
+-Error output:
+---

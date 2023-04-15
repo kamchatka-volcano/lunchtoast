@@ -9,5 +9,6 @@
          a test from the suite "invalid assertions" should fail, 
          both suites should be in the report
 ---         
--Launch unchecked: ../../build/lunchtoast ./test -ext=.test -report=report.res
+-Launch: ../../build/lunchtoast ./test -ext=.test -report=report.res
+-Assert exit code: 1
 -Assert files equal: report.res report.ref

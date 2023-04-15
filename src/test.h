@@ -30,9 +30,11 @@ public:
 
 private:
     void readTestCase(const std::filesystem::path& path, const std::unordered_map<std::string, std::string>& vars);
-    bool readParamFromSection(const Section& section);
-    bool readActionFromSection(const Section& section, const std::unordered_map<std::string, std::string>& vars);
-    void createLaunchAction(const Section& section);
+    std::vector<Section> readParam(const std::vector<Section>& sections);
+    std::vector<Section> readAction(
+            const std::vector<Section>& sections,
+            const std::unordered_map<std::string, std::string>& vars);
+    std::vector<Section> createLaunchAction(const Section& section, const std::vector<Section>& nextSections);
     void createWriteAction(const Section& section);
     void createCompareFilesAction(
             TestActionType actionType,
@@ -46,7 +48,6 @@ private:
             TestActionType actionType,
             const std::string& encodedActionType,
             const Section& section);
-    void createCompareExitCodeAction(TestActionType actionType, const std::string& expectedExitCodeStr);
     void cleanTestFiles();
     bool readParam(std::string& param, const std::string& paramName, const Section& section);
     bool readParam(std::filesystem::path& param, const std::string& paramName, const Section& section);
@@ -67,7 +68,6 @@ private:
     bool cleanup_;
     std::vector<FilenameGroup> contents_;
     std::optional<LaunchProcessResult> launchActionResult_;
-    std::optional<TestAction> nextAction_;
 };
 
 } //namespace lunchtoast

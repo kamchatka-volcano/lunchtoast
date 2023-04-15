@@ -23,14 +23,12 @@ LaunchProcess::LaunchProcess(
         fs::path workingDir,
         std::optional<std::string> shellCommand,
         std::set<ProcessResultCheckMode> checkModeSet,
-        int actionIndex,
-        std::optional<TestAction>& nextAction)
+        int actionIndex)
     : command_{std::move(command)}
     , workingDir_{std::move(workingDir)}
     , shellCommand_{std::move(shellCommand)}
     , checkModeSet_{std::move(checkModeSet)}
     , actionIndex_{actionIndex}
-    , nextAction_{&nextAction}
 {
     auto paths = boost::this_process::path();
 }
@@ -99,6 +97,9 @@ auto makeCheckModeVisitor(const LaunchProcessResult& result, const std::string& 
     return sfun::overloaded{
             [&, actionIndex = actionIndex](const ProcessResultCheckMode::ExitCode& exitCode)
             {
+                if (!exitCode.value.has_value())
+                    return TestActionResult::Success();
+
                 if (result.exitCode != exitCode.value)
                     return TestActionResult::Failure(fmt::format(
                             "Launched process '{}' returned unexpected exit code {}. More info in {}",
@@ -145,13 +146,18 @@ LaunchProcessResult startProcess(
     while (process.running()) {
         auto outLine = std::string{};
         while (std::getline(stdoutStream, outLine) && !outLine.empty())
-            result.output += outLine;
+            result.output += outLine + "\n";
 
         auto errLine = std::string{};
         while (std::getline(stderrStream, errLine) && !errLine.empty())
-            result.errorOutput += errLine;
+            result.errorOutput += errLine + "\n";
     }
     process.wait();
+
+    if (sfun::endsWith(result.output, "\n"))
+        result.output.pop_back();
+    if (sfun::endsWith(result.errorOutput, "\n"))
+        result.errorOutput.pop_back();
 
     result.exitCode = process.exit_code();
     return result;
@@ -225,9 +231,6 @@ TestActionResult LaunchProcess::operator()()
         throw TestConfigError{fmt::format("Couldn't find the executable of a command '{}'", cmdName)};
 
     result_ = startProcess(cmd, cmdArgs, workingDir_);
-
-    if (nextAction_->has_value() && nextAction_->value().is<CompareExitCode>())
-        checkModeSet_.clear();
 
     if (checkModeSet_.empty())
         return TestActionResult::Success();

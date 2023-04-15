@@ -44,7 +44,7 @@ struct CommandLine : public cmdlime::Config{
                                                                   "required when specified test path is a directory";
     CMDLIME_PARAM(width, int)(48)                              << "set test report's width as a number of characters";
     CMDLIME_FLAG(saveContents)                                 << "save the current contents of the test directory";
-    CMDLIME_PARAM(shell, std::string)("sh -c -e")              << "shell command";
+    CMDLIME_PARAM(shell, std::string)("bash -ceo pipefail")    << "shell command";
     CMDLIME_FLAG(noCleanup)                                    << "disables cleanup of test files";
     CMDLIME_PARAMLIST(select, std::vector<std::string>)()      << "select tests by tag names" << EnsureContainsUniqueElements{};
     CMDLIME_PARAMLIST(skip, std::vector<std::string>)()        << "skip tests by tag names" << EnsureContainsUniqueElements{};

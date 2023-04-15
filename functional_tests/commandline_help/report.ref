@@ -20,7 +20,7 @@ Parameters:
                                     characters
                                     (optional, default: 48)
    -shell=<string>                shell command
-                                    (optional, default: sh -c -e)
+                                    (optional, default: bash -ceo pipefail)
    -select=<string>               select tests by tag names
                                     (multi-value, optional, default: {})
    -skip=<string>                 skip tests by tag names

@@ -12,7 +12,7 @@ SealLake_Import(sfun 3.2.0
 
 SealLake_Import(cmdlime 2.4.0
         GIT_REPOSITORY https://github.com/kamchatka-volcano/cmdlime
-        GIT_TAG v2.4.0
+        GIT_TAG v2.4.1
 )
 set(FIGCONE_USE_SHOAL ON)
 SealLake_Import(figcone 2.4.6
@@ -41,11 +41,8 @@ SealLake_Import(platform_folders 4.2.0
 
 set(SRC
     src/testcontentsgenerator.cpp
-    src/compareoutput.cpp
-    src/compareerroroutput.cpp
     src/comparefilecontent.cpp
     src/comparefiles.cpp
-    src/compareexitcode.cpp
     src/filenamereader.cpp
     src/launchprocess.cpp
     src/linestream.cpp

@@ -1,6 +1,6 @@
 ################## [ 1 / 1 ] ###################
 Name: lunchtoast
-Failure: Process output 'Hello world' isn't equal to the expected 'Hello moon'
+Failure: Launched process 'echo "Hello world"' returned unexpected output. More info in launch_failure_0.txt
                               Result:     FAILED
  
 ##################  SUMMARY  ###################

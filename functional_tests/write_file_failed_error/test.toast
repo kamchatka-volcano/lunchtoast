@@ -6,6 +6,8 @@
     WHEN writing file to file 'dir' with the same content as test.ref and assert that files are equal
     THEN file writing should fail because directory with the same name exist
 ---    
--Launch unchecked: mkdir ./test/dir
--Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test | sed '/iostream/d' > report.res
+-Launch: mkdir ./test/dir
+-Assert exit code: *
+-Launch: ../../build/lunchtoast ./test/lunchtoast.test | sed '/iostream/d' > report.res
+-Assert exit code: 1
 -Assert files equal: report.res report.ref

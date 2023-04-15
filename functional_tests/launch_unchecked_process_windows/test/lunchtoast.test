@@ -1,1 +1,2 @@
--Launch unchecked process: process.bat
+-Launch process: process.bat
+-Assert exit code: *

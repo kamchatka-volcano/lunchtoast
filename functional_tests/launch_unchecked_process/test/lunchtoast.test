@@ -1,1 +1,2 @@
--Launch unchecked process: process.sh
+-Launch process: process.sh
+-Assert exit code: *

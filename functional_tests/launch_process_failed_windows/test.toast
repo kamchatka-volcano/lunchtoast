@@ -6,5 +6,6 @@
     WHEN launching script process.sh that outputs content of unexistent file test.res
     THEN test should fail
 ---    
--Launch unchecked: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res -shell='msys2 -c'
+-Launch: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res -shell='msys2 -c'
+-Assert exit code: 1
 -Assert files equal: report.res report.ref

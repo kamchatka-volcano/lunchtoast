@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 #include <string>
 #include <variant>
 
@@ -6,7 +7,7 @@ namespace lunchtoast {
 
 struct ProcessResultCheckMode {
     struct ExitCode {
-        int value;
+        std::optional<int> value;
     };
     struct Output {
         std::string value;

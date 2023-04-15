@@ -1,11 +1,12 @@
 -Name: ${{ DIR }}
--Contents: {test/.*} {.*\.ref}
+-Contents: {test/failed2/.*} {test/.*\.test} {.*\.ref}
 -Description:
     GIVEN 2 different files (lhs.txt and rhs.txt) and 2 different files (lhs2.txt rhs2.txt)
     WHEN test two expectations of files equality
     THEN first expectation should fail, second expectation should fail, after that the test should fail
 ---
--Launch unchecked: ../../build/lunchtoast ./test -ext=".test" -report=report.res -collectFailedTests=failed_tests ${{shellParam}}
+-Launch: ../../build/lunchtoast ./test -ext=".test" -report=report.res -collectFailedTests=failed_tests ${{shellParam}}
+-Assert exit code: 1
 -Launch: find failed_tests | sort -d > failed_tests_dir.res
 -Assert files equal: report.res report.ref
 -Assert files equal: failed_tests_dir.res failed_tests_dir.ref

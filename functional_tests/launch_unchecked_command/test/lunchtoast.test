@@ -1,1 +1,2 @@
--Launch unchecked: cat test.res
+-Launch: cat test.res
+-Assert exit code: *

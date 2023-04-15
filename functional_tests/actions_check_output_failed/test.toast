@@ -1,5 +1,5 @@
 -Name: ${{ DIR }}
--Contents: {test/.*} test.toast report.ref actions.cfg
+-Contents: {.*\.test} test/lhs.txt test.toast report.ref actions.cfg
 -Description: 
     GIVEN action 'Assert text of' is declared in actions.cfg
     WHEN compare lhs.txt content to a different string using this action

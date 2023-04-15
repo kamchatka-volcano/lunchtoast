@@ -1,9 +1,6 @@
 #pragma once
-#include "compareerroroutput.h"
-#include "compareexitcode.h"
 #include "comparefilecontent.h"
 #include "comparefiles.h"
-#include "compareoutput.h"
 #include "launchprocess.h"
 #include "testactiontype.h"
 #include "writefile.h"
@@ -54,9 +51,6 @@ private:
     std::variant<
             CompareFileContent,
             CompareFiles,
-            CompareExitCode,
-            CompareOutput,
-            CompareErrorOutput,
             LaunchProcess,
             WriteFile>
             action_;
