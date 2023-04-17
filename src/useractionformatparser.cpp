@@ -2,6 +2,7 @@
 #include "errors.h"
 #include "utils.h"
 #include <fmt/format.h>
+#include <range/v3/range/conversion.hpp>
 #include <sfun/contract.h>
 #include <sfun/functional.h>
 #include <sfun/string_utils.h>
@@ -77,12 +78,12 @@ void validateUserActionFormat(std::string_view formatString, const UserActionFor
                 formatString,
                 "format parameters indices must form a continuous range starting with 1"};
     };
-    auto paramsSet = std::set(format.paramsOrder.begin(), format.paramsOrder.end());
-    if (paramsSet.size() != format.paramsOrder.size())
+    auto paramsSet = format.paramsOrder | ranges::to<std::set>;
+    if (std::ssize(paramsSet) != std::ssize(format.paramsOrder))
         throw formatParamsError();
     if (*paramsSet.begin() != 1)
         throw formatParamsError();
-    if (*std::prev(paramsSet.end()) != sfun::ssize(paramsSet))
+    if (*std::prev(paramsSet.end()) != std::ssize(paramsSet))
         throw formatParamsError();
 }
 
@@ -99,8 +100,7 @@ UserActionFormat makeUserActionFormat(const std::string& format)
             },
             [&](const ParamToken& token)
             {
-                if (std::find(result.paramsOrder.begin(), result.paramsOrder.end(), token.index) !=
-                    result.paramsOrder.end())
+                if (std::ranges::find(result.paramsOrder, token.index) != result.paramsOrder.end())
                     throw ActionFormatError{
                             format,
                             fmt::format(

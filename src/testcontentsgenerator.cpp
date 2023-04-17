@@ -5,12 +5,19 @@
 #include "test.h"
 #include "utils.h"
 #include <fmt/format.h>
+#include <range/v3/action/sort.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view.hpp>
 #include <sfun/path.h>
 #include <sfun/string_utils.h>
 #include <fstream>
 #include <sstream>
 
+#include <iostream>
+
 namespace lunchtoast {
+namespace actions = ranges::actions;
+namespace views = ranges::views;
 namespace fs = std::filesystem;
 
 namespace {
@@ -33,10 +40,10 @@ void TestContentsGenerator::collectTestConfigs(const fs::path& testPath, const s
             if (fs::is_directory(it->status()))
                 collectTestConfigs(it->path(), testFileExt);
             else if (sfun::pathString(it->path().extension()) == testFileExt)
-                testConfigs_.push_back(fs::canonical(it->path()));
+                testConfigs_.emplace_back(fs::canonical(it->path()));
     }
     else
-        testConfigs_.push_back(fs::canonical(testPath));
+        testConfigs_.emplace_back(fs::canonical(testPath));
 }
 
 bool TestContentsGenerator::process()
@@ -61,33 +68,29 @@ bool TestContentsGenerator::process()
 namespace {
 fs::path getTestDirectory(const fs::path& cfgPath, const std::vector<Section>& sections)
 {
-    auto testDir = cfgPath.parent_path();
-    auto cfgDir = fs::path{};
-    const auto dirSectionIt = std::find_if(
-            sections.begin(),
-            sections.end(),
+    const auto dirSectionIt = std::ranges::find_if(
+            sections,
             [](const Section& section)
             {
                 return section.name == "Directory";
             });
+    auto testDir = cfgPath.parent_path();
     if (dirSectionIt != sections.end())
-        cfgDir = sfun::makePath(sfun::trim(dirSectionIt->value));
-    if (!cfgDir.empty())
-        testDir = fs::canonical(testDir) / cfgDir;
+        return fs::canonical(testDir) / sfun::makePath(sfun::trim(dirSectionIt->value));
     return testDir;
 }
 
 std::string getDirectoryContentString(const fs::path& dir)
 {
-    auto testDirPaths = getDirectoryContent(dir);
-    auto testDirPathsStr = std::vector<std::string>{};
-    auto pathRelativeToDir = [&dir](const fs::path& path)
+    const auto testDirPaths = getDirectoryContent(dir);
+    const auto pathRelativeToDir = [&dir](const fs::path& path)
     {
         return sfun::pathString(fs::relative(path, dir));
     };
-    std::transform(testDirPaths.begin(), testDirPaths.end(), std::back_inserter(testDirPathsStr), pathRelativeToDir);
-    std::sort(testDirPathsStr.begin(), testDirPathsStr.end());
-    return sfun::join(testDirPathsStr, " ");
+    const auto testDirPathsStr = testDirPaths | //
+            views::transform(pathRelativeToDir) | //
+            ranges::to<std::vector> | actions::sort;
+    return testDirPathsStr | views::join(' ') | ranges::to<std::string>;
 }
 
 void writeSections(const std::vector<Section>& sections, const fs::path& outFilePath)
@@ -132,22 +135,21 @@ void processTestConfig(const fs::path& cfgPath)
     const auto testDirContent = getDirectoryContentString(testDir);
     auto newWhiteListSection = Section{"Contents", testDirContent, "-Contents: " + testDirContent + "\n"};
 
-    const auto whitelistSectionIt = std::find_if(
-            sections.cbegin(),
-            sections.cend(),
+    const auto whitelistSectionIt = std::ranges::find_if(
+            sections,
             [](const Section& section)
             {
                 return section.name == "Contents";
             });
-    if (whitelistSectionIt != sections.cend()) {
-        auto whitelistSectionPos = std::distance(sections.cbegin(), whitelistSectionIt);
+    if (whitelistSectionIt != sections.end()) {
+        auto whitelistSectionPos = std::distance(sections.begin(), whitelistSectionIt);
         copyComments(whitelistSectionIt->originalText, newWhiteListSection.originalText);
         sections.erase(whitelistSectionIt);
         sections.insert(sections.begin() + whitelistSectionPos, newWhiteListSection);
     }
-    else {
+    else
         sections.push_back(newWhiteListSection);
-    }
+
     writeSections(sections, cfgPath);
 }
 } //namespace

@@ -2,6 +2,7 @@
 #include "test.h"
 #include "testresult.h"
 #include "utils.h"
+#include <range/v3/view.hpp>
 #include <sfun/path.h>
 #include <sfun/string_utils.h>
 #include <sfun/utility.h>
@@ -12,6 +13,7 @@
 #include <spdlog/spdlog.h>
 
 namespace lunchtoast {
+namespace views = ranges::views;
 namespace fs = std::filesystem;
 
 TestReporter::TestReporter(const fs::path& reportFilePath, int reportWidth)
@@ -35,19 +37,19 @@ std::string testResultStr(TestResultType resultType)
 }
 
 template<typename... Args>
-void print(Args&&... args)
+void print(fmt::format_string<Args...> s, Args&&... args)
 {
-    spdlog::trace(std::forward<Args>(args)...);
-};
+    spdlog::trace(s, std::forward<Args>(args)...);
+}
 
 template<typename... Args>
-void print(TestResultType type, Args&&... args)
+void print(TestResultType type, fmt::format_string<Args...> s, Args&&... args)
 {
     if (type == TestResultType::Success)
-        spdlog::info(std::forward<Args>(args)...);
+        spdlog::info(s, std::forward<Args>(args)...);
     else
-        spdlog::error(std::forward<Args>(args)...);
-};
+        spdlog::error(s, std::forward<Args>(args)...);
+}
 
 void printNewLine()
 {
@@ -56,9 +58,9 @@ void printNewLine()
 
 std::string truncateString(std::string str, int maxWidth)
 {
-    if (sfun::ssize(str) < 4)
+    if (std::ssize(str) < 4)
         return str;
-    if (sfun::ssize(str) > maxWidth) {
+    if (std::ssize(str) > maxWidth) {
         str.resize(static_cast<std::size_t>(maxWidth - 3));
         str += "...";
     }
@@ -79,7 +81,7 @@ void TestReporter::reportResult(
     if (suiteName.empty())
         header = header.substr(1);
 
-    print(result.type(), "{:#^" + std::to_string(reportWidth_) + "}", header);
+    print(result.type(), fmt::runtime("{:#^" + std::to_string(reportWidth_) + "}"), header);
     print("Name: {}", test.name());
     if (result.type() != TestResultType::Success) {
         if (!test.description().empty()) {
@@ -90,7 +92,7 @@ void TestReporter::reportResult(
                 print("Description: {}", test.description());
         }
         if (!result.failedActionsMessages().empty()) {
-            if (result.failedActionsMessages().size() > 1)
+            if (std::ssize(result.failedActionsMessages()) > 1)
                 print("Failure:\n{}", sfun::join(result.failedActionsMessages(), "\n"));
             else
                 print("Failure: {}", sfun::join(result.failedActionsMessages(), "\n"));
@@ -98,9 +100,9 @@ void TestReporter::reportResult(
     }
     if (result.type() == TestResultType::RuntimeError)
         if (!result.errorInfo().empty())
-            print(result.errorInfo());
+            lunchtoast::print(fmt::runtime(result.errorInfo()));
     const auto resultStr = fmt::format("Result: {:>10}", testResultStr(result.type()));
-    print(result.type(), "{:>" + std::to_string(reportWidth_) + "}", resultStr);
+    print(result.type(), fmt::runtime("{:>" + std::to_string(reportWidth_) + "}"), resultStr);
 }
 
 void TestReporter::reportBrokenTest(
@@ -115,7 +117,7 @@ void TestReporter::reportBrokenTest(
     if (suiteName.empty())
         header = header.substr(1);
 
-    print(TestResultType::Failure, "{:#^" + std::to_string(reportWidth_) + "}", header);
+    print(TestResultType::Failure, fmt::runtime("{:#^" + std::to_string(reportWidth_) + "}"), header);
     print("Test can't be started. Config file {} error:\n{}\n", homePathString(brokenTestConfig), errorInfo);
 }
 
@@ -129,7 +131,7 @@ void TestReporter::reportDisabledTest(
     auto header = fmt::format(" {} [ {} / {} ] ", suiteName, suiteTestNumber, suiteNumOfTests);
     if (suiteName.empty())
         header = header.substr(1);
-    print("{:#^" + std::to_string(reportWidth_) + "}", header);
+    lunchtoast::print(fmt::runtime("{:#^" + std::to_string(reportWidth_) + "}"), header);
     print("Name: {}", test.name());
 
     if (!test.description().empty()) {
@@ -141,10 +143,14 @@ void TestReporter::reportDisabledTest(
     }
 
     const auto resultStr = fmt::format("Result: {:>10}", "DISABLED");
-    print("{:>" + std::to_string(reportWidth_) + "}", resultStr);
+    lunchtoast::print(fmt::runtime("{:>" + std::to_string(reportWidth_) + "}"), resultStr);
 }
 
-void TestReporter::reportSuiteResult(std::string suiteName, int passedNumber, int totalNumber, int disabledNumber) const
+void TestReporter::reportSuiteResult(
+        std::string suiteName,
+        int passedNumber,
+        sfun::ssize_t totalNumber,
+        int disabledNumber) const
 {
     if (totalNumber == 0 && disabledNumber == 0)
         return;
@@ -162,19 +168,17 @@ void TestReporter::reportSuiteResult(std::string suiteName, int passedNumber, in
                 disabledNumber);
     else
         resultStr = fmt::format("{} out of {} passed, {} failed", passedNumber, totalNumber, failedNumber);
-    print(resultType, "{:" + std::to_string(width) + "} {}", suiteName, resultStr);
+    print(resultType, fmt::runtime("{:" + std::to_string(width) + "} {}"), suiteName, resultStr);
 }
 
 namespace {
 std::tuple<int, int, int> countTotals(const TestSuite& defaultSuite, const std::map<std::string, TestSuite>& suites)
 {
-    auto totalTests = sfun::ssize(defaultSuite.tests);
+    auto totalTests = std::ssize(defaultSuite.tests);
     auto totalPassed = defaultSuite.passedTestsCounter;
     auto totalDisabled = defaultSuite.disabledTestsCounter;
-    for (const auto& [suiteName, suite] : suites) {
-        [[maybe_unused]] const auto& unused = suite;
-
-        totalTests += sfun::ssize(suite.tests);
+    for (const auto& suite : suites | views::values) {
+        totalTests += std::ssize(suite.tests);
         totalPassed += suite.passedTestsCounter;
         totalDisabled += suite.disabledTestsCounter;
     }
@@ -192,18 +196,14 @@ void TestReporter::reportSummary(const TestSuite& defaultSuite, const std::map<s
 
     if (totalTests)
         printNewLine();
-    print("{:#^" + std::to_string(reportWidth_) + "}", "  SUMMARY  ");
+    lunchtoast::print(fmt::runtime("{:#^" + std::to_string(reportWidth_) + "}"), "  SUMMARY  ");
     reportSuiteResult(
             "Default",
             defaultSuite.passedTestsCounter,
-            static_cast<int>(defaultSuite.tests.size()),
+            std::ssize(defaultSuite.tests),
             defaultSuite.disabledTestsCounter);
     for (const auto& [suiteName, suite] : suites) {
-        reportSuiteResult(
-                suiteName,
-                suite.passedTestsCounter,
-                static_cast<int>(suite.tests.size()),
-                suite.disabledTestsCounter);
+        reportSuiteResult(suiteName, suite.passedTestsCounter, std::ssize(suite.tests), suite.disabledTestsCounter);
     }
     print("---");
     reportSuiteResult("Total", totalPassed, totalTests, totalDisabled);

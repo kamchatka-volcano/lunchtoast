@@ -8,4 +8,4 @@ enum class TestActionType {
     Assertion
 };
 
-}; //namespace lunchtoast
+} //namespace lunchtoast

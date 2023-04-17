@@ -2,7 +2,8 @@
 #include "errors.h"
 #include <platform_folders.h>
 #include <fmt/format.h>
-#include <sfun/contract.h>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view.hpp>
 #include <sfun/path.h>
 #include <sfun/string_utils.h>
 #include <sfun/utility.h>
@@ -12,6 +13,7 @@
 #include <regex>
 
 namespace lunchtoast {
+namespace views = ranges::views;
 namespace fs = std::filesystem;
 
 StringStream::StringStream(const std::string& str)
@@ -112,10 +114,10 @@ std::vector<fs::path> getDirectoryContent(const fs::path& dir)
     auto result = std::vector<fs::path>{};
     auto end = fs::directory_iterator{};
     for (auto it = fs::directory_iterator{dir}; it != end; ++it) {
-        result.push_back(it->path());
+        result.emplace_back(it->path());
         if (fs::is_directory(it->status())) {
             auto subdirResult = getDirectoryContent(it->path());
-            std::copy(subdirResult.begin(), subdirResult.end(), std::back_inserter(result));
+            std::ranges::copy(subdirResult, std::back_inserter(result));
         }
     }
     return result;
@@ -141,16 +143,7 @@ std::string homePathString(const fs::path& path)
 
 std::string toLower(std::string_view str)
 {
-    auto result = std::string{};
-    std::transform(
-            str.begin(),
-            str.end(),
-            std::back_inserter(result),
-            [](char ch)
-            {
-                return sfun::tolower(ch);
-            });
-    return result;
+    return str | views::transform(sfun::tolower) | ranges::to<std::string>;
 }
 
 std::vector<std::string> splitCommand(const std::string& str)

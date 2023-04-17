@@ -9,42 +9,34 @@
 #include <fmt/format.h>
 #include <filesystem>
 #include <optional>
-#include <set>
 
 using namespace lunchtoast;
 namespace fs = std::filesystem;
 
 int generateTestContents(const CommandLine& commandLine);
+Config readConfig(const CommandLine& commandLine);
+
 int mainApp(const CommandLine& commandLine)
 {
     if (commandLine.saveContents)
         return generateTestContents(commandLine);
 
-    auto cfg = Config{};
-    if (!commandLine.config.empty()) {
-        auto cfgReader = figcone::ConfigReader{};
-        cfg = cfgReader.readShoalFile<Config>(commandLine.config);
-    }
+    const auto cfg = readConfig(commandLine);
 
-    auto allTestsPassed = false;
     try {
         const auto testReporter = TestReporter{commandLine.report, commandLine.width};
         auto testLauncher = TestLauncher{testReporter, commandLine, cfg};
-        allTestsPassed = testLauncher.process();
+        const auto allTestPassed = testLauncher.process();
+        return allTestPassed ? 0 : 1;
     }
     catch (const std::runtime_error& e) {
-        fmt::print(e.what());
-        return -1;
+        fmt::print(fmt::runtime(e.what()));
+        return 2;
     }
     catch (const std::exception& e) {
         fmt::print("Unknown error occurred during test processing: {}\n", e.what());
-        return -1;
+        return 2;
     }
-
-    if (allTestsPassed)
-        return 0;
-    else
-        return 1;
 }
 
 #ifdef _WIN32
@@ -70,10 +62,19 @@ int generateTestContents(const CommandLine& commandLine)
         if (testContentsGenerator.process())
             return 0;
         else
-            return -1;
+            return 1;
     }
     catch (const std::exception& e) {
         fmt::print("Unknown error occurred during creation of test cleanup whitelist: {}\n", e.what());
-        return -1;
+        return 2;
     }
+}
+
+Config readConfig(const CommandLine& commandLine)
+{
+    if (!commandLine.config.empty()) {
+        auto cfgReader = figcone::ConfigReader{};
+        return cfgReader.readShoalFile<Config>(commandLine.config);
+    }
+    return Config{};
 }

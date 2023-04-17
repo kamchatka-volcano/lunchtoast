@@ -1,6 +1,6 @@
 ################## [ 1 / 1 ] ###################
 Name: lunchtoast
-Failure: Files lhs.txt and rhs.txt equality check has failed, files lhs.txt and rhs.txt are different
+Failure: Files lhs.txt and rhs.txt aren't equal
                               Result:     FAILED
  
 ##################  SUMMARY  ###################

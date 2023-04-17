@@ -28,7 +28,7 @@ struct EnsureContainsUniqueElements {
     void operator()(const std::vector<std::string>& list)
     {
         auto set = std::set<std::string>{list.begin(), list.end()};
-        if (sfun::ssize(list) != sfun::ssize(set))
+        if (std::ssize(list) != std::ssize(set))
             throw cmdlime::ValidationError{"must contain unique elements"};
     }
 };

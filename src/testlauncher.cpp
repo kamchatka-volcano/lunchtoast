@@ -8,6 +8,8 @@
 #include "useraction.h"
 #include "utils.h"
 #include <figcone/configreader.h>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view.hpp>
 #include <sfun/path.h>
 #include <sfun/string_utils.h>
 #include <sfun/utility.h>
@@ -17,25 +19,22 @@
 #include <set>
 
 namespace lunchtoast {
+namespace views = ranges::views;
 
 namespace {
 std::vector<UserAction> makeUserActions(const Config& cfg)
 {
-    auto result = std::vector<UserAction>{};
-    std::transform(
-            cfg.actions.cbegin(),
-            cfg.actions.cend(),
-            std::back_inserter(result),
-            [](const auto& action)
-            {
-                return UserAction{action};
-            });
-    return result;
+    const auto toUserAction = [](const auto& action)
+    {
+        return UserAction{action};
+    };
+    return cfg.actions | views::transform(toUserAction) | ranges::to<std::vector>;
 }
 
 } //namespace
 
 namespace fs = std::filesystem;
+namespace views = ranges::views;
 
 constexpr auto defaultConfigFilename = std::string_view{"lunchtoast.cfg"};
 
@@ -119,7 +118,7 @@ bool TestLauncher::process()
 
 std::vector<std::filesystem::path> TestLauncher::processSuite(const std::string& suiteName, TestSuite& suite)
 {
-    const auto testsCount = sfun::ssize(suite.tests);
+    const auto testsCount = std::ssize(suite.tests);
     auto testNumber = 0;
     auto failedTests = std::vector<fs::path>{};
 
@@ -179,9 +178,8 @@ void TestLauncher::collectTests(
 namespace {
 std::string getSectionValue(std::string_view sectionName, const std::vector<lunchtoast::Section>& sections)
 {
-    auto it = std::find_if(
-            sections.begin(),
-            sections.end(),
+    auto it = std::ranges::find_if(
+            sections,
             [&](const auto& section)
             {
                 return section.name == sectionName;
@@ -218,14 +216,13 @@ std::unordered_map<std::string, std::string> makeTestVariables(
     for (const auto& [varName, varValue] : config.vars)
         vars[varName] = varValue;
     for (const auto& tag : tags) {
-        auto itTagVars = std::find_if(
-                config.tagVars.cbegin(),
-                config.tagVars.cend(),
+        auto itTagVars = std::ranges::find_if(
+                config.tagVars,
                 [&](const auto& tagVarsSet)
                 {
                     return tagVarsSet.tag == tag;
                 });
-        if (itTagVars != config.tagVars.cend())
+        if (itTagVars != config.tagVars.end())
             for (const auto& [varName, varValue] : itTagVars->vars)
                 vars[varName] = varValue;
     }
@@ -251,20 +248,17 @@ std::unordered_map<std::string, std::string> makeTestVariables(
 
 std::vector<UserAction> makeUserActions(const std::vector<std::filesystem::path>& cfgList)
 {
-    auto result = std::vector<UserAction>{};
-    auto configReader = figcone::ConfigReader{};
-    for (const auto& configPath : cfgList) {
+    const auto readConfigActions = [](const fs::path& configPath)
+    {
+        auto configReader = figcone::ConfigReader{};
         auto cfg = configReader.readShoalFile<Config>(configPath);
-        std::transform(
-                cfg.actions.cbegin(),
-                cfg.actions.cend(),
-                std::inserter(result, result.begin()),
-                [](const auto& action)
-                {
-                    return UserAction{action};
-                });
-    }
-    return result;
+        return makeUserActions(cfg);
+    };
+    return cfgList | //
+            views::reverse | //
+            views::transform(readConfigActions) | //
+            views::join | //
+            ranges::to<std::vector>;
 }
 
 } //namespace
@@ -298,14 +292,14 @@ void TestLauncher::addTest(const fs::path& testFile, const std::vector<std::file
                 tagsSet,
                 sfun::pathString(testFile.stem()),
                 sfun::pathString(testFile.parent_path().stem()));
-        std::copy(cmdLineConfigVariables.begin(), cmdLineConfigVariables.end(), std::inserter(result, result.begin()));
+        std::ranges::copy(cmdLineConfigVariables, std::inserter(result, result.begin()));
         return result;
     }();
 
     const auto userActions = [&]
     {
         auto result = makeUserActions(configList);
-        std::copy(userActions_.begin(), userActions_.end(), std::inserter(result, result.begin()));
+        std::ranges::copy(userActions_, std::inserter(result, result.begin()));
         return result;
     }();
 

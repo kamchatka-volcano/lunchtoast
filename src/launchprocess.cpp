@@ -3,6 +3,8 @@
 #include "testaction.h"
 #include "utils.h"
 #include <fmt/format.h>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view.hpp>
 #include <sfun/functional.h>
 #include <sfun/path.h>
 #include <sfun/string_utils.h>
@@ -14,7 +16,7 @@
 #include <utility>
 
 namespace lunchtoast {
-
+namespace views = ranges::views;
 namespace proc = boost::process;
 namespace fs = std::filesystem;
 
@@ -39,52 +41,37 @@ auto osArgs(const std::vector<std::string>& args)
 #ifndef _WIN32
     return args;
 #else
-    auto result = std::vector<std::wstring>{};
-    std::transform(
-            args.begin(),
-            args.end(),
-            std::back_inserter(result),
-            [](const std::string& arg)
-            {
-                return sfun::toWString(arg);
-            });
-    return result;
+    const auto toWString = [](const std::string& arg)
+    {
+        return sfun::toWString(arg);
+    };
+    return args | views::transform(toWString) | ranges::to<std::vector>;
 #endif
 }
 
-std::vector<std::string> toStringList(const std::vector<std::string_view>& stringViewList)
-{
-    auto result = std::vector<std::string>{};
-    std::transform(
-            stringViewList.begin(),
-            stringViewList.end(),
-            std::back_inserter(result),
-            [](const auto& strView)
-            {
-                return std::string{strView};
-            });
-    return result;
-}
-
-std::tuple<std::string, std::vector<std::string>> parseCommand(
-        const std::optional<std::string>& shellCommand,
+std::tuple<std::string, std::vector<std::string>> parseShellCommand(
+        const std::string& shellCommand,
         const std::string& command)
 {
-    auto cmdParts = shellCommand.has_value() ? splitCommand(shellCommand.value()) : splitCommand(command);
+    const auto shellCmdParts = splitCommand(shellCommand);
+    if (shellCmdParts.empty())
+        throw TestConfigError{"Can't launch the process with an empty command"};
+
+    const auto& shellExec = shellCmdParts.front();
+    const auto shellArgs = shellCmdParts | views::drop(1);
+    const auto args = views::concat(shellArgs, views::single(command)) | ranges::to<std::vector>;
+    return std::tuple{shellExec, args};
+}
+
+std::tuple<std::string, std::vector<std::string>> parseCommand(const std::string& command)
+{
+    auto cmdParts = splitCommand(command);
     if (cmdParts.empty())
         throw TestConfigError{"Can't launch the process with an empty command"};
 
-    auto processCmd = cmdParts[0];
-    cmdParts.erase(cmdParts.begin());
-    auto processCmdParts = toStringList(sfun::split(processCmd));
-    if (sfun::ssize(processCmdParts) > 1) {
-        processCmd = processCmdParts[0];
-        std::copy(processCmdParts.begin() + 1, processCmdParts.end(), std::inserter(cmdParts, cmdParts.begin()));
-    }
-    if (shellCommand.has_value())
-        cmdParts.push_back(command);
-
-    return std::tuple{processCmd, cmdParts};
+    const auto& processExec = cmdParts.front();
+    const auto args = cmdParts | views::drop(1) | ranges::to<std::vector>;
+    return std::tuple{processExec, args};
 }
 
 std::string failureReportFilename(int actionIndex)
@@ -192,7 +179,7 @@ std::string generateLaunchFailureReport(
         std::set<ProcessResultCheckMode>& checkModeSet)
 {
     auto expectedResult = ExpectedLaunchProcessResult{};
-    auto updateExpectedResult = makeCheckModeVisitorSettingExpectedResult(expectedResult);
+    const auto updateExpectedResult = makeCheckModeVisitorSettingExpectedResult(expectedResult);
     for (const auto& checkMode : checkModeSet)
         std::visit(updateExpectedResult, checkMode.value);
 
@@ -221,12 +208,11 @@ std::string generateLaunchFailureReport(
 
 TestActionResult LaunchProcess::operator()()
 {
-    auto res = parseCommand(shellCommand_, command_);
-    auto& [cmdName, cmdArgs] = res;
-
-    auto paths = boost::this_process::path();
-    paths.emplace_back(workingDir_);
-    auto cmd = proc::search_path(std::string{cmdName}, paths);
+    const auto [cmdName, cmdArgs] = shellCommand_.has_value() ? parseShellCommand(shellCommand_.value(), command_)
+                                                              : parseCommand(command_);
+    const auto currentPath = boost::this_process::path();
+    const auto path = views::concat(currentPath, views::single(workingDir_)) | ranges::to<std::vector>;
+    const auto cmd = proc::search_path(std::string{cmdName}, path);
     if (cmd.empty())
         throw TestConfigError{fmt::format("Couldn't find the executable of a command '{}'", cmdName)};
 
@@ -236,7 +222,7 @@ TestActionResult LaunchProcess::operator()()
         return TestActionResult::Success();
 
     for (const auto& checkMode : checkModeSet_) {
-        auto result = std::visit(makeCheckModeVisitor(result_, command_, actionIndex_), checkMode.value);
+        const auto result = std::visit(makeCheckModeVisitor(result_, command_, actionIndex_), checkMode.value);
         if (!result.isSuccessful()) {
             auto failureReport =
                     generateLaunchFailureReport(cmd.string() + " " + sfun::join(cmdArgs, " "), result_, checkModeSet_);

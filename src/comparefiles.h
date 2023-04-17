@@ -18,12 +18,6 @@ public:
     TestActionResult operator()();
 
 private:
-    bool compareFiles(
-            const std::filesystem::path& lhs,
-            const std::filesystem::path& rhs,
-            std::string& failedComparisonInfo) const;
-
-private:
     FilenameGroup lhs_;
     FilenameGroup rhs_;
     ComparisonMode mode_;

@@ -25,7 +25,7 @@ MultilineValueReadResult readMultilineSectionValue(LineStream& stream, std::stri
         auto line = stream.readLine();
         result.originalText += line;
         if (sfun::trim(line) == separator) {
-            if (!sfun::startsWith(line, separator))
+            if (!line.starts_with(separator))
                 throw TestConfigError{
                         lineNumber,
                         "A multiline section separator must be placed at the start of a line"};
@@ -83,34 +83,34 @@ LineReadResult readSectionLine(const std::string& line)
 
 Section readSection(LineStream& stream, std::string_view multilineSectionSeparator)
 {
-    auto result = Section{};
-    auto lineNumber = stream.lineNumber();
-    auto line = stream.readLine();
-    result.originalText = line;
-
-    auto [name, value] = readSectionLine(line);
-    result.name = name;
-    if (sfun::trim(result.name).empty())
+    const auto lineNumber = stream.lineNumber();
+    const auto line = stream.readLine();
+    const auto [name, value] = readSectionLine(line);
+    if (sfun::trim(name).empty())
         throw TestConfigError{lineNumber, "A section name can't be empty"};
-    if (sfun::trim(result.name) != result.name)
+    if (sfun::trim(name) != name)
         throw TestConfigError{lineNumber, "A section name can't start or end with whitespace characters"};
 
     if (value.has_value()) {
-        result.value = sfun::trim(value.value());
-        if (result.value.empty()) {
-            auto multilineValue = readMultilineSectionValue(stream, multilineSectionSeparator);
-            result.originalText += multilineValue.originalText;
-            result.value = multilineValue.value;
+        if (sfun::trim(value.value()).empty()) {
+            const auto multilineValue = readMultilineSectionValue(stream, multilineSectionSeparator);
+            return {.name = name, //
+                    .value = multilineValue.value,
+                    .originalText = line + multilineValue.originalText};
         }
+        return {.name = name, //
+                .value = std::string{sfun::trim(value.value())},
+                .originalText = line};
     }
-    return result;
+    return {.name = name, //
+            .value = {},
+            .originalText = line};
 }
 
 std::string_view getMultilineSectionSeparator(const std::vector<Section>& sections)
 {
-    auto sectionIt = std::find_if(
-            sections.begin(),
-            sections.end(),
+    auto sectionIt = std::ranges::find_if(
+            sections,
             [](const auto& section)
             {
                 return section.name == "Section separator";
@@ -121,6 +121,7 @@ std::string_view getMultilineSectionSeparator(const std::vector<Section>& sectio
 }
 
 } //namespace
+
 std::vector<Section> readSections(std::istream& input)
 {
     auto error = SectionReadingError{};

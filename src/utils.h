@@ -22,11 +22,11 @@ class StringStream {
 public:
     explicit StringStream(const std::string& str);
     void skip();
-    [[nodiscard]] std::optional<char> read();
-    [[nodiscard]] std::optional<char> peek();
-    [[nodiscard]] bool atEnd();
-    [[nodiscard]] std::string readUntil(std::function<bool(char ch)> pred);
-    [[nodiscard]] std::string readUntil(std::function<bool(char ch)> pred, bool& stoppedAtEnd);
+    std::optional<char> read();
+    std::optional<char> peek();
+    bool atEnd();
+    std::string readUntil(std::function<bool(char ch)> pred);
+    std::string readUntil(std::function<bool(char ch)> pred, bool& stoppedAtEnd);
 
 private:
     std::stringstream stream_;

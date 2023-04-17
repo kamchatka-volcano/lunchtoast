@@ -1,6 +1,6 @@
 ######### invalid assertions [ 1 / 1 ] #########
 Name: lunchtoast3
-Failure: Files lhs.txt and rhs2.txt equality check has failed, files lhs.txt and rhs2.txt are different
+Failure: Files lhs.txt and rhs2.txt aren't equal
                               Result:     FAILED
 ########## valid assertions [ 1 / 2 ] ##########
 Name: lunchtoast

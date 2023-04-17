@@ -11,4 +11,4 @@ struct UserActionFormat {
 };
 UserActionFormat makeUserActionFormat(const std::string& format);
 
-}; //namespace lunchtoast
+} //namespace lunchtoast

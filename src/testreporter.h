@@ -31,10 +31,11 @@ public:
 
 private:
     void initReporter(const std::filesystem::path& reportFilePath);
-    void reportSuiteResult(std::string suiteName, int passedNumber, int totalNumber, int disabledNumber) const;
+    void reportSuiteResult(std::string suiteName, int passedNumber, sfun::ssize_t totalNumber, int disabledNumber)
+            const;
 
 private:
-    const int reportWidth_;
+    int reportWidth_;
 };
 
 } //namespace lunchtoast

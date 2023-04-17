@@ -46,7 +46,7 @@ jobs:
             cc: "cl",
             cxx: "cl",
             cmake_vars: "-DCMAKE_GENERATOR_PLATFORM=x64 -DVCPKG_TARGET_TRIPLET=x64-windows-static-md",
-            flags: "/EHsc /W4 /WX",
+            flags: "/EHsc /W4 /WX /wd4702",
             artifacts: "build/Release/lunchtoast.exe"
           }
     steps:

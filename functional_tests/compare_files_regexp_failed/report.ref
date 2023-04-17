@@ -1,6 +1,6 @@
 ################## [ 1 / 1 ] ###################
 Name: lunchtoast
-Failure: Files {.*\.res} and {.*\.ref} equality check has failed, files lhs2.res and rhs2.ref are different
+Failure: Files lhs2.res and rhs2.ref aren't equal
                               Result:     FAILED
  
 ##################  SUMMARY  ###################

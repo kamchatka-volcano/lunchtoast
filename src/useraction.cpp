@@ -1,11 +1,14 @@
 #include "useraction.h"
 #include "useractionformatparser.h"
 #include "utils.h"
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view.hpp>
 #include <sfun/functional.h>
 #include <sfun/string_utils.h>
 #include <sfun/utility.h>
 
 namespace lunchtoast {
+namespace views = ranges::views;
 
 UserAction::UserAction(const Action& action)
     : commandFormat_{action.command}
@@ -31,7 +34,7 @@ std::optional<std::string> UserAction::makeCommand(
         return std::nullopt;
 
     auto command = commandFormat_;
-    for (auto i = 0; i < sfun::ssize(match) - 1; ++i)
+    for (auto i = 0; i < std::ssize(match) - 1; ++i)
         command = sfun::replace(command, "%" + std::to_string(paramsOrder_.at(i)), match[i + 1].str());
 
     command = sfun::replace(command, "%input", inputParam);
@@ -43,19 +46,19 @@ std::set<ProcessResultCheckMode> UserAction::makeProcessResultCheckModeSet(
         const std::unordered_map<std::string, std::string>& vars,
         const std::string& inputParam) const
 {
-    auto checkModeVisitor = sfun::overloaded{
+    const auto checkModeVisitor = sfun::overloaded{
             [](ProcessResultCheckMode::ExitCode&) {},
             [&](auto& checkMode)
             {
                 checkMode.value = sfun::replace(checkMode.value, "%input", inputParam);
                 checkMode.value = processVariablesSubstitution(checkMode.value, vars);
             }};
-    auto result = std::set<ProcessResultCheckMode>{};
-    for (auto checkMode : processResultCheckModeSet_) {
+    const auto processCheckMode = [&](ProcessResultCheckMode checkMode)
+    {
         std::visit(checkModeVisitor, checkMode.value);
-        result.insert(checkMode);
-    }
-    return result;
+        return checkMode;
+    };
+    return processResultCheckModeSet_ | views::transform(processCheckMode) | ranges::to<std::set>;
 }
 
 TestActionType UserAction::actionType() const

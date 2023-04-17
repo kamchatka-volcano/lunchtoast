@@ -39,6 +39,13 @@ SealLake_Import(platform_folders 4.2.0
         GIT_TAG        4.2.0
 )
 
+SealLake_Bundle(
+        NAME range-v3
+        SKIP_LOAD
+        GIT_REPOSITORY https://github.com/ericniebler/range-v3
+        GIT_TAG        0.12.0
+)
+
 set(SRC
     src/testcontentsgenerator.cpp
     src/comparefilecontent.cpp
@@ -61,9 +68,10 @@ set(SRC
 
 SealLake_Executable(
         SOURCES ${SRC}
-        COMPILE_FEATURES cxx_std_17
+        COMPILE_FEATURES cxx_std_20
         PROPERTIES
             CXX_EXTENSIONS OFF
+        INCLUDES ${SEAL_LAKE_SOURCE_range-v3}/include
         LIBRARIES
             Boost::boost
             Boost::filesystem

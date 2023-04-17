@@ -19,7 +19,7 @@ TestActionResult WriteFile::operator()()
     auto fileStream = std::ofstream(filePath_, std::ios::binary);
     fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     try {
-        fileStream.write(content_.c_str(), sfun::ssize(content_));
+        fileStream.write(content_.c_str(), std::ssize(content_));
     }
     catch (std::exception& e) {
         return TestActionResult::Failure(
