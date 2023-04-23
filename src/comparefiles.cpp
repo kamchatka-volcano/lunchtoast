@@ -28,7 +28,7 @@ std::string filenameListStr(const std::vector<fs::path>& pathList)
 {
     const auto pathToString = [](const fs::path& path)
     {
-        return sfun::pathString(path.filename());
+        return sfun::path_string(path.filename());
     };
     return pathList | views::transform(pathToString) | views::join(',') | ranges::to<std::string>;
 }
@@ -61,22 +61,22 @@ std::string getFailedComparisonInfo(const std::tuple<ComparisonResult, fs::path,
     const auto& [res, lhs, rhs] = result;
     if (res == ComparisonResult::FilesDontExist) {
         if (!fs::exists(lhs))
-            return fmt::format("File {} doesn't exist", sfun::pathString(lhs.filename()));
+            return fmt::format("File {} doesn't exist", sfun::path_string(lhs.filename()));
         if (!fs::exists(rhs))
-            return fmt::format("File {} doesn't exist", sfun::pathString(rhs.filename()));
+            return fmt::format("File {} doesn't exist", sfun::path_string(rhs.filename()));
         return {};
     }
     else if (res == ComparisonResult::FilesNotEqual)
         return fmt::format(
                 "Files {} and {} aren't equal",
-                sfun::pathString(lhs.filename()),
-                sfun::pathString(rhs.filename()));
+                sfun::path_string(lhs.filename()),
+                sfun::path_string(rhs.filename()));
     return {};
 }
 
 } //namespace
 
-TestActionResult CompareFiles::operator()()
+TestActionResult CompareFiles::operator()() const
 {
     const auto lhsPaths = lhs_.fileList() | ranges::actions::sort;
     const auto rhsPaths = rhs_.fileList() | ranges::actions::sort;

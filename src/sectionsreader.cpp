@@ -138,7 +138,7 @@ std::vector<Section> readSections(std::istream& input, SectionReadingError& read
     auto stream = LineStream{input};
     while (!stream.atEnd()) {
         auto line = stream.peekLine();
-        if (sfun::startsWith(line, "-")) {
+        if (line.starts_with("-")) {
             try {
                 auto section = readSection(stream, getMultilineSectionSeparator(result));
                 if (result.empty())
@@ -153,7 +153,7 @@ std::vector<Section> readSections(std::istream& input, SectionReadingError& read
                 return result;
             }
         }
-        else if (sfun::startsWith(line, "#") || sfun::trim(line).empty()) {
+        else if (line.starts_with("#") || sfun::trim(line).empty()) {
             sectionOuterWhitespace += line;
             stream.skipLine();
         }

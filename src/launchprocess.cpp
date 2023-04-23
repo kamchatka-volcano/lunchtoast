@@ -43,7 +43,7 @@ auto osArgs(const std::vector<std::string>& args)
 #else
     const auto toWString = [](const std::string& arg)
     {
-        return sfun::toWString(arg);
+        return sfun::to_wstring(arg);
     };
     return args | views::transform(toWString) | ranges::to<std::vector>;
 #endif
@@ -125,7 +125,7 @@ LaunchProcessResult startProcess(
     auto process = proc::child{
             cmd,
             proc::args(osArgs(cmdArgs)),
-            proc::start_dir = sfun::pathString(workingDir),
+            proc::start_dir = sfun::path_string(workingDir),
             proc::std_out > stdoutStream,
             proc::std_err > stderrStream};
 
@@ -141,9 +141,9 @@ LaunchProcessResult startProcess(
     }
     process.wait();
 
-    if (sfun::endsWith(result.output, "\n"))
+    if (result.output.ends_with("\n"))
         result.output.pop_back();
-    if (sfun::endsWith(result.errorOutput, "\n"))
+    if (result.errorOutput.ends_with("\n"))
         result.errorOutput.pop_back();
 
     result.exitCode = process.exit_code();
@@ -176,7 +176,7 @@ auto makeCheckModeVisitorSettingExpectedResult(ExpectedLaunchProcessResult& expe
 std::string generateLaunchFailureReport(
         std::string_view command,
         const LaunchProcessResult& result,
-        std::set<ProcessResultCheckMode>& checkModeSet)
+        const std::set<ProcessResultCheckMode>& checkModeSet)
 {
     auto expectedResult = ExpectedLaunchProcessResult{};
     const auto updateExpectedResult = makeCheckModeVisitorSettingExpectedResult(expectedResult);
@@ -206,7 +206,7 @@ std::string generateLaunchFailureReport(
 
 } //namespace
 
-TestActionResult LaunchProcess::operator()()
+TestActionResult LaunchProcess::operator()() const
 {
     const auto [cmdName, cmdArgs] = shellCommand_.has_value() ? parseShellCommand(shellCommand_.value(), command_)
                                                               : parseCommand(command_);
@@ -216,27 +216,23 @@ TestActionResult LaunchProcess::operator()()
     if (cmd.empty())
         throw TestConfigError{fmt::format("Couldn't find the executable of a command '{}'", cmdName)};
 
-    result_ = startProcess(cmd, cmdArgs, workingDir_);
-
+    const auto launchResult = startProcess(cmd, cmdArgs, workingDir_);
     if (checkModeSet_.empty())
         return TestActionResult::Success();
 
     for (const auto& checkMode : checkModeSet_) {
-        const auto result = std::visit(makeCheckModeVisitor(result_, command_, actionIndex_), checkMode.value);
+        const auto result = std::visit(makeCheckModeVisitor(launchResult, command_, actionIndex_), checkMode.value);
         if (!result.isSuccessful()) {
-            auto failureReport =
-                    generateLaunchFailureReport(cmd.string() + " " + sfun::join(cmdArgs, " "), result_, checkModeSet_);
+            auto failureReport = generateLaunchFailureReport(
+                    cmd.string() + " " + sfun::join(cmdArgs, " "),
+                    launchResult,
+                    checkModeSet_);
             auto failureReportFile = std::ofstream{workingDir_ / failureReportFilename(actionIndex_)};
             failureReportFile << failureReport;
             return result;
         }
     }
     return TestActionResult::Success();
-}
-
-LaunchProcessResult LaunchProcess::result() const
-{
-    return result_;
 }
 
 } //namespace lunchtoast

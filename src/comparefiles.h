@@ -15,7 +15,7 @@ enum class ComparisonMode {
 class CompareFiles {
 public:
     CompareFiles(FilenameGroup lhs, FilenameGroup rhs, ComparisonMode mode);
-    TestActionResult operator()();
+    TestActionResult operator()() const;
 
 private:
     FilenameGroup lhs_;

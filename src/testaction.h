@@ -18,7 +18,7 @@ public:
     }
 
     template<typename TFuncOnSuccess, typename TFuncOnFailure, typename TFuncOnRuntimeError>
-    void process(TFuncOnSuccess onSuccess, TFuncOnFailure onFailure, TFuncOnRuntimeError onRuntimeError)
+    void process(TFuncOnSuccess onSuccess, TFuncOnFailure onFailure, TFuncOnRuntimeError onRuntimeError) const
     {
         auto processAction = [&](auto& action)
         {
@@ -42,7 +42,7 @@ public:
         return std::holds_alternative<TAction>(action_);
     }
 
-    TestActionType type()
+    TestActionType type() const
     {
         return actionType_;
     }

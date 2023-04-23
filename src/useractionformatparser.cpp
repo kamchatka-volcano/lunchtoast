@@ -42,7 +42,7 @@ std::vector<Token> parseUserActionFormat(const std::string& format)
                 if (!result.empty() && std::holds_alternative<StringToken>(result.back())) {
                     auto& str = std::get<StringToken>(result.back()).value;
                     if (!str.empty() && sfun::isspace(str.back())) {
-                        str = sfun::trimBack(str);
+                        str = sfun::trim_back(str);
                         result.emplace_back(WhitespaceToken{});
                     }
                 }

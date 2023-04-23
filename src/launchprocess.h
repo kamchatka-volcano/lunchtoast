@@ -20,15 +20,13 @@ public:
             std::optional<std::string> shellCommand,
             std::set<ProcessResultCheckMode> checkModeSet,
             int actionIndex);
-    TestActionResult operator()();
-    LaunchProcessResult result() const;
+    TestActionResult operator()() const;
 
 private:
     std::string command_;
     std::filesystem::path workingDir_;
     std::optional<std::string> shellCommand_;
     std::set<ProcessResultCheckMode> checkModeSet_;
-    LaunchProcessResult result_;
     int actionIndex_;
 };
 

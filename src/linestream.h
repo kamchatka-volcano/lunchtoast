@@ -1,4 +1,5 @@
 #pragma once
+#include <sfun/member.h>
 #include <functional>
 #include <istream>
 #include <string>
@@ -18,7 +19,7 @@ private:
     std::istream& stream();
 
 private:
-    std::reference_wrapper<std::istream> stream_;
+    sfun::member<std::istream&> stream_;
     int lineNumber_ = 1;
 };
 

@@ -57,7 +57,7 @@ TestLauncher::TestLauncher(const TestReporter& reporter, const CommandLine& comm
     collectTests(commandLine.testPath, commandLine.ext, configList);
 }
 
-const TestReporter& TestLauncher::reporter()
+const TestReporter& TestLauncher::reporter() const
 {
     return reporter_;
 }
@@ -76,7 +76,7 @@ void writePathList(const std::vector<fs::path>& pathList, const fs::path& output
 
     auto stream = std::ofstream{outputFile};
     for (const auto& path : pathList)
-        stream << sfun::replace(sfun::pathString(path), "\\", "/") << std::endl;
+        stream << sfun::replace(sfun::path_string(path), "\\", "/") << std::endl;
 }
 
 void copyDirList(const std::vector<fs::path>& pathList, const fs::path& targetDir)
@@ -103,13 +103,13 @@ bool TestLauncher::process()
 {
     auto failedTests = std::vector<fs::path>{};
     concat(failedTests, processSuite("", defaultSuite_));
-    for (auto& suitePair : suites_)
-        concat(failedTests, processSuite(suitePair.first, suitePair.second));
+    for (auto& [suiteName, suite] : suites_)
+        concat(failedTests, processSuite(suiteName, suite));
 
     reporter().reportSummary(defaultSuite_, suites_);
-    if (!listOfFailedTests_.empty())
+    if (!listOfFailedTests_.get().empty())
         writePathList(failedTests, listOfFailedTests_);
-    if (!dirWithFailedTests_.empty()) {
+    if (!dirWithFailedTests_.get().empty()) {
         copyDirList(failedTests, dirWithFailedTests_);
     }
 
@@ -163,7 +163,7 @@ void TestLauncher::collectTests(
         for (auto it = fs::directory_iterator{testPath}; it != end; ++it)
             if (fs::is_directory(it->status()))
                 dirSet.insert(it->path());
-            else if (sfun::pathString(it->path().extension()) == testFileExt)
+            else if (sfun::path_string(it->path().extension()) == testFileExt)
                 fileSet.insert(it->path());
 
         for (const auto& dirPath : dirSet)
@@ -285,13 +285,13 @@ void TestLauncher::addTest(const fs::path& testFile, const std::vector<std::file
         auto result = makeTestVariables(
                 configList,
                 tagsSet,
-                sfun::pathString(testFile.stem()),
-                sfun::pathString(testFile.parent_path().stem()));
+                sfun::path_string(testFile.stem()),
+                sfun::path_string(testFile.parent_path().stem()));
         auto cmdLineConfigVariables = makeTestVariables(
                 config_,
                 tagsSet,
-                sfun::pathString(testFile.stem()),
-                sfun::pathString(testFile.parent_path().stem()));
+                sfun::path_string(testFile.stem()),
+                sfun::path_string(testFile.parent_path().stem()));
         std::ranges::copy(cmdLineConfigVariables, std::inserter(result, result.begin()));
         return result;
     }();
@@ -299,7 +299,7 @@ void TestLauncher::addTest(const fs::path& testFile, const std::vector<std::file
     const auto userActions = [&]
     {
         auto result = makeUserActions(configList);
-        std::ranges::copy(userActions_, std::inserter(result, result.begin()));
+        std::ranges::copy(userActions_.get(), std::inserter(result, result.begin()));
         return result;
     }();
 

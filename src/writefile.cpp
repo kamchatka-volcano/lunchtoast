@@ -14,7 +14,7 @@ WriteFile::WriteFile(fs::path filePath, std::string content)
 {
 }
 
-TestActionResult WriteFile::operator()()
+TestActionResult WriteFile::operator()() const
 {
     auto fileStream = std::ofstream(filePath_, std::ios::binary);
     fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -23,7 +23,7 @@ TestActionResult WriteFile::operator()()
     }
     catch (std::exception& e) {
         return TestActionResult::Failure(
-                fmt::format("File {} writing error: {}", sfun::pathString(filePath_), e.what()));
+                fmt::format("File {} writing error: {}", sfun::path_string(filePath_), e.what()));
     }
     return TestActionResult::Success();
 }

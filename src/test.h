@@ -5,6 +5,7 @@
 #include "testaction.h"
 #include "testresult.h"
 #include "useraction.h"
+#include <sfun/member.h>
 #include <filesystem>
 #include <memory>
 #include <set>
@@ -58,14 +59,14 @@ private:
 
 private:
     std::vector<TestAction> actions_;
-    std::vector<UserAction> userActions_;
+    sfun::member<const std::vector<UserAction>> userActions_;
+    sfun::member<const std::string> shellCommand_;
+    sfun::member<const bool> cleanup_;
     std::string name_;
     std::string description_;
     std::filesystem::path directory_;
     std::string suite_;
-    std::string shellCommand_;
-    bool isEnabled_;
-    bool cleanup_;
+    bool isEnabled_ = true;
     std::vector<FilenameGroup> contents_;
     std::optional<LaunchProcessResult> launchActionResult_;
 };

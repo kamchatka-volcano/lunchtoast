@@ -30,11 +30,11 @@ Test::Test(
         std::string shellCommand,
         bool cleanup)
     : userActions_{std::move(userActions)}
-    , name_(sfun::pathString(testCasePath.stem()))
-    , directory_(testCasePath.parent_path())
     , shellCommand_(std::move(shellCommand))
-    , isEnabled_(true)
     , cleanup_(cleanup)
+    , name_(sfun::path_string(testCasePath.stem()))
+    , directory_(testCasePath.parent_path())
+    , isEnabled_(true)
 {
     readTestCase(testCasePath, vars);
     postProcessCleanupConfig(testCasePath);
@@ -49,25 +49,19 @@ TestResult Test::process()
     if (actions_.empty())
         return TestResult::RuntimeError("Test has nothing to check", failedActionsMessages);
 
-    auto onActionSuccessful = sfun::overloaded{
-            [](auto&) {},
-            [&](LaunchProcess& launchAction)
-            {
-                launchActionResult_ = launchAction.result();
-            }};
-
     auto ok = true;
-    auto onActionFailed = [&](auto&, const std::string& errorInfo)
+    const auto onActionFailed = [&](auto&, const std::string& errorInfo)
     {
         ok = false;
         failedActionsMessages.push_back(errorInfo);
     };
 
     auto runtimeError = std::optional<std::string>{};
-    auto onActionError = [&](auto&, const std::string& errorInfo)
+    const auto onActionError = [&](auto&, const std::string& errorInfo)
     {
         runtimeError = errorInfo;
     };
+    const auto onActionSuccessful = [](auto&) {};
 
     for (auto& action : actions_) {
         action.process(onActionSuccessful, onActionFailed, onActionError);
@@ -133,7 +127,7 @@ std::vector<Section> Test::readAction(
         return sections;
 
     const auto& section = sections.front();
-    for (const auto& userAction : userActions_) {
+    for (const auto& userAction : userActions_.get()) {
         auto command = userAction.makeCommand(section.name, vars, section.value);
         if (command.has_value()) {
             actions_.push_back(
@@ -148,20 +142,20 @@ std::vector<Section> Test::readAction(
         }
     }
 
-    if (sfun::startsWith(section.name, "Launch")) {
+    if (section.name.starts_with("Launch")) {
         return createLaunchAction(section, sections | views::drop(1) | ranges::to<std::vector>);
     }
-    if (sfun::startsWith(section.name, "Write")) {
+    if (section.name.starts_with("Write")) {
         createWriteAction(section);
         return sections | views::drop(1) | ranges::to<std::vector>;
         ;
     }
-    if (sfun::startsWith(section.name, "Assert")) {
+    if (section.name.starts_with("Assert")) {
         auto actionType = sfun::trim(sfun::after(section.name, "Assert"));
         createComparisonAction(TestActionType::Assertion, std::string{actionType}, section);
         return sections | views::drop(1) | ranges::to<std::vector>;
     }
-    if (sfun::startsWith(section.name, "Expect")) {
+    if (section.name.starts_with("Expect")) {
         auto actionType = sfun::trim(sfun::after(section.name, "Expect"));
         createComparisonAction(TestActionType::Expectation, std::string{actionType}, section);
         return sections | views::drop(1) | ranges::to<std::vector>;
@@ -341,7 +335,7 @@ std::vector<Section> Test::createLaunchAction(const Section& section, const std:
 void Test::createWriteAction(const Section& section)
 {
     const auto fileName = sfun::trim(sfun::after(section.name, "Write"));
-    const auto path = fs::absolute(directory_) / sfun::makePath(fileName);
+    const auto path = fs::absolute(directory_) / sfun::make_path(fileName);
     actions_.push_back({WriteFile{path, section.value}, TestActionType::RequiredOperation});
 }
 
@@ -354,8 +348,7 @@ void Test::createCompareFilesAction(
     if (std::ssize(filenameGroups) != 2)
         throw TestConfigError{"Comparison of files requires exactly two filenames or filename matching regular "
                               "expressions to be specified"};
-    const auto comparisonMode = sfun::startsWith(comparisonType, "data") ? ComparisonMode::Binary
-                                                                         : ComparisonMode::Text;
+    const auto comparisonMode = comparisonType.starts_with("data") ? ComparisonMode::Binary : ComparisonMode::Text;
     actions_.push_back({CompareFiles{filenameGroups[0], filenameGroups[1], comparisonMode}, actionType});
 }
 
@@ -364,7 +357,7 @@ void Test::createCompareFileContentAction(
         const std::string& filenameStr,
         const std::string& expectedFileContent)
 {
-    const auto filePath = fs::absolute(directory_) / sfun::makePath(filenameStr);
+    const auto filePath = fs::absolute(directory_) / sfun::make_path(filenameStr);
     actions_.push_back({CompareFileContent{filePath, expectedFileContent}, actionType});
 }
 
@@ -445,13 +438,13 @@ void Test::postProcessCleanupConfig(const fs::path& testCasePath)
     if (contents_.empty()) {
         const auto pathToFilenameGroup = [this](const fs::path& path)
         {
-            return FilenameGroup{sfun::pathString(fs::relative(path, directory_)), directory_};
+            return FilenameGroup{sfun::path_string(fs::relative(path, directory_)), directory_};
         };
         const auto pathList = getDirectoryContent(directory_);
         contents_ = pathList | views::transform(pathToFilenameGroup) | ranges::to<std::vector>;
         return;
     }
-    contents_.emplace_back(sfun::pathString(fs::relative(testCasePath, directory_)), directory_);
+    contents_.emplace_back(sfun::path_string(fs::relative(testCasePath, directory_)), directory_);
 }
 
 } //namespace lunchtoast

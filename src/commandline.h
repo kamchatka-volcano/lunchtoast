@@ -20,7 +20,7 @@ struct EnsurePathExists {
             throw cmdlime::ValidationError{fmt::format(
                     "specified test directory "
                     "or file path '{}' doesn't exist.\n",
-                    sfun::pathString(path))};
+                    sfun::path_string(path))};
     }
 };
 

@@ -48,7 +48,7 @@ std::vector<fs::path> FilenameGroup::fileList() const
                     return fs::is_regular_file(path);
                 });
     else
-        return {fs::absolute(directory_) / sfun::makePath(filenameOrRegexp_)};
+        return {fs::absolute(directory_) / sfun::make_path(filenameOrRegexp_)};
 }
 
 std::vector<fs::path> FilenameGroup::pathList() const
@@ -57,7 +57,7 @@ std::vector<fs::path> FilenameGroup::pathList() const
     if (isRegexp_)
         result = getMatchingPaths(directory_, fileMatchingRegexp_);
     else
-        result = {fs::absolute(directory_) / sfun::makePath(filenameOrRegexp_)};
+        result = {fs::absolute(directory_) / sfun::make_path(filenameOrRegexp_)};
 
     auto dirs = std::set<fs::path>{};
     for (const auto& path : result) {
@@ -95,12 +95,12 @@ std::vector<fs::path> getMatchingPaths(
     auto result = std::vector<fs::path>{};
     const auto pathMatchesFilter = [&](const fs::path& path) -> fs::path
     {
-        const auto fileEntry = sfun::pathString(fs::relative(path, directory));
+        const auto fileEntry = sfun::path_string(fs::relative(path, directory));
         const auto unixFileEntry = sfun::replace(fileEntry, "/", "\\");
         const auto windowsFileEntry = sfun::replace(fileEntry, "\\", "/");
         auto match = std::smatch{};
         if (std::regex_match(unixFileEntry, match, pathFilter) || std::regex_match(windowsFileEntry, match, pathFilter))
-            return fs::absolute(directory) / sfun::makePath(fileEntry);
+            return fs::absolute(directory) / sfun::make_path(fileEntry);
         return {};
     };
     const auto pathNotEmpty = [](const auto& path)

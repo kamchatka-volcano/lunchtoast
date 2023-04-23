@@ -82,7 +82,7 @@ std::string readTextFile(const fs::path& filePath)
 {
     auto fileStream = std::ifstream{filePath, std::ios::binary};
     if (!fileStream.is_open())
-        throw std::runtime_error{fmt::format("Can't open {}", sfun::pathString(filePath))};
+        throw std::runtime_error{fmt::format("Can't open {}", sfun::path_string(filePath))};
     fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     auto buffer = std::stringstream{};
     buffer << fileStream.rdbuf();
@@ -94,7 +94,7 @@ std::string readFile(const fs::path& filePath)
 {
     auto fileStream = std::ifstream{filePath, std::ios::binary};
     if (!fileStream.is_open())
-        throw std::runtime_error{fmt::format("Can't open {}", sfun::pathString(filePath))};
+        throw std::runtime_error{fmt::format("Can't open {}", sfun::path_string(filePath))};
 
     fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     auto buffer = std::stringstream{};
@@ -126,7 +126,7 @@ std::vector<fs::path> getDirectoryContent(const fs::path& dir)
 namespace {
 std::filesystem::path homePath()
 {
-    return sfun::makePath(sago::getDesktopFolder()).parent_path();
+    return sfun::make_path(sago::getDesktopFolder()).parent_path();
 }
 } //namespace
 
@@ -134,11 +134,11 @@ std::string homePathString(const fs::path& path)
 {
     auto resPath = fs::relative(path, homePath());
     if (resPath == path)
-        return sfun::pathString(resPath);
-    else if (sfun::pathString(resPath) == ".")
+        return sfun::path_string(resPath);
+    else if (sfun::path_string(resPath) == ".")
         return "~/";
     else
-        return "~/" + sfun::pathString(resPath);
+        return "~/" + sfun::path_string(resPath);
 }
 
 std::string toLower(std::string_view str)

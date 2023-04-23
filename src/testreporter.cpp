@@ -16,12 +16,6 @@ namespace lunchtoast {
 namespace views = ranges::views;
 namespace fs = std::filesystem;
 
-TestReporter::TestReporter(const fs::path& reportFilePath, int reportWidth)
-    : reportWidth_(reportWidth)
-{
-    initReporter(reportFilePath);
-}
-
 namespace {
 std::string testResultStr(TestResultType resultType)
 {
@@ -67,7 +61,45 @@ std::string truncateString(std::string str, int maxWidth)
     return str;
 }
 
+void initReporter(const fs::path& reportFilePath)
+{
+    auto makeConsoleSink = []
+    {
+        auto sink = std::make_shared<spdlog::sinks::stdout_color_sink_st>();
+        sink->set_level(spdlog::level::trace);
+        sink->set_pattern("%^%v%$");
+        return sink;
+    };
+    auto makeFileSink = [](const fs::path& logFilePath)
+    {
+        auto sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(sfun::path_string(logFilePath), true);
+        sink->set_level(spdlog::level::trace);
+        sink->set_pattern("%v");
+        return sink;
+    };
+
+    auto logger = std::shared_ptr<spdlog::logger>{};
+
+    if (reportFilePath.empty())
+        logger = std::make_shared<spdlog::logger>("reporter", spdlog::sinks_init_list{makeConsoleSink()});
+
+    else
+        logger = std::make_shared<spdlog::logger>(
+                "reporter",
+                spdlog::sinks_init_list{makeConsoleSink(), makeFileSink(reportFilePath)});
+
+    logger->set_level(spdlog::level::trace);
+    logger->flush_on(spdlog::level::trace);
+    spdlog::set_default_logger(logger);
+}
+
 } //namespace
+
+TestReporter::TestReporter(const fs::path& reportFilePath, int reportWidth)
+    : reportWidth_(reportWidth)
+{
+    initReporter(reportFilePath);
+}
 
 void TestReporter::reportResult(
         const Test& test,
@@ -146,16 +178,31 @@ void TestReporter::reportDisabledTest(
     lunchtoast::print(fmt::runtime("{:>" + std::to_string(reportWidth_) + "}"), resultStr);
 }
 
-void TestReporter::reportSuiteResult(
+namespace {
+std::tuple<int, int, int> countTotals(const TestSuite& defaultSuite, const std::map<std::string, TestSuite>& suites)
+{
+    auto totalTests = std::ssize(defaultSuite.tests);
+    auto totalPassed = defaultSuite.passedTestsCounter;
+    auto totalDisabled = defaultSuite.disabledTestsCounter;
+    for (const auto& suite : suites | views::values) {
+        totalTests += std::ssize(suite.tests);
+        totalPassed += suite.passedTestsCounter;
+        totalDisabled += suite.disabledTestsCounter;
+    }
+    return std::make_tuple(static_cast<int>(totalTests), totalPassed, totalDisabled);
+}
+
+void reportSuiteResult(
         std::string suiteName,
         int passedNumber,
         sfun::ssize_t totalNumber,
-        int disabledNumber) const
+        int disabledNumber,
+        int reportWidth)
 {
     if (totalNumber == 0 && disabledNumber == 0)
         return;
     const auto failedNumber = totalNumber - disabledNumber - passedNumber;
-    const auto width = reportWidth_ / 2 + 4;
+    const auto width = reportWidth / 2 + 4;
     suiteName = truncateString(suiteName, width - 1) + ":";
     const auto resultType = failedNumber ? TestResultType::Failure : TestResultType::Success;
     auto resultStr = std::string{};
@@ -171,19 +218,6 @@ void TestReporter::reportSuiteResult(
     print(resultType, fmt::runtime("{:" + std::to_string(width) + "} {}"), suiteName, resultStr);
 }
 
-namespace {
-std::tuple<int, int, int> countTotals(const TestSuite& defaultSuite, const std::map<std::string, TestSuite>& suites)
-{
-    auto totalTests = std::ssize(defaultSuite.tests);
-    auto totalPassed = defaultSuite.passedTestsCounter;
-    auto totalDisabled = defaultSuite.disabledTestsCounter;
-    for (const auto& suite : suites | views::values) {
-        totalTests += std::ssize(suite.tests);
-        totalPassed += suite.passedTestsCounter;
-        totalDisabled += suite.disabledTestsCounter;
-    }
-    return std::make_tuple(static_cast<int>(totalTests), totalPassed, totalDisabled);
-}
 } //namespace
 
 void TestReporter::reportSummary(const TestSuite& defaultSuite, const std::map<std::string, TestSuite>& suites) const
@@ -201,44 +235,18 @@ void TestReporter::reportSummary(const TestSuite& defaultSuite, const std::map<s
             "Default",
             defaultSuite.passedTestsCounter,
             std::ssize(defaultSuite.tests),
-            defaultSuite.disabledTestsCounter);
+            defaultSuite.disabledTestsCounter,
+            reportWidth_);
     for (const auto& [suiteName, suite] : suites) {
-        reportSuiteResult(suiteName, suite.passedTestsCounter, std::ssize(suite.tests), suite.disabledTestsCounter);
+        reportSuiteResult(
+                suiteName,
+                suite.passedTestsCounter,
+                std::ssize(suite.tests),
+                suite.disabledTestsCounter,
+                reportWidth_);
     }
     print("---");
-    reportSuiteResult("Total", totalPassed, totalTests, totalDisabled);
-}
-
-void TestReporter::initReporter(const fs::path& reportFilePath)
-{
-    auto makeConsoleSink = []
-    {
-        auto sink = std::make_shared<spdlog::sinks::stdout_color_sink_st>();
-        sink->set_level(spdlog::level::trace);
-        sink->set_pattern("%^%v%$");
-        return sink;
-    };
-    auto makeFileSink = [](const fs::path& logFilePath)
-    {
-        auto sink = std::make_shared<spdlog::sinks::basic_file_sink_st>(sfun::pathString(logFilePath), true);
-        sink->set_level(spdlog::level::trace);
-        sink->set_pattern("%v");
-        return sink;
-    };
-
-    auto logger = std::shared_ptr<spdlog::logger>{};
-
-    if (reportFilePath.empty())
-        logger = std::make_shared<spdlog::logger>("reporter", spdlog::sinks_init_list{makeConsoleSink()});
-
-    else
-        logger = std::make_shared<spdlog::logger>(
-                "reporter",
-                spdlog::sinks_init_list{makeConsoleSink(), makeFileSink(reportFilePath)});
-
-    logger->set_level(spdlog::level::trace);
-    logger->flush_on(spdlog::level::trace);
-    spdlog::set_default_logger(logger);
+    reportSuiteResult("Total", totalPassed, totalTests, totalDisabled, reportWidth_);
 }
 
 } //namespace lunchtoast

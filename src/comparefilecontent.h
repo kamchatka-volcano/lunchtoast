@@ -7,7 +7,7 @@ namespace lunchtoast {
 class CompareFileContent {
 public:
     CompareFileContent(std::filesystem::path filePath, std::string expectedFileContent);
-    TestActionResult operator()();
+    TestActionResult operator()() const;
 
 private:
     std::filesystem::path filePath_;

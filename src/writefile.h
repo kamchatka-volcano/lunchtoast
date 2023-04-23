@@ -8,7 +8,7 @@ namespace lunchtoast {
 class WriteFile {
 public:
     WriteFile(std::filesystem::path fileName, std::string content);
-    TestActionResult operator()();
+    TestActionResult operator()() const;
 
 private:
     std::filesystem::path filePath_;

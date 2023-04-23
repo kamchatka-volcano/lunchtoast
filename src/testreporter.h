@@ -25,14 +25,12 @@ public:
             std::string suiteName,
             int suiteTestNumber,
             sfun::ssize_t suiteNumOfTests) const;
-    void reportDisabledTest(const Test& test, std::string suiteName, int suiteTestNumber, sfun::ssize_t suiteNumOfTests)
-            const;
+    void reportDisabledTest( //
+            const Test& test,
+            std::string suiteName,
+            int suiteTestNumber,
+            sfun::ssize_t suiteNumOfTests) const;
     void reportSummary(const TestSuite& defaultSuite, const std::map<std::string, TestSuite>& suites) const;
-
-private:
-    void initReporter(const std::filesystem::path& reportFilePath);
-    void reportSuiteResult(std::string suiteName, int passedNumber, sfun::ssize_t totalNumber, int disabledNumber)
-            const;
 
 private:
     int reportWidth_;

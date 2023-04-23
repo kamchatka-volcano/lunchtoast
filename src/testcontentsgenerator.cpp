@@ -39,14 +39,14 @@ void TestContentsGenerator::collectTestConfigs(const fs::path& testPath, const s
         for (auto it = fs::directory_iterator{testPath}; it != end; ++it)
             if (fs::is_directory(it->status()))
                 collectTestConfigs(it->path(), testFileExt);
-            else if (sfun::pathString(it->path().extension()) == testFileExt)
+            else if (sfun::path_string(it->path().extension()) == testFileExt)
                 testConfigs_.emplace_back(fs::canonical(it->path()));
     }
     else
         testConfigs_.emplace_back(fs::canonical(testPath));
 }
 
-bool TestContentsGenerator::process()
+bool TestContentsGenerator::process() const
 {
     if (testConfigs_.empty()) {
         fmt::print("No tests were found for generation of test contents. Exiting.");
@@ -76,7 +76,7 @@ fs::path getTestDirectory(const fs::path& cfgPath, const std::vector<Section>& s
             });
     auto testDir = cfgPath.parent_path();
     if (dirSectionIt != sections.end())
-        return fs::canonical(testDir) / sfun::makePath(sfun::trim(dirSectionIt->value));
+        return fs::canonical(testDir) / sfun::make_path(sfun::trim(dirSectionIt->value));
     return testDir;
 }
 
@@ -85,7 +85,7 @@ std::string getDirectoryContentString(const fs::path& dir)
     const auto testDirPaths = getDirectoryContent(dir);
     const auto pathRelativeToDir = [&dir](const fs::path& path)
     {
-        return sfun::pathString(fs::relative(path, dir));
+        return sfun::path_string(fs::relative(path, dir));
     };
     const auto testDirPathsStr = testDirPaths | //
             views::transform(pathRelativeToDir) | //
@@ -111,13 +111,13 @@ void copyComments(const std::string& input, std::string& output)
     while (!line.empty()) {
         if (sfun::trim(line).empty())
             output += "\n";
-        else if (sfun::startsWith(line, "#")) {
+        else if (line.starts_with("#")) {
             if (!sectionEncountered)
                 output.insert(0, line);
             else
                 output += line;
         }
-        else if (sfun::startsWith(line, "-"))
+        else if (line.starts_with("-"))
             sectionEncountered = true;
 
         line = lineStream.readLine();

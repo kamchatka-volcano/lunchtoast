@@ -8,7 +8,7 @@ namespace lunchtoast {
 class TestContentsGenerator {
 public:
     TestContentsGenerator(const std::filesystem::path& testPath, const std::string& testFileExt);
-    bool process();
+    bool process() const;
 
 private:
     void collectTestConfigs(const std::filesystem::path& testPath, const std::string& testFileExt);
