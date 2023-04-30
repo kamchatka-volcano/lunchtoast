@@ -1,4 +1,5 @@
 #include "testcontentsgenerator.h"
+#include "constants.h"
 #include "errors.h"
 #include "linestream.h"
 #include "sectionsreader.h"
@@ -8,6 +9,7 @@
 #include <range/v3/action/sort.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view.hpp>
+#include <sfun/contract.h>
 #include <sfun/path.h>
 #include <sfun/string_utils.h>
 #include <fstream>
@@ -24,44 +26,19 @@ namespace {
 void processTestConfig(const fs::path& cfgPath);
 }
 
-TestContentsGenerator::TestContentsGenerator(const fs::path& testPath, const std::string& testFileExt)
+bool saveTestContents(const std::filesystem::path& testPath)
 {
-    collectTestConfigs(testPath, testFileExt);
-}
+    sfun_precondition(is_directory(testPath));
 
-void TestContentsGenerator::collectTestConfigs(const fs::path& testPath, const std::string& testFileExt)
-{
-    if (fs::is_directory(testPath)) {
-        if (testFileExt.empty())
-            throw std::runtime_error{"To launch all tests in the directory, test extension must be specified"};
-
-        const auto end = fs::directory_iterator{};
-        for (auto it = fs::directory_iterator{testPath}; it != end; ++it)
-            if (fs::is_directory(it->status()))
-                collectTestConfigs(it->path(), testFileExt);
-            else if (sfun::path_string(it->path().extension()) == testFileExt)
-                testConfigs_.emplace_back(fs::canonical(it->path()));
+    const auto testCfgPath = fs::canonical(testPath) / hardcoded::testCaseFilename;
+    try {
+        processTestConfig(testCfgPath);
     }
-    else
-        testConfigs_.emplace_back(fs::canonical(testPath));
-}
-
-bool TestContentsGenerator::process() const
-{
-    if (testConfigs_.empty()) {
-        fmt::print("No tests were found for generation of test contents. Exiting.");
+    catch (const TestConfigError& error) {
+        fmt::print("Can't generate test contents in config {}. Error: {}\n", homePathString(testCfgPath), error.what());
         return false;
     }
-
-    for (const auto& cfgPath : testConfigs_) {
-        try {
-            processTestConfig(cfgPath);
-        }
-        catch (const TestConfigError& error) {
-            fmt::print("Can't generate test contents in config {}. Error: {}\n", homePathString(cfgPath), error.what());
-        }
-        fmt::print("Generating test contents in test config {}\n", homePathString(cfgPath));
-    }
+    fmt::print("Generating test contents in test config {}\n", homePathString(testCfgPath));
     return true;
 }
 

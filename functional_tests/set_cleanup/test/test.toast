@@ -1,3 +1,4 @@
+-Contents: data/lhs.txt rhs.txt
 -Write test.txt:
 Hello world
 ---

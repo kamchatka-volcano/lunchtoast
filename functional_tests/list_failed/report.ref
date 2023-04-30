@@ -1,14 +1,14 @@
 ################## [ 1 / 3 ] ###################
-Name: failed
-Failure: Launched process 'unknown_process' returned unexpected exit code 127. More info in launch_failure_0.txt
-                              Result:     FAILED
+Name: test
+                              Result:     PASSED
 ################## [ 2 / 3 ] ###################
-Name: failed2
-Failure: Launched process 'unknown_process' returned unexpected exit code 127. More info in launch_failure_0.txt
+Name: failed
+Failure: Launched process 'unknown_process' returned unexpected exit code 127. More info in launch_0.failure_info
                               Result:     FAILED
 ################## [ 3 / 3 ] ###################
-Name: lunchtoast
-                              Result:     PASSED
+Name: failed2
+Failure: Launched process 'unknown_process' returned unexpected exit code 127. More info in launch_0.failure_info
+                              Result:     FAILED
  
 ##################  SUMMARY  ###################
 Default:                     1 out of 3 passed, 2 failed

@@ -1,5 +1,5 @@
 ################## [ 1 / 1 ] ###################
-Name: lunchtoast
+Name: test
 Failure: File content check has failed: file.txt doesn't exist
                               Result:     FAILED
  

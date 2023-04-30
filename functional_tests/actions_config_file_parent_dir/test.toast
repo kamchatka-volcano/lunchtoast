@@ -1,9 +1,9 @@
--Name: ${{ DIR }}
--Contents: {test/.*} test.toast report.ref actions.cfg
+
+-Contents: {.*\.txt} report.ref
 -Description: 
     GIVEN action 'Assert text of' is declared in lunchtoast.cfg placed outside of the parent directory
     WHEN check lhs.txt content using this action, don't specify config file in command line
     THEN test should pass
 ---    
--Launch: ../../build/lunchtoast -ext=.test ./test -report=report.res ${{ shellParam }}
+-Launch: ../../build/lunchtoast  ./test -reportFile=report.res --withoutCleanup ${{ shellParam }}
 -Assert files equal: report.res report.ref

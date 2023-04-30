@@ -1,6 +1,6 @@
 ################## [ 1 / 1 ] ###################
-Name: lunchtoast
-Failure: Launched process 'echo "Hello world"' returned unexpected output. More info in launch_failure_0.txt
+Name: test
+Failure: Launched process 'echo "Hello world"' returned unexpected output. More info in launch_0.failure_info
                               Result:     FAILED
  
 ##################  SUMMARY  ###################

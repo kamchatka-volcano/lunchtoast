@@ -1,6 +1,6 @@
--Name: ${{ DIR }}
+
 -Suite: errors
--Contents: test test/lhs.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
+-Contents: test test/lhs.txt test/test.toast test/rhs.txt test.toast report.ref
 -Description: 
     GIVEN 2 equal files (lhs.txt and rhs.txt)
     WHEN launch lunchtoast with passing path to unexistent test config

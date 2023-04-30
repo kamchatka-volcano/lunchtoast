@@ -1,12 +1,11 @@
--Command: /usr/bin/sh -c -e cat lhs.txt
--Exit code: 0
+-Command: /usr/bin/bash -ceo pipefail cat lhs.txt
+-Exit code: 1
 -Expected exit code: 0
 -Output:
-Hello world
-
 ---
 -Expected output:
 Hello world
 ---
 -Error output:
+cat: lhs.txt: No such file or directory
 ---

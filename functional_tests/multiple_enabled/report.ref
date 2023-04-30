@@ -1,11 +1,11 @@
 ######### invalid assertions [ 1 / 1 ] #########
-Name: lunchtoast3
+Name: test3
                               Result:   DISABLED
 ########## valid assertions [ 1 / 2 ] ##########
-Name: lunchtoast
+Name: test
                               Result:     PASSED
 ########## valid assertions [ 2 / 2 ] ##########
-Name: lunchtoast2
+Name: test2
                               Result:   DISABLED
  
 ##################  SUMMARY  ###################

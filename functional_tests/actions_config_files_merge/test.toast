@@ -1,10 +1,10 @@
--Name: ${{ DIR }}
--Contents: {test/.*} test.toast report.ref actions.cfg
+
+-Contents: {.*\.txt} report.ref
 -Description: 
     GIVEN action 'Assert text of' is declared in test/lunchtoast.cfg and test/subdir/lunchtoast.cfg,
           action 'Check text of' is declared in test/lunchtoast.cfg
     WHEN check lhs.txt content using both this action, don't specify config file in command line
     THEN test should pass, 'Assert text of' should use the version declared in test/subdir/lunchtoast.cfg
 ---    
--Launch process: ../../build/lunchtoast -ext=.test ./test -report=report.res ${{ shellParam }}
+-Launch process: ../../build/lunchtoast  test/ -reportFile=report.res --withoutCleanup ${{ shellParam }}
 -Assert files equal: report.res report.ref

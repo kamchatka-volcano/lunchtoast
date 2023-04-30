@@ -1,6 +1,7 @@
 #include "test.h"
 #include "comparefilecontent.h"
 #include "comparefiles.h"
+#include "constants.h"
 #include "errors.h"
 #include "launchprocess.h"
 #include "sectionsreader.h"
@@ -23,6 +24,30 @@ namespace lunchtoast {
 namespace views = ranges::views;
 namespace fs = std::filesystem;
 
+namespace {
+std::vector<FilenameGroup> getDefaultContents(const fs::path testDirectory)
+{
+    const auto isDefaultTestFile = [](const fs::path& path)
+    {
+        return (is_regular_file(path) && sfun::path_string(path.filename()) == hardcoded::testCaseFilename);
+    };
+    const auto isConfigFile = [](const fs::path& path)
+    {
+        return (is_regular_file(path) && sfun::path_string(path.filename()) == hardcoded::configFilename);
+    };
+    const auto toFilenameFroup = [&](const fs::path& path)
+    {
+        return FilenameGroup{sfun::path_string(fs::relative(path, testDirectory)), testDirectory};
+    };
+
+    const auto dirContent = getDirectoryContent(testDirectory);
+    return views::concat(
+                   dirContent | views::filter(isDefaultTestFile), //
+                   dirContent | views::filter(isConfigFile)) |
+            views::transform(toFilenameFroup) | ranges::to<std::vector>;
+}
+} //namespace
+
 Test::Test(
         const fs::path& testCasePath,
         const std::unordered_map<std::string, std::string>& vars,
@@ -32,9 +57,10 @@ Test::Test(
     : userActions_{std::move(userActions)}
     , shellCommand_(std::move(shellCommand))
     , cleanup_(cleanup)
-    , name_(sfun::path_string(testCasePath.stem()))
     , directory_(testCasePath.parent_path())
+    , name_(sfun::path_string(directory_.filename()))
     , isEnabled_(true)
+    , contents_{getDefaultContents(directory_)}
 {
     readTestCase(testCasePath, vars);
     postProcessCleanupConfig(testCasePath);
@@ -97,8 +123,6 @@ std::vector<Section> Test::readParam(const std::vector<Section>& sections)
         return {std::next(sections.begin()), sections.end()};
     if (readParam(description_, "Description", section))
         return {std::next(sections.begin()), sections.end()};
-    if (readParam(directory_, "Directory", section))
-        return {std::next(sections.begin()), sections.end()};
     if (readParam(isEnabled_, "Enabled", section))
         return {std::next(sections.begin()), sections.end()};
     if (readParam(contents_, "Contents", section))
@@ -108,13 +132,14 @@ std::vector<Section> Test::readParam(const std::vector<Section>& sections)
 }
 
 namespace {
-int countLaunchProcessActions(const std::vector<TestAction>& actions)
+template<typename TAction>
+int countActions(const std::vector<TestAction>& actions)
 {
     return gsl::narrow_cast<int>(std::ranges::count_if(
             actions,
             [](const auto& action)
             {
-                return action.template is<LaunchProcess>();
+                return action.template is<TAction>();
             }));
 }
 } //namespace
@@ -136,7 +161,7 @@ std::vector<Section> Test::readAction(
                              directory_,
                              shellCommand_,
                              userAction.makeProcessResultCheckModeSet(vars, section.value),
-                             countLaunchProcessActions(actions_)},
+                             countActions<LaunchProcess>(actions_)},
                      userAction.actionType()});
             return sections | views::drop(1) | ranges::to<std::vector>;
         }
@@ -326,7 +351,7 @@ std::vector<Section> Test::createLaunchAction(const Section& section, const std:
                      directory_,
                      shellCommand(),
                      checkModeSet,
-                     countLaunchProcessActions(actions_)},
+                     countActions<LaunchProcess>(actions_)},
              actionType});
 
     return nextSections | views::drop(foundCheckModesCount) | ranges::to<std::vector>;
@@ -358,7 +383,9 @@ void Test::createCompareFileContentAction(
         const std::string& expectedFileContent)
 {
     const auto filePath = fs::absolute(directory_) / sfun::make_path(filenameStr);
-    actions_.push_back({CompareFileContent{filePath, expectedFileContent}, actionType});
+    actions_.push_back(
+            {CompareFileContent{filePath, expectedFileContent, directory_, countActions<CompareFileContent>(actions_)},
+             actionType});
 }
 
 void Test::cleanTestFiles()
@@ -377,8 +404,9 @@ void Test::cleanTestFiles()
         return !contentsPaths.count(path);
     };
     const auto paths = getDirectoryContent(directory_) | ranges::actions::sort(std::greater<>{});
+    const auto pathsNotInContent = paths | views::filter(notInContentPaths) | ranges::to<std::vector>;
     std::ranges::for_each(
-            paths | views::filter(notInContentPaths),
+            pathsNotInContent,
             [](const auto& path)
             {
                 fs::remove(path);
@@ -420,7 +448,8 @@ bool Test::readParam(std::vector<FilenameGroup>& param, const std::string& param
 {
     if (section.name != paramName)
         return false;
-    param = readFilenames(section.value, directory_);
+    const auto fileNames = readFilenames(section.value, directory_);
+    param = views::concat(param, fileNames) | ranges::to<std::vector>;
     return true;
 }
 

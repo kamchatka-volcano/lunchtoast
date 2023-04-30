@@ -1,9 +1,9 @@
--Name: ${{ DIR }}
+
 -Contents: {test/🥸\.txt} test/ланчтост.test test/рхс.txt test.toast report.ref
 -Description: 
     GIVEN 2 equal files (lhs.txt and rhs.txt)
     WHEN test single assertion of files equality
     THEN test should pass
 ---    
--Launch process: ../../build/lunchtoast ./test/ланчтост.test -report=report.res ${{shellParam}}
+-Launch process: ../../build/lunchtoast ./test -reportFile=report.res --withoutCleanup ${{shellParam}}
 -Assert files equal: report.res report.ref

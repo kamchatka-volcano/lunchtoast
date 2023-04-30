@@ -1,10 +1,10 @@
--Name: ${{ DIR }}
+
 -Suite: command line
--Contents: test test/lhs.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
+-Contents: test test/lhs.txt test/test.toast test/rhs.txt test.toast report.ref
 -Description: 
     GIVEN 2 equal files (lhs.txt and rhs.txt)
     WHEN test single assertion of files equality, launch test by specifying directory and extension of config file
     THEN test should pass
 ---
--Launch: ../../build/lunchtoast test/ -ext=.test -report=report.res
+-Launch: ../../build/lunchtoast test/  -reportFile=report.res --withoutCleanup
 -Assert files equal: report.res report.ref

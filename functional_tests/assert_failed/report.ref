@@ -1,5 +1,5 @@
 ################## [ 1 / 1 ] ###################
-Name: lunchtoast
+Name: test
 Failure: Files lhs.txt and rhs.txt aren't equal
                               Result:     FAILED
  

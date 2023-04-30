@@ -1,11 +1,11 @@
 ################## [ 1 / 3 ] ###################
-Name: lunchtoast0
+Name: test_0
                               Result:     PASSED
 ################## [ 2 / 3 ] ###################
-Name: lunchtoast1
+Name: test_1
                               Result:     PASSED
 ################## [ 3 / 3 ] ###################
-Name: lunchtoast2
+Name: test_2
                               Result:     PASSED
  
 ##################  SUMMARY  ###################

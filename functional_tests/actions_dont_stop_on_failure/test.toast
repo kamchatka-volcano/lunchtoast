@@ -1,11 +1,11 @@
--Name: ${{ DIR }}
--Contents: test/lhs.txt test/lunchtoast.test test.toast report.ref actions.cfg
+
+-Contents: test/lhs.txt test/test.toast test.toast report.ref actions.cfg
 -Description: 
     GIVEN actions 'Expect text of' and 'Assert text of' are declared in actions.cfg
     WHEN check lhs.txt content using expect action (that doesn't stop on error), write a test file and check lhs.txt content using assert action
     THEN test should fail, test file should be created
 ---    
--Launch process: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res -config=actions.cfg ${{ shellParam }}
+-Launch process: ../../build/lunchtoast test/ -reportFile=report.res --withoutCleanup -config=actions.cfg ${{ shellParam }}
 -Assert exit code: 1
 -Assert ./test/test.txt:
 TEST

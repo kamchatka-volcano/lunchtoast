@@ -1,6 +1,7 @@
 #include "testlauncher.h"
 #include "commandline.h"
 #include "config.h"
+#include "constants.h"
 #include "errors.h"
 #include "sectionsreader.h"
 #include "test.h"
@@ -36,25 +37,18 @@ std::vector<UserAction> makeUserActions(const Config& cfg)
 namespace fs = std::filesystem;
 namespace views = ranges::views;
 
-constexpr auto defaultConfigFilename = std::string_view{"lunchtoast.cfg"};
-
 TestLauncher::TestLauncher(const TestReporter& reporter, const CommandLine& commandLine, const Config& cfg)
     : reporter_{reporter}
     , config_{cfg}
     , userActions_{makeUserActions(cfg)}
     , shellCommand_{commandLine.shell}
-    , cleanup_{!commandLine.noCleanup}
+    , cleanup_{!commandLine.withoutCleanup}
     , selectedTags_{commandLine.select}
     , skippedTags_{commandLine.skip}
     , listOfFailedTests_{commandLine.listFailedTests}
     , dirWithFailedTests_{commandLine.collectFailedTests}
 {
-    auto configList = std::vector<fs::path>{};
-    if (fs::is_regular_file(commandLine.testPath) &&
-        fs::exists(commandLine.testPath.parent_path() / defaultConfigFilename))
-        configList.emplace_back(commandLine.testPath.parent_path() / defaultConfigFilename);
-
-    collectTests(commandLine.testPath, commandLine.ext, configList);
+    collectTests(commandLine.testPath, {}, commandLine.searchDepth);
 }
 
 const TestReporter& TestLauncher::reporter() const
@@ -76,7 +70,7 @@ void writePathList(const std::vector<fs::path>& pathList, const fs::path& output
 
     auto stream = std::ofstream{outputFile};
     for (const auto& path : pathList)
-        stream << sfun::replace(sfun::path_string(path), "\\", "/") << std::endl;
+        stream << sfun::replace(sfun::path_string(path.parent_path()), "\\", "/") << std::endl;
 }
 
 void copyDirList(const std::vector<fs::path>& pathList, const fs::path& targetDir)
@@ -148,14 +142,12 @@ std::vector<std::filesystem::path> TestLauncher::processSuite(const std::string&
 
 void TestLauncher::collectTests(
         const fs::path& testPath,
-        const std::string& testFileExt,
-        std::vector<fs::path> configList)
+        std::vector<fs::path> configList,
+        std::optional<int> searchDirectoryLevels)
 {
     if (fs::is_directory(testPath)) {
-        if (testFileExt.empty())
-            throw std::runtime_error{"To launch all tests in the directory, test extension must be specified"};
-        if (fs::exists(testPath / defaultConfigFilename))
-            configList.emplace_back(testPath / defaultConfigFilename);
+        if (fs::exists(testPath / hardcoded::configFilename))
+            configList.emplace_back(testPath / hardcoded::configFilename);
 
         const auto end = fs::directory_iterator{};
         auto dirSet = std::set<fs::path>{};
@@ -163,13 +155,18 @@ void TestLauncher::collectTests(
         for (auto it = fs::directory_iterator{testPath}; it != end; ++it)
             if (fs::is_directory(it->status()))
                 dirSet.insert(it->path());
-            else if (sfun::path_string(it->path().extension()) == testFileExt)
+            else if (sfun::path_string(it->path().filename()) == hardcoded::testCaseFilename)
                 fileSet.insert(it->path());
 
-        for (const auto& dirPath : dirSet)
-            collectTests(dirPath, testFileExt, configList);
         for (const auto& filePath : fileSet)
             addTest(fs::canonical(filePath), configList);
+
+        if (!searchDirectoryLevels.has_value() || searchDirectoryLevels > 0)
+            for (const auto& dirPath : dirSet)
+                collectTests(
+                        dirPath,
+                        configList,
+                        searchDirectoryLevels.has_value() ? searchDirectoryLevels.value() - 1 : searchDirectoryLevels);
     }
     else
         addTest(fs::canonical(testPath), configList);
@@ -207,11 +204,9 @@ bool isTestSelected(
 std::unordered_map<std::string, std::string> makeTestVariables(
         const Config& config,
         const std::set<std::string>& tags,
-        const std::string& varFileName,
         const std::string& varDirName)
 {
     auto vars = std::unordered_map<std::string, std::string>{};
-    vars["FILENAME"] = varFileName;
     vars["DIR"] = varDirName;
     for (const auto& [varName, varValue] : config.vars)
         vars[varName] = varValue;
@@ -232,14 +227,13 @@ std::unordered_map<std::string, std::string> makeTestVariables(
 std::unordered_map<std::string, std::string> makeTestVariables(
         const std::vector<fs::path>& configList,
         const std::set<std::string>& tags,
-        const std::string& varFileName,
         const std::string& varDirName)
 {
     auto result = std::unordered_map<std::string, std::string>{};
     auto configReader = figcone::ConfigReader{};
     for (const auto& configPath : configList) {
         auto cfg = configReader.readShoalFile<Config>(configPath);
-        const auto cfgVars = makeTestVariables(cfg, tags, varFileName, varDirName);
+        const auto cfgVars = makeTestVariables(cfg, tags, varDirName);
         for (const auto& [cfgVarName, cfgVarValue] : cfgVars)
             result.insert_or_assign(cfgVarName, cfgVarValue);
     }
@@ -285,12 +279,10 @@ void TestLauncher::addTest(const fs::path& testFile, const std::vector<std::file
         auto result = makeTestVariables(
                 configList,
                 tagsSet,
-                sfun::path_string(testFile.stem()),
                 sfun::path_string(testFile.parent_path().stem()));
         auto cmdLineConfigVariables = makeTestVariables(
                 config_,
                 tagsSet,
-                sfun::path_string(testFile.stem()),
                 sfun::path_string(testFile.parent_path().stem()));
         std::ranges::copy(cmdLineConfigVariables, std::inserter(result, result.begin()));
         return result;

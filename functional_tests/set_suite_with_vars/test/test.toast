@@ -1,2 +1,2 @@
--Suite: ${{ FILENAME }} - ${{ DIR }}
+-Suite: directory ${{ DIR }}
 -Assert files equal: lhs.txt rhs.txt

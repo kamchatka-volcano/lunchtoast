@@ -1,5 +1,5 @@
 ################## [ 1 / 1 ] ###################
-Name: lunchtoast
+Name: test
 Failure: Files crlf.txt and lf.txt aren't equal
                               Result:     FAILED
  

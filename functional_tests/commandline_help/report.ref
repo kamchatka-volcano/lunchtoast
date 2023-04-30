@@ -1,33 +1,34 @@
-Usage: lunchtoast <testPath> [params] [flags] 
+Usage: lunchtoast [commands] <testPath> [params] [flags] 
 Arguments:
-    <testPath> (path)             a test file or a directory containing tests
+    <testPath> (path)             directory containing tests
 Parameters:
-   -config=<path>                 a config file for setting variables
+   -config=<path>                 config file for setting variables and 
+                                    actions
                                     (optional, default: "")
-   -report=<path>                 write a test report to the specified file
-                                    (optional, default: "")
+   -shell=<string>                shell command
+                                    (optional, default: bash -ceo pipefail)
    -listFailedTests=<path>        write a list of failed tests to the 
                                     specified file
                                     (optional, default: "")
    -collectFailedTests=<path>     copy directories containing failed tests to 
                                     the specified path
                                     (optional, default: "")
-   -ext=<string>                  the extension of searched test files, 
-                                    required when specified test path is a 
-                                    directory
-                                    (optional, default: .toast)
-   -width=<int>                   set test report's width as a number of 
+   -reportWidth=<int>             set the test report's width as the number of
                                     characters
                                     (optional, default: 48)
-   -shell=<string>                shell command
-                                    (optional, default: bash -ceo pipefail)
+   -reportFile=<path>             write the test report to the specified file
+                                    (optional, default: "")
+   -searchDepth=<int>             the number of descents into child 
+                                    directories levels for tests searching
+                                    (optional)
    -select=<string>               select tests by tag names
                                     (multi-value, optional, default: {})
    -skip=<string>                 skip tests by tag names
                                     (multi-value, optional, default: {})
 Flags:
-  --saveContents                  save the current contents of the test 
-                                    directory
-  --noCleanup                     disables cleanup of test files
+  --withoutCleanup                disable cleanup of test files
   --help                          show usage info and exit
+Commands:
+    saveContents [options]        save the current contents of the test 
+                                    directory
 

@@ -1,4 +1,5 @@
+-Contents: {.*\.txt}
 -Tags: first
--Assert 0.txt:
+-Assert 1.txt:
 Hello ${{greetName}}
 ---

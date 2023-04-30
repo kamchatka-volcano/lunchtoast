@@ -1,6 +1,6 @@
 ################## [ 1 / 1 ] ###################
-Name: lunchtoast
-Failure: File file.txt content isn't equal to the expected string
+Name: test
+Failure: File file.txt content isn't equal to the expected string 'Hello world2'
                               Result:     FAILED
  
 ##################  SUMMARY  ###################

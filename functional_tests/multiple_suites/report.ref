@@ -1,12 +1,12 @@
 ######### invalid assertions [ 1 / 1 ] #########
-Name: lunchtoast3
+Name: test3
 Failure: Files lhs.txt and rhs2.txt aren't equal
                               Result:     FAILED
 ########## valid assertions [ 1 / 2 ] ##########
-Name: lunchtoast
+Name: test
                               Result:     PASSED
 ########## valid assertions [ 2 / 2 ] ##########
-Name: lunchtoast2
+Name: test2
                               Result:     PASSED
  
 ##################  SUMMARY  ###################

@@ -1,6 +1,6 @@
 ################## [ 1 / 1 ] ###################
-Name: lunchtoast
-Failure: Launched process '[ "$(cat lhs.txt)" = "Hello moon" ]' returned unexpected exit code 1. More info in launch_failure_0.txt
+Name: test
+Failure: Launched process '[ "$(cat lhs.txt)" = "Hello moon" ]' returned unexpected exit code 1. More info in launch_0.failure_info
                               Result:     FAILED
  
 ##################  SUMMARY  ###################

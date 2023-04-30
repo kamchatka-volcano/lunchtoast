@@ -13,18 +13,17 @@
 using namespace lunchtoast;
 namespace fs = std::filesystem;
 
-int generateTestContents(const CommandLine& commandLine);
+int generateTestContents(const CommandSaveContents& commandCfg);
 Config readConfig(const CommandLine& commandLine);
 
 int mainApp(const CommandLine& commandLine)
 {
-    if (commandLine.saveContents)
-        return generateTestContents(commandLine);
+    if (commandLine.saveContents.has_value())
+        return generateTestContents(commandLine.saveContents.value());
 
     const auto cfg = readConfig(commandLine);
-
     try {
-        const auto testReporter = TestReporter{commandLine.report, commandLine.width};
+        const auto testReporter = TestReporter{commandLine.reportFile, commandLine.reportWidth};
         auto testLauncher = TestLauncher{testReporter, commandLine, cfg};
         const auto allTestPassed = testLauncher.process();
         return allTestPassed ? 0 : 1;
@@ -55,11 +54,10 @@ int main(int argc, char** argv)
 }
 #endif
 
-int generateTestContents(const CommandLine& commandLine)
+int generateTestContents(const CommandSaveContents& commandCfg)
 {
     try {
-        auto testContentsGenerator = TestContentsGenerator{commandLine.testPath, commandLine.ext};
-        if (testContentsGenerator.process())
+        if (saveTestContents(commandCfg.testPath))
             return 0;
         else
             return 1;

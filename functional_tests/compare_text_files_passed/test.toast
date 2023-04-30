@@ -1,9 +1,9 @@
--Name: ${{ DIR }}
--Contents: test/crlf.txt test/lf.txt test/lunchtoast.test report.ref
+
+-Contents: test/crlf.txt test/lf.txt test/test.toast report.ref
 -Description: 
     GIVEN 2 text files (crlf.txt and lf.txt) with equal text by different line separators (\r\n and \n)
     WHEN test assertion of files equality by the text
     THEN the test should pass
 ---    
--Launch: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res
+-Launch: ../../build/lunchtoast test/ -reportFile=report.res --withoutCleanup
 -Assert files equal: report.res report.ref

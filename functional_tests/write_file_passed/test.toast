@@ -1,5 +1,5 @@
--Name: ${{ DIR }}
--Contents: test test/lunchtoast.test test.ref test2.ref test.toast report.ref
+
+-Contents: test test/test.toast test.ref test2.ref test.toast report.ref
 -Description:
     GIVEN file test.ref
     WHEN writing file test.res with the same content as test.ref and assert that files are equal
@@ -7,7 +7,7 @@
 ---
 -Launch: rm test/test.res
 -Assert exit code: *
--Launch: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res --noCleanup
+-Launch: ../../build/lunchtoast test/ -reportFile=report.res --withoutCleanup
 -Assert files equal: report.res report.ref
 -Assert files equal: test/test.res test.ref
 -Assert files equal: test/test2.res test2.ref

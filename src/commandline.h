@@ -12,14 +12,19 @@
 
 namespace lunchtoast {
 
-struct EnsurePathExists {
+struct EnsureDirectoryExists {
     void operator()(const std::filesystem::path& path)
     {
         auto fsError = std::error_code{};
         if (!std::filesystem::exists(path, fsError))
             throw cmdlime::ValidationError{fmt::format(
-                    "specified test directory "
-                    "or file path '{}' doesn't exist.\n",
+                    "specified test directory '{}' "
+                    "doesn't exist.\n",
+                    sfun::path_string(path))};
+        if (!std::filesystem::is_directory(path, fsError))
+            throw cmdlime::ValidationError{fmt::format(
+                    "specified test directory '{}' "
+                    "isn't a directory.\n",
                     sfun::path_string(path))};
     }
 };
@@ -34,23 +39,27 @@ struct EnsureContainsUniqueElements {
 };
 
 // clang-format off
-struct CommandLine : public cmdlime::Config{
-    CMDLIME_ARG(testPath, std::filesystem::path)               << "a test file or a directory containing tests" << EnsurePathExists{};
-    CMDLIME_PARAM(config, std::filesystem::path)()             << "a config file for setting variables";
-    CMDLIME_PARAM(report, std::filesystem::path)()             << "write a test report to the specified file";
-    CMDLIME_PARAM(listFailedTests, std::filesystem::path)()    << "write a list of failed tests to the specified file";
-    CMDLIME_PARAM(collectFailedTests, std::filesystem::path)() << "copy directories containing failed tests to the specified path";
-    CMDLIME_PARAM(ext, std::string)(".toast")                  << "the extension of searched test files, "
-                                                                  "required when specified test path is a directory";
-    CMDLIME_PARAM(width, int)(48)                              << "set test report's width as a number of characters";
-    CMDLIME_FLAG(saveContents)                                 << "save the current contents of the test directory";
-    CMDLIME_PARAM(shell, std::string)("bash -ceo pipefail")    << "shell command";
-    CMDLIME_FLAG(noCleanup)                                    << "disables cleanup of test files";
-    CMDLIME_PARAMLIST(select, std::vector<std::string>)()      << "select tests by tag names" << EnsureContainsUniqueElements{};
-    CMDLIME_PARAMLIST(skip, std::vector<std::string>)()        << "skip tests by tag names" << EnsureContainsUniqueElements{};
+
+struct CommandSaveContents : public cmdlime::Config{
+    CMDLIME_ARG(testPath, std::filesystem::path)               << "test directory" << EnsureDirectoryExists{};
 };
 
+struct CommandLine : public cmdlime::Config{
+    CMDLIME_ARG(testPath, std::filesystem::path)               << "directory containing tests" << EnsureDirectoryExists{};
+    CMDLIME_PARAM(config, std::filesystem::path)()             << "config file for setting variables and actions";
+    CMDLIME_PARAM(shell, std::string)("bash -ceo pipefail")    << "shell command";
+    CMDLIME_PARAM(listFailedTests, std::filesystem::path)()    << "write a list of failed tests to the specified file";
+    CMDLIME_PARAM(collectFailedTests, std::filesystem::path)() << "copy directories containing failed tests to the specified path";
+    CMDLIME_PARAMLIST(select, std::vector<std::string>)()      << "select tests by tag names" << EnsureContainsUniqueElements{};
+    CMDLIME_PARAMLIST(skip, std::vector<std::string>)()        << "skip tests by tag names" << EnsureContainsUniqueElements{};
+    CMDLIME_FLAG(withoutCleanup)                               << "disable cleanup of test files";
+    CMDLIME_PARAM(reportWidth, int)(48)                        << "set the test report's width as the number of characters";
+    CMDLIME_PARAM(reportFile, std::filesystem::path)()         << "write the test report to the specified file";
+    CMDLIME_PARAM(searchDepth, cmdlime::optional<int>)         << "the number of descents into child directories levels for tests searching";
+    CMDLIME_COMMAND(saveContents, CommandSaveContents)         << "save the current contents of the test directory";
+};
 // clang-format on
+
 } //namespace lunchtoast
 
 namespace cmdlime {
@@ -80,8 +89,8 @@ struct PostProcessor<lunchtoast::CommandLine> {
         if (cfg.config.is_relative())
             cfg.config = fs::weakly_canonical(cfg.config, fsError);
 
-        if (cfg.report.is_relative())
-            cfg.report = fs::weakly_canonical(cfg.report, fsError);
+        if (cfg.reportFile.is_relative())
+            cfg.reportFile = fs::weakly_canonical(cfg.reportFile, fsError);
 
         if (cfg.listFailedTests.is_relative())
             cfg.listFailedTests = fs::weakly_canonical(cfg.listFailedTests, fsError);

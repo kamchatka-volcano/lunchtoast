@@ -1,4 +1,4 @@
--Name: ${{ DIR }}
+
 -Suite: command line
 -Contents: test test/file_to_preserve.txt test/lhs.txt test/rhs.txt lunchtoast_test.ref lunchtoast.test test.toast report.ref
 -Description: 
@@ -6,8 +6,11 @@
     test config has a cleanup whitelist, listing all test files except file_to_preserve.txt
     WHEN launch lunchtoast with --saveContents
     THEN test config should get file_to_preserve.txt in a contents section
----    
--Launch: cp lunchtoast.test test/
--Launch: ../../build/lunchtoast test/lunchtoast.test --saveContents | sed 's/~\|\/[^ ]*//g' > report.res
+---
+-Launch: cp lunchtoast.test test/test.toast
+-Launch: ../../build/lunchtoast saveContents test/ | sed 's/~\|\/[^ ]*//g' > report.res
 -Assert files equal: report.res report.ref
--Assert files equal: test/lunchtoast.test lunchtoast_test.ref
+-Assert files equal: test/test.toast lunchtoast_test.ref
+
+-Launch: rm -rf test/test.toast
+-Assert exit code: *

@@ -1,6 +1,6 @@
--Name: ${{ DIR }}
+
 -Suite: setting params
--Contents: test test/lunchtoast3.test test/lunchtoast2.test test/lhs.txt test/rhs2.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
+-Contents: {.*\.txt} report.ref
 -Description: 
     GIVEN 2 equal files lhs.txt and rhs.txt and different file rhs2.txt 
     WHEN 2 tests in the suite "valid assertions" check equality of lhs.txt and rhs.txt, one of them is disabled
@@ -9,5 +9,5 @@
          other tests shouldn't run because they are disabled
          disabled  tests counters should be in the report
 ---         
--Launch unchecked: ../../build/lunchtoast ./test -ext=.test -report=report.res
+-Launch unchecked: ../../build/lunchtoast test/  -reportFile=report.res --withoutCleanup
 -Assert files equal: report.res report.ref

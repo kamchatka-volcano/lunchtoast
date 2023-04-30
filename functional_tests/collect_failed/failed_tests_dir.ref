@@ -1,13 +1,8 @@
 failed_tests
+failed_tests/failed
 failed_tests/failed2
-failed_tests/failed2/failed2.test
 failed_tests/failed2/lhs.txt
 failed_tests/failed2/rhs.txt
-failed_tests/test
-failed_tests/test/failed2
-failed_tests/test/failed2/failed2.test
-failed_tests/test/failed2/lhs.txt
-failed_tests/test/failed2/rhs.txt
-failed_tests/test/failed.test
-failed_tests/test/launch_failure_0.txt
-failed_tests/test/lunchtoast.test
+failed_tests/failed2/test.toast
+failed_tests/failed/launch_0.failure_info
+failed_tests/failed/test.toast

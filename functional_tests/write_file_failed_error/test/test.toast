@@ -1,3 +1,4 @@
+-Contents: dir/tmp test.ref
 -Write dir:
 Hello world
 ---

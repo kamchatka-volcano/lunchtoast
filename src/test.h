@@ -62,9 +62,9 @@ private:
     sfun::member<const std::vector<UserAction>> userActions_;
     sfun::member<const std::string> shellCommand_;
     sfun::member<const bool> cleanup_;
+    std::filesystem::path directory_;
     std::string name_;
     std::string description_;
-    std::filesystem::path directory_;
     std::string suite_;
     bool isEnabled_ = true;
     std::vector<FilenameGroup> contents_;

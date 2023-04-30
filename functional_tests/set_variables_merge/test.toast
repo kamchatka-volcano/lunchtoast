@@ -1,9 +1,9 @@
--Name: ${{ DIR }}
--Contents: {test/.*} test.toast report.ref vars.cfg
+
+-Contents: {.*\.txt} report.ref
 -Description: 
     GIVEN 2 files lhs.txt and multiline.txt
     WHEN test that text of lhs.txt is equal to variable 'greetName' and text of multiline.txt is equal to variable 'multilineText'
     THEN test should pass
 ---    
--Launch: ../../build/lunchtoast -ext=.test ./test -report=report.res
+-Launch: ../../build/lunchtoast  ./test -reportFile=report.res --withoutCleanup
 -Assert files equal: report.res report.ref

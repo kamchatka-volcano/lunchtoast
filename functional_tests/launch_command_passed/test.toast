@@ -1,5 +1,5 @@
--Name: ${{ DIR }}
--Contents: test test/test.ref test/lunchtoast.test test.toast report.ref
+
+-Contents: test test/test.ref test/test.toast test.toast report.ref
 -Description:
     GIVEN file test.ref
     WHEN launching shell command that outputs content of test.ref to file test.res and assert that files are equal
@@ -7,5 +7,5 @@
 ---    
 -Launch: rm test/test.res
 -Assert exit code: *
--Launch: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res ${{shellParam}}
+-Launch: ../../build/lunchtoast test/ -reportFile=report.res --withoutCleanup ${{shellParam}}
 -Assert files equal: report.res report.ref

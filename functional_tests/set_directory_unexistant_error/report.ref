@@ -1,9 +1,0 @@
-################## [ 1  1 ] ###################
-Test can't be started. Config file  error:
-Specified directory ' doesn't exist
-
- 
-##################  SUMMARY  ###################
-Default:                     0 out of 1 passed, 1 failed
----
-Total:                       0 out of 1 passed, 1 failed

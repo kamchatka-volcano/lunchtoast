@@ -1,4 +1,4 @@
 #Some comment
 -Assert files equal: lhs.txt rhs.txt
 #Other comment
--Contents: lhs.txt lunchtoast.test rhs.txt
+-Contents: lhs.txt rhs.txt test.toast

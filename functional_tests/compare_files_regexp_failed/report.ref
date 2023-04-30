@@ -1,5 +1,5 @@
 ################## [ 1 / 1 ] ###################
-Name: lunchtoast
+Name: test
 Failure: Files lhs2.res and rhs2.ref aren't equal
                               Result:     FAILED
  

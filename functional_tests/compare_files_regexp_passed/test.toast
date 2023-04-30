@@ -1,10 +1,10 @@
--Name: ${{ DIR }}
--Contents: test test/rhs2.ref test/rhs.ref test/lhs.res test/lunchtoast.test test/lhs2.res test.toast report.ref
+
+-Contents: test test/rhs2.ref test/rhs.ref test/lhs.res test/test.toast test/lhs2.res test.toast report.ref
 -Description: 
     GIVEN 2 equal files (lhs.res and rhs.ref) and 2 equal files (lhs2.res and rhs2.ref)
     WHEN test assertion of files equality using regexp matching files 
          with extension .res and files with extension .ref
     THEN test should pass
 ---    
--Launch: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res
+-Launch: ../../build/lunchtoast test/ -reportFile=report.res --withoutCleanup
 -Assert files equal: report.res report.ref

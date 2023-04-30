@@ -1,0 +1,2 @@
+-Name: Files equality assertion (directory - ${{ DIR }})
+-Assert files equal: lhs.txt rhs.txt

@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <functional>
 #include <map>
+#include <optional>
 #include <vector>
 
 namespace lunchtoast {
@@ -23,8 +24,8 @@ public:
 private:
     void collectTests(
             const std::filesystem::path& testPath,
-            const std::string& testFileExt,
-            std::vector<std::filesystem::path> configList);
+            std::vector<std::filesystem::path> configList,
+            std::optional<int> searchDirectoryLevels);
     void addTest(const std::filesystem::path& testFile, const std::vector<std::filesystem::path>& configList);
     std::vector<std::filesystem::path> processSuite(const std::string& suiteName, TestSuite& suite);
     const TestReporter& reporter() const;

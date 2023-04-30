@@ -1,10 +1,10 @@
--Name: ${{ DIR }}
+
 -Suite: setting params
--Contents: test test/lhs.txt test/lunchtoast.test test/rhs.txt test.toast report.ref
+-Contents: test test/lhs.txt test/test.toast test/rhs.txt test.toast report.ref
 -Description: 
-    GIVEN 2 equal files (lhs.txt and rhs.txt), set suite name using built-in variables ${{ FILENAME }} and ${{ DIR }}
+    GIVEN 2 equal files (lhs.txt and rhs.txt), set suite name using a built-in variable ${{ DIR }}
     WHEN test single assertion of files equality
     THEN test should pass, suite name should be in report
 ---    
--Launch: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res
+-Launch: ../../build/lunchtoast test/ -reportFile=report.res --withoutCleanup
 -Assert files equal: report.res report.ref

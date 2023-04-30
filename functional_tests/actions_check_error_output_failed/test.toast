@@ -1,10 +1,10 @@
--Name: ${{ DIR }}
--Contents: {.*\.test} {.*\.ref} actions.cfg
+
+-Contents:  {.*\.ref} actions.cfg
 -Description: 
     GIVEN action 'Ensure error output' is declared in actions.cfg
     WHEN comparing unexpected error output using this action
     THEN test should pass
 ---    
--Launch process: ../../build/lunchtoast ./test/lunchtoast.test -report=report.res -config=actions.cfg ${{ shellParam }}
+-Launch process: ../../build/lunchtoast test/ -reportFile=report.res --withoutCleanup -config=actions.cfg ${{ shellParam }}
 -Assert exit code: 1
 -Assert files equal: report.res report.ref

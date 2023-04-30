@@ -1,6 +1,6 @@
--Name: ${{ DIR }}
+
 -Suite: errors
--Contents: test test/test.ref test/dir test/dir/tmp test/lunchtoast.test test.toast report.ref
+-Contents: test test/test.ref test/dir test/dir/tmp test/test.toast test.toast report.ref
 -Description: 
     GIVEN file test.ref and directory dir
     WHEN writing file to file 'dir' with the same content as test.ref and assert that files are equal
@@ -8,6 +8,6 @@
 ---    
 -Launch: mkdir ./test/dir
 -Assert exit code: *
--Launch: ../../build/lunchtoast ./test/lunchtoast.test | sed '/iostream/d' > report.res
+-Launch: ../../build/lunchtoast test/ | sed '/iostream/d' > report.res
 -Assert exit code: 1
 -Assert files equal: report.res report.ref

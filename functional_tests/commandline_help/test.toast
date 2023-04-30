@@ -1,6 +1,6 @@
--Name: ${{ DIR }}
+
 -Suite: command line
--Contents: test test/lunchtoast.test test.toast report.ref
+-Contents: test test/test.toast test.toast report.ref
 -Description: 
     GIVEN 2 equal files (lhs.txt and rhs.txt)
     WHEN launch lunchtoast with --help command line argument

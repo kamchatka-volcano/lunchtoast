@@ -1,9 +1,9 @@
--Name: ${{ DIR }}
--Contents: {test/.*} test.toast report.ref vars.cfg
+
+-Contents: {.*\.txt} report.ref vars.cfg
 -Description: 
     GIVEN 2 equal files (lhs.txt and rhs.txt)
     WHEN test single assertion of files equality
     THEN test should pass
 ---    
--Launch process: ../../build/lunchtoast ./test -ext=.test -report=report.res -config=vars.cfg
+-Launch process: ../../build/lunchtoast test/  -reportFile=report.res --withoutCleanup -config=vars.cfg
 -Assert files equal: report.res report.ref

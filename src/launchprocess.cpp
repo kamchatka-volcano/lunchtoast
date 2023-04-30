@@ -1,4 +1,5 @@
 #include "launchprocess.h"
+#include "constants.h"
 #include "errors.h"
 #include "testaction.h"
 #include "utils.h"
@@ -76,7 +77,7 @@ std::tuple<std::string, std::vector<std::string>> parseCommand(const std::string
 
 std::string failureReportFilename(int actionIndex)
 {
-    return fmt::format("launch_failure_{}.txt", actionIndex);
+    return fmt::format(hardcoded::launchFailureReportFilename, actionIndex);
 }
 
 auto makeCheckModeVisitor(const LaunchProcessResult& result, const std::string& command, int actionIndex)
