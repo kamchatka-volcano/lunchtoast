@@ -25,7 +25,7 @@ namespace views = ranges::views;
 namespace fs = std::filesystem;
 
 namespace {
-std::vector<FilenameGroup> getDefaultContents(const fs::path testDirectory)
+std::vector<FilenameGroup> getDefaultContents(const fs::path& testDirectory)
 {
     const auto isDefaultTestFile = [](const fs::path& path)
     {
@@ -118,16 +118,19 @@ std::vector<Section> Test::readParam(const std::vector<Section>& sections)
 
     const auto& section = sections.front();
     if (readParam(name_, "Name", section))
-        return {std::next(sections.begin()), sections.end()};
+        return sections | views::drop(1) | ranges::to<std::vector>;
     if (readParam(suite_, "Suite", section))
-        return {std::next(sections.begin()), sections.end()};
+        return sections | views::drop(1) | ranges::to<std::vector>;
     if (readParam(description_, "Description", section))
-        return {std::next(sections.begin()), sections.end()};
+        return sections | views::drop(1) | ranges::to<std::vector>;
     if (readParam(isEnabled_, "Enabled", section))
-        return {std::next(sections.begin()), sections.end()};
-    if (readParam(contents_, "Contents", section))
-        return {std::next(sections.begin()), sections.end()};
+        return sections | views::drop(1) | ranges::to<std::vector>;
 
+    auto sectionContents = std::vector<FilenameGroup>{};
+    if (readParam(sectionContents, "Contents", section)) {
+        contents_ = views::concat(contents_, sectionContents) | ranges::to<std::vector>;
+        return sections | views::drop(1) | ranges::to<std::vector>;
+    }
     return sections;
 }
 
@@ -369,12 +372,11 @@ void Test::createCompareFilesAction(
         const std::string& comparisonType,
         const std::string& filenamesStr)
 {
-    const auto filenameGroups = readFilenames(filenamesStr, directory_);
-    if (std::ssize(filenameGroups) != 2)
-        throw TestConfigError{"Comparison of files requires exactly two filenames or filename matching regular "
-                              "expressions to be specified"};
+    const auto files = readFilenames(filenamesStr, directory_);
+    if (std::ssize(files) != 2)
+        throw TestConfigError{"Comparison of files requires exactly two file names"};
     const auto comparisonMode = comparisonType.starts_with("data") ? ComparisonMode::Binary : ComparisonMode::Text;
-    actions_.push_back({CompareFiles{filenameGroups[0], filenameGroups[1], comparisonMode}, actionType});
+    actions_.push_back({CompareFiles{files[0], files[1], comparisonMode}, actionType});
 }
 
 void Test::createCompareFileContentAction(
@@ -448,8 +450,7 @@ bool Test::readParam(std::vector<FilenameGroup>& param, const std::string& param
 {
     if (section.name != paramName)
         return false;
-    const auto fileNames = readFilenames(section.value, directory_);
-    param = views::concat(param, fileNames) | ranges::to<std::vector>;
+    param = readFilenameGroups(section.value, directory_);
     return true;
 }
 

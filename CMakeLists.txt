@@ -50,7 +50,7 @@ set(SRC
     src/testcontentsgenerator.cpp
     src/comparefilecontent.cpp
     src/comparefiles.cpp
-    src/filenamereader.cpp
+    src/filenamegroup.cpp
     src/launchprocess.cpp
     src/linestream.cpp
     src/main.cpp

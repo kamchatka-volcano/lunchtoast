@@ -102,6 +102,26 @@ std::string readFile(const fs::path& filePath)
     return buffer.str();
 }
 
+std::vector<fs::path> readFilenames(const std::string& input, const fs::path& directory)
+{
+    auto result = std::vector<fs::path>{};
+    auto fileName = std::string{};
+    auto stream = std::istringstream{input};
+    const auto makePath = [&](const std::string& fileName)
+    {
+        auto path = sfun::make_path(fileName);
+        if (path.is_absolute())
+            return path;
+
+        return fs::weakly_canonical(directory / path);
+    };
+
+    while (stream >> std::quoted(fileName))
+        result.emplace_back(makePath(fileName));
+
+    return result;
+}
+
 std::string processVariablesSubstitution(std::string value, const std::unordered_map<std::string, std::string>& vars)
 {
     for (const auto& [varName, varValue] : vars)

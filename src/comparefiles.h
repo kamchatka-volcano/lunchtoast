@@ -1,5 +1,4 @@
 #pragma once
-#include "filenamereader.h"
 #include "testactionresult.h"
 #include <filesystem>
 #include <regex>
@@ -14,12 +13,12 @@ enum class ComparisonMode {
 
 class CompareFiles {
 public:
-    CompareFiles(FilenameGroup lhs, FilenameGroup rhs, ComparisonMode mode);
+    CompareFiles(std::filesystem::path lhs, std::filesystem::path rhs, ComparisonMode mode);
     TestActionResult operator()() const;
 
 private:
-    FilenameGroup lhs_;
-    FilenameGroup rhs_;
+    std::filesystem::path lhs_;
+    std::filesystem::path rhs_;
     ComparisonMode mode_;
 };
 

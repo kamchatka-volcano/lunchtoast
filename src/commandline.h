@@ -68,35 +68,33 @@ struct PostProcessor<lunchtoast::CommandLine> {
     void operator()(lunchtoast::CommandLine& cfg)
     {
         namespace fs = std::filesystem;
-        auto fsError = std::error_code{};
 
-        const auto baseDir = [&]
-        {
-            if (fs::is_directory(cfg.testPath, fsError))
-                return cfg.testPath;
-            else
-                return cfg.testPath.parent_path();
-        }();
+        if (cfg.saveContents.has_value()) {
+            cfg.saveContents->testPath = fs::absolute(cfg.saveContents->testPath);
+            return;
+        }
 
-        auto path = fs::current_path(fsError);
+        cfg.testPath = fs::canonical(cfg.testPath);
+
+        const auto path = fs::current_path();
         const auto restorePath = gsl::finally(
                 [path]
                 {
                     fs::current_path(path);
                 });
-        fs::current_path(baseDir, fsError);
+        fs::current_path(cfg.testPath);
 
-        if (cfg.config.is_relative())
-            cfg.config = fs::weakly_canonical(cfg.config, fsError);
+        if (!cfg.config.empty() && cfg.config.is_relative())
+            cfg.config = fs::weakly_canonical(cfg.config);
 
-        if (cfg.reportFile.is_relative())
-            cfg.reportFile = fs::weakly_canonical(cfg.reportFile, fsError);
+        if (!cfg.reportFile.empty() && cfg.reportFile.is_relative())
+            cfg.reportFile = fs::weakly_canonical(cfg.reportFile);
 
-        if (cfg.listFailedTests.is_relative())
-            cfg.listFailedTests = fs::weakly_canonical(cfg.listFailedTests, fsError);
+        if (!cfg.listFailedTests.empty() && cfg.listFailedTests.is_relative())
+            cfg.listFailedTests = fs::weakly_canonical(cfg.listFailedTests);
 
-        if (cfg.collectFailedTests.is_relative())
-            cfg.collectFailedTests = fs::weakly_canonical(cfg.collectFailedTests, fsError);
+        if (!cfg.collectFailedTests.empty() && cfg.collectFailedTests.is_relative())
+            cfg.collectFailedTests = fs::weakly_canonical(cfg.collectFailedTests);
     }
 };
 } //namespace cmdlime

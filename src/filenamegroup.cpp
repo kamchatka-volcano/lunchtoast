@@ -1,4 +1,4 @@
-#include "filenamereader.h"
+#include "filenamegroup.h"
 #include "utils.h"
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view.hpp>
@@ -48,7 +48,7 @@ std::vector<fs::path> FilenameGroup::fileList() const
                     return fs::is_regular_file(path);
                 });
     else
-        return {fs::absolute(directory_) / sfun::make_path(filenameOrRegexp_)};
+        return {fs::weakly_canonical(directory_ / sfun::make_path(filenameOrRegexp_))};
 }
 
 std::vector<fs::path> FilenameGroup::pathList() const
@@ -57,7 +57,7 @@ std::vector<fs::path> FilenameGroup::pathList() const
     if (isRegexp_)
         result = getMatchingPaths(directory_, fileMatchingRegexp_);
     else
-        result = {fs::absolute(directory_) / sfun::make_path(filenameOrRegexp_)};
+        result = {fs::weakly_canonical(directory_ / sfun::make_path(filenameOrRegexp_))};
 
     auto dirs = std::set<fs::path>{};
     for (const auto& path : result) {
@@ -76,7 +76,7 @@ std::string FilenameGroup::string() const
     return filenameOrRegexp_;
 }
 
-std::vector<FilenameGroup> readFilenames(const std::string& input, const fs::path& directory)
+std::vector<FilenameGroup> readFilenameGroups(const std::string& input, const fs::path& directory)
 {
     auto result = std::vector<FilenameGroup>{};
     auto fileName = std::string{};
@@ -100,7 +100,7 @@ std::vector<fs::path> getMatchingPaths(
         const auto windowsFileEntry = sfun::replace(fileEntry, "\\", "/");
         auto match = std::smatch{};
         if (std::regex_match(unixFileEntry, match, pathFilter) || std::regex_match(windowsFileEntry, match, pathFilter))
-            return fs::absolute(directory) / sfun::make_path(fileEntry);
+            return fs::weakly_canonical(directory / sfun::make_path(fileEntry));
         return {};
     };
     const auto pathNotEmpty = [](const auto& path)

@@ -1,21 +1,20 @@
 #include "comparefiles.h"
 #include "utils.h"
 #include <fmt/format.h>
-#include <range/v3/action.hpp>
-#include <range/v3/range/conversion.hpp>
-#include <range/v3/view.hpp>
 #include <sfun/path.h>
-#include <gsl/util>
-#include <algorithm>
 #include <string>
 #include <utility>
-#include <variant>
 
 namespace lunchtoast {
 namespace fs = std::filesystem;
-namespace views = ranges::views;
 
-CompareFiles::CompareFiles(FilenameGroup lhs, FilenameGroup rhs, ComparisonMode mode)
+enum class ComparisonResult {
+    FilesEqual,
+    FilesDontExist,
+    FilesNotEqual
+};
+
+CompareFiles::CompareFiles(fs::path lhs, fs::path rhs, ComparisonMode mode)
     : lhs_{std::move(lhs)}
     , rhs_{std::move(rhs)}
     , mode_{mode}
@@ -23,20 +22,6 @@ CompareFiles::CompareFiles(FilenameGroup lhs, FilenameGroup rhs, ComparisonMode 
 }
 
 namespace {
-
-std::string filenameListStr(const std::vector<fs::path>& pathList)
-{
-    const auto pathToString = [](const fs::path& path)
-    {
-        return sfun::path_string(path.filename());
-    };
-    return pathList | views::transform(pathToString) | views::join(',') | ranges::to<std::string>;
-}
-enum class ComparisonResult {
-    FilesEqual,
-    FilesDontExist,
-    FilesNotEqual
-};
 
 ComparisonResult compareFiles(const fs::path& lhs, const fs::path& rhs, ComparisonMode comparisonMode)
 {
@@ -56,17 +41,16 @@ ComparisonResult compareFiles(const fs::path& lhs, const fs::path& rhs, Comparis
     return ComparisonResult::FilesEqual;
 }
 
-std::string getFailedComparisonInfo(const std::tuple<ComparisonResult, fs::path, fs::path>& result)
+std::string getFailedComparisonInfo(const ComparisonResult& result, const fs::path& lhs, const fs::path& rhs)
 {
-    const auto& [res, lhs, rhs] = result;
-    if (res == ComparisonResult::FilesDontExist) {
+    if (result == ComparisonResult::FilesDontExist) {
         if (!fs::exists(lhs))
             return fmt::format("File {} doesn't exist", sfun::path_string(lhs.filename()));
         if (!fs::exists(rhs))
             return fmt::format("File {} doesn't exist", sfun::path_string(rhs.filename()));
         return {};
     }
-    else if (res == ComparisonResult::FilesNotEqual)
+    else if (result == ComparisonResult::FilesNotEqual)
         return fmt::format(
                 "Files {} and {} aren't equal",
                 sfun::path_string(lhs.filename()),
@@ -78,39 +62,10 @@ std::string getFailedComparisonInfo(const std::tuple<ComparisonResult, fs::path,
 
 TestActionResult CompareFiles::operator()() const
 {
-    const auto lhsPaths = lhs_.fileList() | ranges::actions::sort;
-    const auto rhsPaths = rhs_.fileList() | ranges::actions::sort;
-
-    if (std::ssize(lhsPaths) != std::ssize(rhsPaths)) {
-        return TestActionResult::Failure(fmt::format(
-                "Files equality check has failed, file lists have different number of elements:\n{} : {}\n{} : {}\n",
-                lhs_.string(),
-                filenameListStr(lhsPaths),
-                rhs_.string(),
-                filenameListStr(rhsPaths)));
-    }
-
-    const auto makeComparison = [this](const auto& lhsRhs)
-    {
-        const auto& [lhsPath, rhsPath] = lhsRhs;
-        return std::make_tuple(compareFiles(lhsPath, rhsPath, mode_), lhsPath, rhsPath);
-    };
-
-    const auto isNotEqual = [](const std::tuple<ComparisonResult, fs::path, fs::path>& result)
-    {
-        return std::get<0>(result) != ComparisonResult::FilesEqual;
-    };
-
-    const auto errorInfo = views::zip(lhsPaths, rhsPaths) | //
-            views::transform(makeComparison) | //
-            views::filter(isNotEqual) | //
-            views::transform(getFailedComparisonInfo) | //
-            views::join('\n') | ranges::to<std::string>;
-
-    if (errorInfo.empty())
-        return TestActionResult::Success();
-    else
-        return TestActionResult::Failure(errorInfo);
+    const auto result = compareFiles(lhs_, rhs_, mode_);
+    if (result != ComparisonResult::FilesEqual)
+        return TestActionResult::Failure(getFailedComparisonInfo(result, lhs_, rhs_));
+    return TestActionResult::Success();
 }
 
 } //namespace lunchtoast

@@ -1,5 +1,5 @@
 #pragma once
-#include "filenamereader.h"
+#include "filenamegroup.h"
 #include "launchprocessresult.h"
 #include "section.h"
 #include "testaction.h"

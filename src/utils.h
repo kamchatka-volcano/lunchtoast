@@ -12,6 +12,7 @@ namespace lunchtoast {
 
 std::string readTextFile(const std::filesystem::path& filePath);
 std::string readFile(const std::filesystem::path& filePath);
+std::vector<std::filesystem::path> readFilenames(const std::string& input, const std::filesystem::path& directory);
 std::string processVariablesSubstitution(std::string value, const std::unordered_map<std::string, std::string>& vars);
 std::vector<std::filesystem::path> getDirectoryContent(const std::filesystem::path& dir);
 std::string homePathString(const std::filesystem::path& path);

@@ -1,2 +1,0 @@
--Assert files equal: {*.res} {.*\.ref}
-
