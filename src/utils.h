@@ -18,6 +18,7 @@ std::vector<std::filesystem::path> getDirectoryContent(const std::filesystem::pa
 std::string homePathString(const std::filesystem::path& path);
 std::string toLower(std::string_view str);
 std::vector<std::string> splitCommand(const std::string& str);
+std::vector<std::string> splitSectionValue(const std::string& str);
 
 class StringStream {
 public:

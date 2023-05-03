@@ -245,7 +245,7 @@ std::vector<UserAction> makeUserActions(const std::vector<std::filesystem::path>
     const auto readConfigActions = [](const fs::path& configPath)
     {
         auto configReader = figcone::ConfigReader{};
-        auto cfg = configReader.readShoalFile<Config>(configPath);
+        const auto cfg = configReader.readShoalFile<Config>(configPath);
         return makeUserActions(cfg);
     };
     return cfgList | //
@@ -261,33 +261,33 @@ void TestLauncher::addTest(const fs::path& testFile, const std::vector<std::file
 {
     auto stream = std::ifstream{testFile, std::ios::binary};
     auto error = SectionReadingError{};
-    auto sections = lunchtoast::readSections(stream, error);
+    const auto sections = lunchtoast::readSections(stream, error);
 
-    auto enabledStr = toLower(getSectionValue("Enabled", sections));
-    auto isEnabled = (enabledStr.empty() || enabledStr == "true");
-    stream.clear();
-    stream.seekg(0, std::ios::beg);
+    const auto makeTestVarsWithoutTags = [&]
+    {
+        auto result = makeTestVariables(configList, {}, sfun::path_string(testFile.parent_path().stem()));
+        auto cmdLineConfigVariables = makeTestVariables(config_, {}, sfun::path_string(testFile.parent_path().stem()));
+        std::ranges::copy(cmdLineConfigVariables, std::inserter(result, result.begin()));
+        return result;
+    };
 
-    auto tagsStr = getSectionValue("Tags", sections);
-    auto tags = sfun::split(tagsStr, ",");
-    auto tagsSet = std::set<std::string>{tags.begin(), tags.end()};
+    const auto tagsStr = processVariablesSubstitution(getSectionValue("Tags", sections), makeTestVarsWithoutTags());
+    const auto tagsSet = splitSectionValue(tagsStr) | ranges::to<std::set>;
     if (!isTestSelected(tagsSet, selectedTags_, skippedTags_))
         return;
 
     const auto testVars = [&]
     {
-        auto result = makeTestVariables(
-                configList,
-                tagsSet,
-                sfun::path_string(testFile.parent_path().stem()));
-        auto cmdLineConfigVariables = makeTestVariables(
-                config_,
-                tagsSet,
-                sfun::path_string(testFile.parent_path().stem()));
+        auto result = makeTestVariables(configList, tagsSet, sfun::path_string(testFile.parent_path().stem()));
+        auto cmdLineConfigVariables =
+                makeTestVariables(config_, tagsSet, sfun::path_string(testFile.parent_path().stem()));
         std::ranges::copy(cmdLineConfigVariables, std::inserter(result, result.begin()));
         return result;
     }();
 
+    const auto enabledStr = toLower(processVariablesSubstitution(getSectionValue("Enabled", sections), testVars));
+    const auto isEnabled = (enabledStr.empty() || enabledStr == "true");
+    const auto suiteName = processVariablesSubstitution(getSectionValue("Suite", sections), testVars);
     const auto userActions = [&]
     {
         auto result = makeUserActions(configList);
@@ -295,7 +295,6 @@ void TestLauncher::addTest(const fs::path& testFile, const std::vector<std::file
         return result;
     }();
 
-    const auto suiteName = processVariablesSubstitution(getSectionValue("Suite", sections), testVars);
     if (suiteName.empty()) {
         defaultSuite_.tests.push_back({testFile, isEnabled, testVars, userActions});
         if (!isEnabled)

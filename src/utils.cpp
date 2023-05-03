@@ -102,11 +102,18 @@ std::string readFile(const fs::path& filePath)
     return buffer.str();
 }
 
+std::vector<std::string> splitSectionValue(const std::string& input)
+{
+    auto result = std::vector<std::string>{};
+    auto stream = std::istringstream{input};
+    auto str = std::string{};
+    while (stream >> std::quoted(str))
+        result.emplace_back(std::move(str));
+    return result;
+}
+
 std::vector<fs::path> readFilenames(const std::string& input, const fs::path& directory)
 {
-    auto result = std::vector<fs::path>{};
-    auto fileName = std::string{};
-    auto stream = std::istringstream{input};
     const auto makePath = [&](const std::string& fileName)
     {
         auto path = sfun::make_path(fileName);
@@ -115,11 +122,8 @@ std::vector<fs::path> readFilenames(const std::string& input, const fs::path& di
 
         return fs::weakly_canonical(directory / path);
     };
-
-    while (stream >> std::quoted(fileName))
-        result.emplace_back(makePath(fileName));
-
-    return result;
+    const auto inputParts = splitSectionValue(input);
+    return inputParts | views::transform(makePath) | ranges::to<std::vector>;
 }
 
 std::string processVariablesSubstitution(std::string value, const std::unordered_map<std::string, std::string>& vars)
