@@ -134,7 +134,7 @@ std::vector<Section> readSections(std::istream& input)
 std::vector<Section> readSections(std::istream& input, SectionReadingError& readingError)
 {
     auto result = std::vector<Section>{};
-    auto sectionOuterWhitespace = std::string{};
+    auto sectionOuterSpace = std::string{};
     auto stream = LineStream{input};
     while (!stream.atEnd()) {
         auto line = stream.peekLine();
@@ -142,10 +142,10 @@ std::vector<Section> readSections(std::istream& input, SectionReadingError& read
             try {
                 auto section = readSection(stream, getMultilineSectionSeparator(result));
                 if (result.empty())
-                    section.originalText.insert(0, sectionOuterWhitespace);
+                    section.originalText.insert(0, sectionOuterSpace);
                 else
-                    result.back().originalText += sectionOuterWhitespace;
-                sectionOuterWhitespace.clear();
+                    result.back().originalText += sectionOuterSpace;
+                sectionOuterSpace.clear();
                 result.emplace_back(std::move(section));
             }
             catch (const TestConfigError& error) {
@@ -153,19 +153,13 @@ std::vector<Section> readSections(std::istream& input, SectionReadingError& read
                 return result;
             }
         }
-        else if (line.starts_with("#") || sfun::trim(line).empty()) {
-            sectionOuterWhitespace += line;
-            stream.skipLine();
-        }
         else {
-            readingError = TestConfigError{
-                    stream.lineNumber(),
-                    "Space outside of sections can only contain whitespace characters and comments"};
-            return result;
+            sectionOuterSpace += line;
+            stream.skipLine();
         }
     }
     if (!result.empty())
-        result.back().originalText += sectionOuterWhitespace;
+        result.back().originalText += sectionOuterSpace;
     return result;
 }
 

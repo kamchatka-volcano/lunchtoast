@@ -71,17 +71,17 @@ TEST(SectionsReader, BasicCR)
 TEST(SectionsReader, Comments)
 {
     testSectionReader(
-            "#COMMENT 1\n"
+            "COMMENT 1\n"
             "-Name:foo\n"
             "#COMMENT 2\n"
-            "#COMMENT 2-1\n"
+            "//COMMENT 2-1\n"
             "-Value:\n"
             "#NOT A COMMENT\n"
             "bar\n"
             "---\n"
-            "#COMMENT 3\n",
-            {{"Name", "foo", "#COMMENT 1\n-Name:foo\n#COMMENT 2\n#COMMENT 2-1\n"},
-             {"Value", "#NOT A COMMENT\nbar", "-Value:\n#NOT A COMMENT\nbar\n---\n#COMMENT 3\n"}});
+            "COMMENT 3\n",
+            {{"Name", "foo", "COMMENT 1\n-Name:foo\n#COMMENT 2\n//COMMENT 2-1\n"},
+             {"Value", "#NOT A COMMENT\nbar", "-Value:\n#NOT A COMMENT\nbar\n---\nCOMMENT 3\n"}});
 }
 
 TEST(SectionsReader, MultilineSection)
@@ -150,61 +150,6 @@ TEST(SectionsReader, NameWithColon3)
 TEST(SectionsReader, EmptySectionWithColon)
 {
     testSectionReader("-Name`00:01`", {{"Name`00:01`", "", "-Name`00:01`"}});
-}
-
-TEST(SectionsReader, ErrorTextOutsideOfSections)
-{
-    assert_exception<lunchtoast::TestConfigError>(
-            []
-            {
-                testSectionReader(
-                        "Empty:"
-                        "Value",
-                        {});
-            },
-            [](const auto& e)
-            {
-                ASSERT_EQ(
-                        std::string{e.what()},
-                        "line 1: Space outside of sections can only contain whitespace characters and comments");
-            });
-}
-
-TEST(SectionsReader, ErrorTextOutsideOfSections2)
-{
-    assert_exception<lunchtoast::TestConfigError>(
-            []
-            {
-                testSectionReader(
-                        "-Test: value\n"
-                        "Value",
-                        {});
-            },
-            [](const auto& e)
-            {
-                ASSERT_EQ(
-                        std::string{e.what()},
-                        "line 2: Space outside of sections can only contain whitespace characters and comments");
-            });
-}
-
-TEST(SectionsReader, ErrorTextOutsideOfSections3)
-{
-    assert_exception<lunchtoast::TestConfigError>(
-            []
-            {
-                testSectionReader(
-                        "-Test: \n"
-                        "---\n"
-                        "Value",
-                        {});
-            },
-            [](const auto& e)
-            {
-                ASSERT_EQ(
-                        std::string{e.what()},
-                        "line 3: Space outside of sections can only contain whitespace characters and comments");
-            });
 }
 
 TEST(SectionsReader, ErrorEmptySectionName)
