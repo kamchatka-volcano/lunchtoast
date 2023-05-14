@@ -132,6 +132,11 @@ TEST(SectionsReader, EmptySection)
     testSectionReader("-Name", {{"Name", "", "-Name"}});
 }
 
+TEST(SectionsReader, EmptySection2)
+{
+    testSectionReader("-Name and Surname\n", {{"Name and Surname", "", "-Name and Surname\n"}});
+}
+
 TEST(SectionsReader, NameWithColon)
 {
     testSectionReader("-Name`00:01`: value", {{"Name`00:01`", "value", "-Name`00:01`: value"}});

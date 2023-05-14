@@ -1,0 +1,9 @@
+
+-Contents: {.*\.txt} report.ref actions.cfg
+-Description: 
+    GIVEN action 'Compare %1 and %2' is declared in actions.cfg
+    WHEN comparing lhs.txt and rhs.txt using this action
+    THEN test should pass
+---    
+-Launch process: ../../build/lunchtoast test/ -reportFile=report.res --withoutCleanup -config=actions.cfg ${{ shellParam }}
+-Assert files equal: report.res report.ref

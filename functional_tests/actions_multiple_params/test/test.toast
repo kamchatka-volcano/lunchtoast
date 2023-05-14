@@ -1,0 +1,2 @@
+-Contents: {.*\.txt}
+-Compare lhs.txt and rhs.txt

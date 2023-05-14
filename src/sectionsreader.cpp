@@ -78,6 +78,8 @@ LineReadResult readSectionLine(const std::string& line)
         else
             result.value.value() += ch;
     }
+    if (!result.value.has_value())
+        result.name = sfun::trim_back(result.name);
     return result;
 }
 
