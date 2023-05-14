@@ -1,6 +1,7 @@
 #include "useraction.h"
 #include "useractionformatparser.h"
 #include "utils.h"
+#include <fmt/format.h>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view.hpp>
 #include <sfun/functional.h>
@@ -35,9 +36,12 @@ std::optional<std::string> UserAction::makeCommand(
 
     auto command = commandFormat_;
     for (auto i = 0; i < std::ssize(match) - 1; ++i)
-        command = sfun::replace(command, "%" + std::to_string(paramsOrder_.at(i)), match[i + 1].str());
+        command = sfun::replace(command, fmt::format("%{}", paramsOrder_.at(i)), match[i + 1].str());
 
+    for (const auto& [name, value] : readInputParamSections(inputParam))
+        command = sfun::replace(command, fmt::format("%input.{}", name), value);
     command = sfun::replace(command, "%input", inputParam);
+
     command = processVariablesSubstitution(command, vars);
     return command;
 }
@@ -50,6 +54,8 @@ std::set<ProcessResultCheckMode> UserAction::makeProcessResultCheckModeSet(
             [](ProcessResultCheckMode::ExitCode&) {},
             [&](auto& checkMode)
             {
+                for (const auto& [name, value] : readInputParamSections(inputParam))
+                    checkMode.value = sfun::replace(checkMode.value, fmt::format("%input.{}", name), value);
                 checkMode.value = sfun::replace(checkMode.value, "%input", inputParam);
                 checkMode.value = processVariablesSubstitution(checkMode.value, vars);
             }};

@@ -99,3 +99,71 @@ TEST(Utils, SplitCommandUnclosedString2)
                 ASSERT_EQ(std::string{e.what()}, "Command 'command -param \"' has an unclosed quotation mark");
             });
 }
+
+TEST(Utils, ReadInputParams)
+{
+    const auto sections = lunchtoast::readInputParamSections(R"(
+#foo:
+Hello world
+#bar:
+Hello moon)");
+    const auto expectedSections =
+            std::unordered_map<std::string, std::string>{{"foo", "Hello world"}, {"bar", "Hello moon"}};
+    EXPECT_EQ(sections, expectedSections);
+}
+
+TEST(Utils, ReadInputParams2)
+{
+    const auto sections = lunchtoast::readInputParamSections(R"(
+#foo:
+Hello world
+
+#bar:
+Hello moon
+)");
+    const auto expectedSections =
+            std::unordered_map<std::string, std::string>{{"foo", "Hello world\n"}, {"bar", "Hello moon\n"}};
+    EXPECT_EQ(sections, expectedSections);
+}
+
+TEST(Utils, ReadInputParams3)
+{
+    const auto sections = lunchtoast::readInputParamSections(R"(
+#foo:
+#bar:
+Hello moon)");
+    const auto expectedSections = std::unordered_map<std::string, std::string>{{"foo", ""}, {"bar", "Hello moon"}};
+    EXPECT_EQ(sections, expectedSections);
+}
+
+TEST(Utils, ReadInputParams4)
+{
+    const auto sections = lunchtoast::readInputParamSections(R"(
+#foo:
+
+Hello world
+#bar:
+
+Hello moon
+)");
+    const auto expectedSections =
+            std::unordered_map<std::string, std::string>{{"foo", "\nHello world"}, {"bar", "\nHello moon\n"}};
+    EXPECT_EQ(sections, expectedSections);
+}
+
+TEST(Utils, ReadInputParams5)
+{
+    const auto sections = lunchtoast::readInputParamSections(R"(
+Hello world
+Hello moon
+)");
+    const auto expectedSections = std::unordered_map<std::string, std::string>{};
+    EXPECT_EQ(sections, expectedSections);
+}
+
+TEST(Utils, ReadInputParams6)
+{
+    const auto sections = lunchtoast::readInputParamSections(R"()");
+    const auto expectedSections = std::unordered_map<std::string, std::string>{};
+    EXPECT_EQ(sections, expectedSections);
+}

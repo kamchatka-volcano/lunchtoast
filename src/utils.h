@@ -19,6 +19,7 @@ std::string homePathString(const std::filesystem::path& path);
 std::string toLower(std::string_view str);
 std::vector<std::string> splitCommand(const std::string& str);
 std::vector<std::string> splitSectionValue(const std::string& str);
+std::unordered_map<std::string, std::string> readInputParamSections(const std::string&);
 
 class StringStream {
 public:

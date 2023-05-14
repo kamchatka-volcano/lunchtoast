@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "errors.h"
+#include "linestream.h"
 #include <platform_folders.h>
 #include <fmt/format.h>
 #include <range/v3/range/conversion.hpp>
@@ -11,6 +12,7 @@
 #include <fstream>
 #include <optional>
 #include <regex>
+#include <sstream>
 
 namespace lunchtoast {
 namespace views = ranges::views;
@@ -202,6 +204,33 @@ std::vector<std::string> splitCommand(const std::string& str)
         prevCh = ch;
     }
     return result;
+}
+
+std::unordered_map<std::string, std::string> readInputParamSections(const std::string& inputParam)
+{
+    auto inputStringStream = std::stringstream{inputParam};
+    auto inputStream = LineStream{inputStringStream};
+    using StringPair = std::pair<std::string, std::string>;
+    auto result = std::vector<StringPair>{};
+    while (!inputStream.atEnd()) {
+        const auto line = inputStream.readLine();
+        const auto trimmedLine = sfun::trim(line);
+        if (trimmedLine.starts_with("#") && trimmedLine.ends_with(":"))
+            result.emplace_back(StringPair{std::string{sfun::between(trimmedLine, "#", ":")}, {}});
+        else if (!result.empty())
+            result.back().second += line;
+    }
+    const auto removeLastNewline = [](StringPair pair)
+    {
+        if (!pair.second.empty())
+            pair.second.pop_back();
+        return pair;
+    };
+
+    return views::concat(
+                   result | views::drop_last(1) | views::transform(removeLastNewline),
+                   result | views::take_last(1)) |
+            ranges::to<std::unordered_map>;
 }
 
 } //namespace lunchtoast

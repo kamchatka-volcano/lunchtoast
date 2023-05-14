@@ -1,0 +1,8 @@
+-Contents: {.*\.txt}
+
+-Compare files:
+#lhs:
+lhs.txt
+#rhs:
+rhs.txt
+---

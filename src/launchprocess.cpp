@@ -54,9 +54,14 @@ std::tuple<std::string, std::vector<std::string>> parseShellCommand(
         const std::string& shellCommand,
         const std::string& command)
 {
+    if (shellCommand.find('\n') != std::string::npos)
+        throw TestConfigError{fmt::format("Can't launch a command with a newline character: {}", shellCommand)};
+
     const auto shellCmdParts = splitCommand(shellCommand);
     if (shellCmdParts.empty())
         throw TestConfigError{"Can't launch the process with an empty command"};
+    if (command.find('\n') != std::string::npos)
+        throw TestConfigError{fmt::format("Can't launch a command with a newline character: {}", command)};
 
     const auto& shellExec = shellCmdParts.front();
     const auto shellArgs = shellCmdParts | views::drop(1);
@@ -66,6 +71,9 @@ std::tuple<std::string, std::vector<std::string>> parseShellCommand(
 
 std::tuple<std::string, std::vector<std::string>> parseCommand(const std::string& command)
 {
+    if (command.find('\n') != std::string::npos)
+        throw TestConfigError{fmt::format("Can't launch a command with a newline character: {}", command)};
+
     auto cmdParts = splitCommand(command);
     if (cmdParts.empty())
         throw TestConfigError{"Can't launch the process with an empty command"};
