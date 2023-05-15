@@ -85,7 +85,8 @@ jobs:
       - uses: robinraju/release-downloader@v1.7
         with:
           repository: "kamchatka-volcano/lunchtoast"
-          tag: "v0.1.0-beta"
+          latest: true
+          #tag: "v0.1.0-beta"
           filename: "lunchtoast.exe"
           out-file-path: "master"
       - name: Download lunchtoast build
@@ -118,7 +119,8 @@ jobs:
       - uses: robinraju/release-downloader@v1.7
         with:
           repository: "kamchatka-volcano/lunchtoast"
-          tag: "v0.1.0-beta"
+          latest: true
+          #tag: "v0.1.0-beta"
           filename: "lunchtoast"
           out-file-path: "master"
       - name: Set master lunchtoast execute permissions
