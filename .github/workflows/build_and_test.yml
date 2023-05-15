@@ -3,6 +3,7 @@ name: build & test (clang, gcc, MSVC)
 on:
   push:
     branches: [ "master", "dev" ]
+    tags: [ "v*" ]
     paths-ignore:
       - '**.md'
   pull_request:
@@ -144,3 +145,26 @@ jobs:
         with:
           name: lunchtoast-ubuntu-failed-tests
           path: failed_tests
+
+  release:
+    name: Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-20.04
+    needs: [ functional_test_linux, functional_test_windows ]
+    steps:
+      - name: Download lunchtoast build
+        uses: actions/download-artifact@v3
+        with:
+          name: lunchtoast-build-ubuntu-20.04
+          path: build
+      - name: Download lunchtoast build
+        uses: actions/download-artifact@v3
+        with:
+          name: lunchtoast-build-windows-latest
+          path: build
+      - name: Upload release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/lunchtoast.exe
+            build/lunchtoast
