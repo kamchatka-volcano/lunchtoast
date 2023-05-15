@@ -22,7 +22,11 @@ or define your own actions to invoke any shell command you like. For example:
 -Check boiler #42 temperature: +54C
 ```
 
-can be configured to run `[ $(curl http://localhost/boiler/42/temperature) == "+54C" ]`
+can be configured to run
+
+```
+[ $(curl http://localhost/boiler/42/temperature) == "+54C" ]
+```
 
 ---
 
