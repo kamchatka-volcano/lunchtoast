@@ -23,17 +23,17 @@ jobs:
       matrix:
         config:
           - {
-            name: "Ubuntu Latest gcc",
-            os: ubuntu-latest,
-            cc: "gcc",
-            cxx: "g++",
+            name: "Ubuntu 20.04 gcc",
+            os: ubuntu-20.04,
+            cc: "gcc-10",
+            cxx: "g++-10",
             cmake_vars: "-DBoost_USE_STATIC_LIBS=ON -DBoost_USE_STATIC_RUNTIME=ON",
             flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
             artifacts: "build/lunchtoast"
           }
           - {
-            name: "Ubuntu Latest clang",
-            os: ubuntu-latest,
+            name: "Ubuntu 20.04 clang",
+            os: ubuntu-20.04,
             cc: "clang",
             cxx: "clang++",
             cmake_vars: "-DBoost_USE_STATIC_LIBS=ON -DBoost_USE_STATIC_RUNTIME=ON",
@@ -105,13 +105,13 @@ jobs:
         if: failure() && steps.launch_tests.outcome != 'success' && steps.pre_launch_tests.outcome == 'success'
         uses: actions/upload-artifact@v3
         with:
-          name: lunchtoast-windows-latest-failed-tests
+          name: lunchtoast-windows-failed-tests
           path: failed_tests
 
   functional_test_linux:
     name: Functional testing (Ubuntu)
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       - uses: robinraju/release-downloader@v1.7
@@ -127,7 +127,7 @@ jobs:
       - name: Download lunchtoast build
         uses: actions/download-artifact@v3
         with:
-          name: lunchtoast-build-ubuntu-latest
+          name: lunchtoast-build-ubuntu-20.04
           path: build
       - name: Set lunchtoast build execute permissions
         id: pre_launch_tests
@@ -142,5 +142,5 @@ jobs:
         if: failure() && steps.launch_tests.outcome != 'success' && steps.pre_launch_tests.outcome == 'success'
         uses: actions/upload-artifact@v3
         with:
-          name: lunchtoast-ubuntu-latest-failed-tests
+          name: lunchtoast-ubuntu-failed-tests
           path: failed_tests
