@@ -80,6 +80,12 @@ std::string StringStream::readUntil(std::function<bool(char ch)> pred, bool& sto
     return result;
 }
 
+std::string normalizeLineEndings(std::string_view str)
+{
+    auto result = sfun::replace(std::string{str}, "\r\n", "\n");
+    return sfun::replace(result, "\r", "\n");
+}
+
 std::string readTextFile(const fs::path& filePath)
 {
     auto fileStream = std::ifstream{filePath, std::ios::binary};
@@ -88,8 +94,7 @@ std::string readTextFile(const fs::path& filePath)
     fileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     auto buffer = std::stringstream{};
     buffer << fileStream.rdbuf();
-    auto result = sfun::replace(buffer.str(), "\r\n", "\n");
-    return sfun::replace(result, "\r", "\n");
+    return normalizeLineEndings(buffer.str());
 }
 
 std::string readFile(const fs::path& filePath)

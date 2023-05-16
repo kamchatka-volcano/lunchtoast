@@ -106,7 +106,7 @@ auto makeCheckModeVisitor(const LaunchProcessResult& result, const std::string& 
             },
             [&, actionIndex = actionIndex](const ProcessResultCheckMode::Output& output)
             {
-                if (result.output != output.value)
+                if (result.output != normalizeLineEndings(output.value))
                     return TestActionResult::Failure(fmt::format(
                             "Launched process '{}' returned unexpected output. More info in {}",
                             command,
@@ -115,7 +115,7 @@ auto makeCheckModeVisitor(const LaunchProcessResult& result, const std::string& 
             },
             [&, actionIndex = actionIndex](const ProcessResultCheckMode::ErrorOutput& output)
             {
-                if (result.errorOutput != output.value)
+                if (result.errorOutput != normalizeLineEndings(output.value))
                     return TestActionResult::Failure(fmt::format(
                             "Launched process '{}' returned unexpected error output. More info in {}",
                             command,
@@ -150,6 +150,8 @@ LaunchProcessResult startProcess(
     }
     process.wait();
 
+    result.output = normalizeLineEndings(result.output);
+    result.errorOutput = normalizeLineEndings(result.errorOutput);
     if (result.output.ends_with("\n"))
         result.output.pop_back();
     if (result.errorOutput.ends_with("\n"))
@@ -174,11 +176,11 @@ auto makeCheckModeVisitorSettingExpectedResult(ExpectedLaunchProcessResult& expe
             },
             [&](const ProcessResultCheckMode::Output& output)
             {
-                expectedResult.output = output.value;
+                expectedResult.output = normalizeLineEndings(output.value);
             },
             [&](const ProcessResultCheckMode::ErrorOutput& output)
             {
-                expectedResult.errorOutput = output.value;
+                expectedResult.errorOutput = normalizeLineEndings(output.value);
             }};
 }
 
