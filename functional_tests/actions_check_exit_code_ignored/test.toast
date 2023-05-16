@@ -1,0 +1,9 @@
+
+-Contents:  test.toast report.ref actions.cfg
+-Description: 
+    GIVEN action 'Ensure command works' is declared in actions.cfg, which doesn't check an exit code
+    WHEN invoking incorrect ls command using this action
+    THEN test should pass
+---    
+-Launch process: ../../build/lunchtoast test/ -reportFile=report.res --withoutCleanup -config=actions.cfg ${{ shellParam }}
+-Assert files equal: report.res report.ref

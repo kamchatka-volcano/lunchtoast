@@ -18,7 +18,8 @@ UserAction::UserAction(const Action& action)
     auto [formatRegexStr, paramsOrder] = makeUserActionFormat(action.format);
     format_ = std::regex{formatRegexStr};
     paramsOrder_ = std::move(paramsOrder);
-    processResultCheckModeSet_.emplace(ProcessResultCheckMode::ExitCode{action.checkExitCode});
+    if (action.checkExitCode.value.has_value())
+        processResultCheckModeSet_.emplace(ProcessResultCheckMode::ExitCode{action.checkExitCode.value});
     if (action.checkOutput.has_value())
         processResultCheckModeSet_.emplace(ProcessResultCheckMode::Output{action.checkOutput.value()});
     if (action.checkErrorOutput.has_value())
