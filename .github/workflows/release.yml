@@ -1,0 +1,75 @@
+name: release
+
+on:
+  push:
+    tags: [ "v*" ]
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {
+            name: "Ubuntu 20.04 clang",
+            os: ubuntu-20.04,
+            cc: "clang",
+            cxx: "clang++",
+            cmake_vars: "-DBoost_USE_STATIC_LIBS=ON -DBoost_USE_STATIC_RUNTIME=ON",
+            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
+            artifacts: "build/lunchtoast"
+          }
+          - {
+            name: "Windows Latest MSVC",
+            os: windows-latest,
+            cc: "cl",
+            cxx: "cl",
+            cmake_vars: "-DCMAKE_GENERATOR_PLATFORM=x64 -DVCPKG_TARGET_TRIPLET=x64-windows-static-md",
+            flags: "/EHsc /W4 /WX /wd4702",
+            artifacts: "build/Release/lunchtoast.exe"
+          }
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: lukka/run-vcpkg@v10
+        with:
+          vcpkgGitCommitId: 31a159c1cae2bf905299085d9ef01bdfea0ca7b8
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON ${{ matrix.config.cmake_vars }} -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_CXX_FLAGS="${{ matrix.config.flags }}"
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config Release
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: lunchtoast-build-${{ matrix.config.os }}
+          path: ${{ matrix.config.artifacts }}
+
+  release:
+    name: Release
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Download lunchtoast build
+        uses: actions/download-artifact@v3
+        with:
+          name: lunchtoast-build-ubuntu-20.04
+          path: build
+      - name: Download lunchtoast build
+        uses: actions/download-artifact@v3
+        with:
+          name: lunchtoast-build-windows-latest
+          path: build
+      - name: Upload release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/lunchtoast.exe
+            build/lunchtoast
