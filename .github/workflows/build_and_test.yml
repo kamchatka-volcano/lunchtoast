@@ -89,15 +89,11 @@ jobs:
           filename: "lunchtoast.exe"
           out-file-path: "master"
       - name: Download lunchtoast build
+        id: pre_launch_tests
         uses: actions/download-artifact@v3
         with:
           name: lunchtoast-build-windows-latest
           path: build
-      - name: Make symlink
-        id: pre_launch_tests
-        shell: cmd
-        working-directory: '${{github.workspace}}\build'
-        run: mklink lunchtoast lunchtoast.exe
       - name: Launch tests
         id: launch_tests
         working-directory: ${{github.workspace}}
