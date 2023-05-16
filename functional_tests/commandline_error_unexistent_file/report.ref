@@ -1,4 +1,4 @@
 Argument 'testPath' is invalid: specified test directory 'test.cfg' doesn't exist.
 
-Usage: lunchtoast [commands] <testPath> [-config=<path>] [-shell=<string>] [-listFailedTests=<path>] [-collectFailedTests=<path>] [-reportWidth=<int>] [-reportFile=<path>] [-searchDepth=<int>] [-select=<string>...] [-skip=<string>...] [--withoutCleanup] [--help] 
+Usage: lunchtoast [commands] <testPath> [-config=<path>] [-shell=<string>] [-listFailedTests=<path>] [-collectFailedTests=<path>] [-reportWidth=<int>] [-reportFile=<path>] [-searchDepth=<int>] [-select=<string>...] [-skip=<string>...] [--withoutCleanup] [--help] [--version] 
 

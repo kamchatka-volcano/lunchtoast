@@ -41,14 +41,14 @@ int mainApp(const CommandLine& commandLine)
 #ifdef _WIN32
 int wmain(int argc, wchar_t** argv)
 {
-    auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast"};
+    auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast", "lunchtoast v0.2.0"};
     cmdlineReader.setErrorOutputStream(std::cout);
     return cmdlineReader.exec<CommandLine>(argc, argv, mainApp);
 }
 #else
 int main(int argc, char** argv)
 {
-    auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast"};
+    auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast", "lunchtoast v0.2.0"};
     cmdlineReader.setErrorOutputStream(std::cout);
     return cmdlineReader.exec<CommandLine>(argc, argv, mainApp);
 }

@@ -28,6 +28,7 @@ Parameters:
 Flags:
   --withoutCleanup                disable cleanup of test files
   --help                          show usage info and exit
+  --version                       show version info and exit
 Commands:
     saveContents [options]        save the current contents of the test 
                                     directory

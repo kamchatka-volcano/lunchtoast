@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
-project(lunchtoast VERSION 0.1.0 DESCRIPTION "lunchtoast - a command line functional testing automation tool")
+project(lunchtoast VERSION 0.2.0 DESCRIPTION "lunchtoast - a command-line tool for functional testing of console applications.")
 
-find_package(Boost 1.67 REQUIRED COMPONENTS system filesystem)
+find_package(Boost 1.78 REQUIRED COMPONENTS system filesystem)
 include(GNUInstallDirs)
 include(external/seal_lake)
 
