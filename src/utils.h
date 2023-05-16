@@ -20,6 +20,7 @@ std::string toLower(std::string_view str);
 std::vector<std::string> splitCommand(const std::string& str);
 std::vector<std::string> splitSectionValue(const std::string& str);
 std::unordered_map<std::string, std::string> readInputParamSections(const std::string&);
+std::string normalizeLineEndings(std::string_view str);
 
 class StringStream {
 public:
