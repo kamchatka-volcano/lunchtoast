@@ -39,9 +39,10 @@ can be configured to run
 * [Configuration](#configuration)
   * [Variables](#variables)
   * [User defined actions](#user-defined-actions)
-* [Command line options](#command-line-options-)
-* [Installation](#installation)
-* [Running tests](#running-tests)
+* [Command line options](#command-line-options)
+* [Showcase](#showcase)
+* [Build instructions](#build-instructions)
+* [Running unit tests](#running-unit-tests)
 * [Running functional tests](#running-functional-tests)
 * [License](#license)
 
@@ -95,6 +96,19 @@ section's value on the next line. The section's value must be closed with `---` 
 SectionValueLine1
 SectionValueLine2
 ---
+```
+
+Empty section values can be created using empty multiline sections:
+
+```
+-EmptySection:
+---
+```
+
+or by omitting the `:` delimiter in single-line sections:
+
+```
+-EmptySection
 ```
 
 #### Parameter sections
@@ -377,50 +391,53 @@ Subsections are created by starting the line with `#` followed by the subsection
 delimiter, and starting the section's value on the next line. The subsection's value is closed with `---`, the start of
 the next subsection or the end of the file.
 
-### Command line options:
+### Command line options
 
-|                              |                                                                                        |
-|------------------------------|----------------------------------------------------------------------------------------|
-| **Arguments:**               |                                                                                        |
-| `<testPath>`                 | directory containing tests                                                             |
-| **Parameters:**              |                                                                                        |
-| `-config=<path>`             | config file for setting variables and actions (optional, default: "")                  |
-| `-shell=<string>`            | shell command (optional, default: bash -ceo pipefail)                                  |
-| `-listFailedTests=<path>`    | write a list of failed tests to the specified file (optional, default: "")             |
-| `-collectFailedTests=<path>` | copy directories containing failed tests to the specified path (optional, default: "") |
-| `-reportWidth=<int>`         | set the test report's width as the number of characters (optional, default: 48)        |
-| `-reportFile=<path>`         | write the test report to the specified file (optional, default: "")                    |
-| `-searchDepth=<int>`         | the number of descents into child directories levels for tests searching (optional)    |
-| `-select=<string>`           | select tests by tag names (multi-value, optional, default: "")                         | 
-| `-skip=<string>`             | skip tests by tag names (multi-value, optional, default: "")                           |
-| **Flags:**                   |                                                                                        | 
-| `--withoutCleanup`           | disable cleanup of test files                                                          |
-| `--help`                     | show usage info and exit                                                               |
-| **Commands:**                |                                                                                        |
-| `saveContents [options]`     | save the current contents of the test directory                                        |
+|                              |                                                                                     |
+|------------------------------|-------------------------------------------------------------------------------------|
+| **Arguments:**               |                                                                                     |
+| `<testPath>`                 | directory containing tests                                                          |
+| **Parameters:**              |                                                                                     |
+| `-config=<path>`             | config file for setting variables and actions (optional)                            |
+| `-shell=<string>`            | shell command (optional, default: bash -ceo pipefail)                               |
+| `-listFailedTests=<path>`    | write a list of failed tests to the specified file (optional)                       |
+| `-collectFailedTests=<path>` | copy directories containing failed tests to the specified path (optional)           |
+| `-reportWidth=<int>`         | set the test report's width as the number of characters (optional, default: 48)     |
+| `-reportFile=<path>`         | write the test report to the specified file (optional)                              |
+| `-searchDepth=<int>`         | the number of descents into child directories levels for tests searching (optional) |
+| `-select=<string>`           | select tests by tag names (multi-value, optional)                                   | 
+| `-skip=<string>`             | skip tests by tag names (multi-value, optional)                                     |
+| **Flags:**                   |                                                                                     | 
+| `--withoutCleanup`           | disable cleanup of test files                                                       |
+| `--help`                     | show usage info and exit                                                            |
+| **Commands:**                |                                                                                     |
+| `saveContents [options]`     | save the current contents of the test directory                                     |
 
-### Installation
+### Showcase
+
+- [`lunchtoast/functional_tests`](https://github.com/kamchatka-volcano/lunchtoast/tree/master/functional_tests)
+- [`figcone/functional_tests`](https://github.com/kamchatka-volcano/figcone/tree/master/functional_tests)
+
+### Build instructions
+
+To build `lunchtoast`, you will need a C++20-compliant compiler, CMake, and the Boost.Process library installed on your
+system.
 
 ```
 git clone https://github.com/kamchatka-volcano/lunchtoast.git
 cd lunchtoast
 cmake -S . -B build
 cmake --build build
-cmake --install build
 ```
-
-Dependencies:
-
-* Boost.Process
 
 Boost dependencies can be resolved using [`vcpkg`](https://vcpkg.io/en/getting-started.html) by running the build with
 this command:
 
 ```
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=~/<vcpkg path>/scripts/buildsystems/vcpkg.cmake
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=<vcpkg path>/scripts/buildsystems/vcpkg.cmake
 ```
 
-### Running tests
+### Running unit tests
 
 ```
 cd lunchtoast
@@ -431,15 +448,31 @@ cd build/tests && ctest
 
 ### Running functional tests
 
-To test for regression in `lunchtoast`, you can use `lunchtoast` itself. After building the development branch, you can
-run functional tests using the master build of `lunchtoast`, as follows:
+`lunchtoast` is tested for regression using the `lunchtoast` itself. Once the development branch is built, functional
+tests are executed using the latest release of `lunchtoast` in the following manner:
+
+* Linux command:
 
 ```
-<lunchtoast_master_branch_dir>/build/lunchtoast <lunchtoast_dev_branch_dir>/functional_tests -skip=windows -config=linux_vars.shoal -searchDepth=1
+<lunchtoast_release>/lunchtoast <dev_branch_dir>/functional_tests -skip=windows -config=linux_vars.shoal -searchDepth=1
 ```
 
+* Windows command:
+
 ```
-<lunchtoast_master_branch_dir>/build/lunchtoast <lunchtoast_dev_branch_dir>/functional_tests -skip=linux -config=windows_vars.shoal -searchDepth=1
+<lunchtoast_release>/lunchtoast.exe <dev_branch_dir>/functional_tests -skip=linux -config=windows_vars.shoal -searchDepth=1
+```
+
+To run functional tests on Windows, it's recommended to use the bash shell from
+the  [`msys2`](https://www.msys2.org/#installation) project. After installing it, add the following script `msys2.cmd`
+to your system `PATH`:
+
+```bat
+@echo off
+setlocal
+IF NOT DEFINED MSYS2_PATH_TYPE set MSYS2_PATH_TYPE=inherit
+set CHERE_INVOKING=1
+C:\\msys64\\usr\\bin\\bash.exe -leo pipefail %*
 ```
 
 ### License
