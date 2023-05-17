@@ -1,5 +1,7 @@
 # 🍞lunchtoast
 
+[![build & test (clang, gcc, MSVC)](https://github.com/kamchatka-volcano/lunchtoast/actions/workflows/build_and_test.yml/badge.svg?branch=master)](https://github.com/kamchatka-volcano/lunchtoast/actions/workflows/build_and_test.yml)
+
 **lunchtoast** - is a command-line functional testing tool that provides a clean and customizable way to launch
 processes or shell commands and check their exit codes, console output, and contents of result files.
 
@@ -188,6 +190,13 @@ The following sections are available to set up test actions:
   ```
   -Launch process: my_proc --write-ouput test.res
   ```
+
+  To launch the process in the background without waiting for its completion, use the `Launch detached` format:
+  ```
+  -Launch detached: my_proc 
+  ```
+  Detached processes cannot be checked for their result, and they are automatically terminated at the end of the test.
+
 
 - **Assert/Expect files equal**  
   The `Assert files equal` section checks that two files specified in the section's value are equal. If they differ, the

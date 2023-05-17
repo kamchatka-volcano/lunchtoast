@@ -26,12 +26,14 @@ LaunchProcess::LaunchProcess(
         fs::path workingDir,
         std::optional<std::string> shellCommand,
         std::set<ProcessResultCheckMode> checkModeSet,
-        int actionIndex)
+        int actionIndex,
+        std::vector<boost::process::child>* detachedProcessList)
     : command_{std::move(command)}
     , workingDir_{std::move(workingDir)}
     , shellCommand_{std::move(shellCommand)}
     , checkModeSet_{std::move(checkModeSet)}
     , actionIndex_{actionIndex}
+    , detachedProcessList_{detachedProcessList}
 {
     auto paths = boost::this_process::path();
 }
@@ -139,7 +141,8 @@ LaunchProcessResult startProcess(
             proc::std_err > stderrStream};
 
     auto result = LaunchProcessResult{};
-    while (process.running()) {
+    auto skipReadingOutput = !cmdArgs.empty() && cmdArgs.back().ends_with("&");
+    while (!skipReadingOutput && process.running()) {
         auto outLine = std::string{};
         while (std::getline(stdoutStream, outLine) && !outLine.empty())
             result.output += outLine + "\n";
@@ -149,7 +152,6 @@ LaunchProcessResult startProcess(
             result.errorOutput += errLine + "\n";
     }
     process.wait();
-
     result.output = normalizeLineEndings(result.output);
     result.errorOutput = normalizeLineEndings(result.errorOutput);
     if (result.output.ends_with("\n"))
@@ -159,6 +161,14 @@ LaunchProcessResult startProcess(
 
     result.exitCode = process.exit_code();
     return result;
+}
+
+proc::child startDetachedProcess(
+        const boost::filesystem::path& cmd,
+        const std::vector<std::string>& cmdArgs,
+        const std::filesystem::path& workingDir)
+{
+    return proc::child{cmd, proc::args(osArgs(cmdArgs)), proc::start_dir = sfun::path_string(workingDir)};
 }
 
 struct ExpectedLaunchProcessResult {
@@ -226,6 +236,14 @@ TestActionResult LaunchProcess::operator()() const
     const auto cmd = proc::search_path(std::string{cmdName}, path);
     if (cmd.empty())
         throw TestConfigError{fmt::format("Couldn't find the executable of a command '{}'", cmdName)};
+
+    if (detachedProcessList_) {
+        auto process = startDetachedProcess(cmd, cmdArgs, workingDir_);
+        if (!process.valid())
+            throw TestConfigError{fmt::format("Couldn't start the process '{}'", command_)};
+        detachedProcessList_->emplace_back(std::move(process));
+        return TestActionResult::Success();
+    }
 
     const auto launchResult = startProcess(cmd, cmdArgs, workingDir_);
     if (checkModeSet_.empty())

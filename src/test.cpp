@@ -102,6 +102,12 @@ TestResult Test::process()
             break;
     }
 
+    for (auto& detachedProcess : detachedProcessList_)
+        if (detachedProcess.running()) {
+            auto errorCode = std::error_code{};
+            detachedProcess.terminate(errorCode);
+        }
+
     if (ok && cleanup_)
         cleanTestFiles();
 
@@ -332,10 +338,11 @@ std::vector<Section> Test::createLaunchAction(const Section& section, const std:
     const auto parts = sfun::split(section.name);
     const auto shellCommand = [&]() -> std::optional<std::string>
     {
-        if (std::find(parts.begin(), parts.end(), "process") == parts.end())
+        if (std::ranges::find(parts, "process") == parts.end())
             return shellCommand_;
         return std::nullopt;
     };
+    const auto isDetached = (std::ranges::find(parts, "detached") != parts.end());
 
     const auto [checkModeSet, actionType, foundCheckModesCount] = [&]
     {
@@ -354,7 +361,8 @@ std::vector<Section> Test::createLaunchAction(const Section& section, const std:
                      directory_,
                      shellCommand(),
                      checkModeSet,
-                     countActions<LaunchProcess>(actions_)},
+                     countActions<LaunchProcess>(actions_),
+                     isDetached ? &detachedProcessList_ : nullptr},
              actionType});
 
     return nextSections | views::drop(foundCheckModesCount) | ranges::to<std::vector>;

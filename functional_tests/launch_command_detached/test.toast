@@ -1,0 +1,10 @@
+
+-Contents: report.ref
+-Description:
+    GIVEN file test.ref
+    WHEN launching a detached shell command that adds a new line to file test.res every second, sleep for 2 seconds, and check that file test.res has more than 1 line.
+    THEN test should pass
+---    
+
+-Launch: ../../build/lunchtoast test/ -reportFile=report.res --withoutCleanup ${{shellParam}}
+-Assert files equal: report.res report.ref

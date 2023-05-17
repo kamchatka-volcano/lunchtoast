@@ -1,0 +1,3 @@
+-Launch detached: while true; do echo "Hello world" >> test.res; sleep 1; done
+-Launch: sleep 2;
+-Launch: [ $(wc -l < test.res) != 1 ]

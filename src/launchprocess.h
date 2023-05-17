@@ -2,6 +2,7 @@
 #include "launchprocessresult.h"
 #include "processresultcheckmode.h"
 #include "testactionresult.h"
+#include <boost/process/child.hpp>
 #include <gsl/pointers>
 #include <filesystem>
 #include <optional>
@@ -19,7 +20,8 @@ public:
             std::filesystem::path workingDir,
             std::optional<std::string> shellCommand,
             std::set<ProcessResultCheckMode> checkModeSet,
-            int actionIndex);
+            int actionIndex,
+            std::vector<boost::process::child>* detachedProcessList = nullptr);
     TestActionResult operator()() const;
 
 private:
@@ -28,6 +30,7 @@ private:
     std::optional<std::string> shellCommand_;
     std::set<ProcessResultCheckMode> checkModeSet_;
     int actionIndex_;
+    std::vector<boost::process::child>* detachedProcessList_;
 };
 
 } //namespace lunchtoast

@@ -6,6 +6,7 @@
 #include "testresult.h"
 #include "useraction.h"
 #include <sfun/member.h>
+#include <boost/process/child.hpp>
 #include <filesystem>
 #include <memory>
 #include <set>
@@ -69,6 +70,7 @@ private:
     bool isEnabled_ = true;
     std::vector<FilenameGroup> contents_;
     std::optional<LaunchProcessResult> launchActionResult_;
+    std::vector<boost::process::child> detachedProcessList_;
 };
 
 } //namespace lunchtoast
