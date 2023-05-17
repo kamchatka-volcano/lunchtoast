@@ -157,6 +157,11 @@ TEST(SectionsReader, EmptySectionWithColon)
     testSectionReader("-Name`00:01`", {{"Name`00:01`", "", "-Name`00:01`"}});
 }
 
+TEST(SectionsReader, ValueWithColon)
+{
+    testSectionReader("-Name: localhost:8080", {{"Name", "localhost:8080", "-Name: localhost:8080"}});
+}
+
 TEST(SectionsReader, ErrorEmptySectionName)
 {
     assert_exception<lunchtoast::TestConfigError>(

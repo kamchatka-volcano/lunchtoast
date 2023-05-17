@@ -71,7 +71,7 @@ LineReadResult readSectionLine(const std::string& line)
             result.name += ch;
             result.name += readUntil(lineStream, ch);
         }
-        else if (ch == ':')
+        else if (!result.value.has_value() && ch == ':')
             result.value.emplace();
         else if (!result.value.has_value())
             result.name += ch;
