@@ -1,5 +1,6 @@
 #include "commandline.h"
 #include "config.h"
+#include "constants.h"
 #include "test.h"
 #include "testcontentsgenerator.h"
 #include "testlauncher.h"
@@ -41,14 +42,16 @@ int mainApp(const CommandLine& commandLine)
 #ifdef _WIN32
 int wmain(int argc, wchar_t** argv)
 {
-    auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast", "lunchtoast v0.2.0"};
+    auto cmdlineReader =
+            cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast", std::string{hardcoded::appVersion}};
     cmdlineReader.setErrorOutputStream(std::cout);
     return cmdlineReader.exec<CommandLine>(argc, argv, mainApp);
 }
 #else
 int main(int argc, char** argv)
 {
-    auto cmdlineReader = cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast", "lunchtoast v0.2.0"};
+    auto cmdlineReader =
+            cmdlime::CommandLineReader<cmdlime::Format::Simple>{"lunchtoast", std::string{hardcoded::appVersion}};
     cmdlineReader.setErrorOutputStream(std::cout);
     return cmdlineReader.exec<CommandLine>(argc, argv, mainApp);
 }
