@@ -23,6 +23,7 @@
 namespace lunchtoast {
 namespace views = ranges::views;
 namespace fs = std::filesystem;
+using namespace std::string_view_literals;
 
 namespace {
 std::vector<FilenameGroup> getDefaultContents(const fs::path& testDirectory)
@@ -83,7 +84,7 @@ TestResult Test::process()
         testResult = false;
         runtimeError = errorInfo;
     };
-    const auto onActionSuccessful = [](auto&){};
+    const auto onActionSuccessful = [](auto&) {};
 
     const auto cleanup = gsl::finally(
             [&]
@@ -352,6 +353,8 @@ std::vector<Section> Test::createLaunchAction(const Section& section, const std:
         return std::nullopt;
     };
     const auto isDetached = (std::ranges::find(parts, "detached") != parts.end());
+    const auto skipReadingOutput = //
+            contains(parts, {"ignore"sv, "output"sv}) || contains(parts, {"ignoring"sv, "output"sv});
 
     const auto [checkModeSet, actionType, foundCheckModesCount] = [&]
     {
@@ -366,12 +369,13 @@ std::vector<Section> Test::createLaunchAction(const Section& section, const std:
 
     actions_.push_back(
             {LaunchProcess{
-                     section.value,
+                     std::string{sfun::trim(section.value)},
                      directory_,
                      shellCommand(),
                      checkModeSet,
                      countActions<LaunchProcess>(actions_),
-                     isDetached ? &detachedProcessList_ : nullptr},
+                     isDetached ? &detachedProcessList_ : nullptr,
+                     skipReadingOutput},
              actionType});
 
     return nextSections | views::drop(foundCheckModesCount) | ranges::to<std::vector>;

@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <filesystem>
 #include <functional>
 #include <optional>
@@ -21,6 +22,20 @@ std::vector<std::string> splitCommand(const std::string& str);
 std::vector<std::string> splitSectionValue(const std::string& str);
 std::unordered_map<std::string, std::string> readInputParamSections(const std::string&);
 std::string normalizeLineEndings(std::string_view str);
+
+template<typename TContainer>
+    requires requires(TContainer t) {
+                 {
+                     std::begin(t)
+                 } -> std::same_as<typename TContainer::iterator>;
+                 {
+                     std::end(t)
+                 } -> std::same_as<typename TContainer::iterator>;
+             }
+bool contains(const TContainer& range, const TContainer& subrange)
+{
+    return std::search(std::begin(range), std::end(range), std::begin(subrange), std::end(subrange)) != std::end(range);
+}
 
 class StringStream {
 public:

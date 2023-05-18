@@ -197,6 +197,21 @@ The following sections are available to set up test actions:
   ```
   Detached processes cannot be checked for their result, and they are automatically terminated at the end of the test.
 
+  There's also a way to launch processes and wait for their completion while ignoring the output. To use it, use
+  the `Launch ignoring output` format:
+
+  ``` 
+  -Launch ignoring output: my_proc
+  ``` 
+  Generally, you won't need to use it, but it can be helpful when encountering processes that hang, to confirm that
+  their execution is actually stuck waiting for the output.  
+  <br/>
+  The previously mentioned launch formats are defined by the keywords "process", "detached", "ignoring output" or "
+  ignore output". These keywords can be combined and other words can be used in between them:
+  ```
+  -Launch detached process: my_proc
+  -Launch process and ignore output: my_proc
+  ``` 
 
 - **Assert/Expect files equal**  
   The `Assert files equal` section checks that two files specified in the section's value are equal. If they differ, the

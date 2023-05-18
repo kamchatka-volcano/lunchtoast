@@ -29,13 +29,15 @@ LaunchProcess::LaunchProcess(
         std::optional<std::string> shellCommand,
         std::set<ProcessResultCheckMode> checkModeSet,
         int actionIndex,
-        std::vector<boost::process::child>* detachedProcessList)
+        std::vector<boost::process::child>* detachedProcessList,
+        bool skipReadingOutput)
     : command_{std::move(command)}
     , workingDir_{std::move(workingDir)}
     , shellCommand_{std::move(shellCommand)}
     , checkModeSet_{std::move(checkModeSet)}
     , actionIndex_{actionIndex}
     , detachedProcessList_{detachedProcessList}
+    , skipReadingOutput_{skipReadingOutput}
 {
     auto paths = boost::this_process::path();
 }
@@ -149,11 +151,31 @@ LaunchProcessResult startProcess(
     if (process.running())
         process.terminate();
 
-    return {
-        .exitCode = process.exit_code(),
-        .output = normalizeLineEndings(stdoutData.get()),
-        .errorOutput = normalizeLineEndings(stderrData.get())
-    };
+    return {.exitCode = process.exit_code(),
+            .output = normalizeLineEndings(stdoutData.get()),
+            .errorOutput = normalizeLineEndings(stderrData.get())};
+}
+
+LaunchProcessResult startProcessWithoutReadingOutput(
+        const boost::filesystem::path& cmd,
+        const std::vector<std::string>& cmdArgs,
+        const std::filesystem::path& workingDir)
+{
+    auto ios = boost::asio::io_service{};
+    auto process = proc::child{
+            cmd,
+            proc::args(osArgs(cmdArgs)),
+            proc::start_dir = sfun::path_string(workingDir),
+            proc::std_out > proc::null,
+            proc::std_err > proc::null,
+            ios};
+
+    ios.run();
+    process.wait();
+    if (process.running())
+        process.terminate();
+
+    return {.exitCode = process.exit_code(), .output = {}, .errorOutput = {}};
 }
 
 proc::child startDetachedProcess(
@@ -243,12 +265,13 @@ TestActionResult LaunchProcess::operator()() const
         return TestActionResult::Success();
     }
 
-    const auto launchResult = startProcess(cmd, cmdArgs, workingDir_);
+    const auto launchResult = skipReadingOutput_ ? startProcessWithoutReadingOutput(cmd, cmdArgs, workingDir_)
+                                                 : startProcess(cmd, cmdArgs, workingDir_);
     if (checkModeSet_.empty())
         return TestActionResult::Success();
 
     for (const auto& checkMode : checkModeSet_) {
-        const auto result = std::visit(makeCheckModeVisitor(launchResult, command_, actionIndex_), checkMode.value);
+        auto result = std::visit(makeCheckModeVisitor(launchResult, command_, actionIndex_), checkMode.value);
         if (!result.isSuccessful()) {
             auto failureReport = generateLaunchFailureReport(
                     cmd.string() + " " + sfun::join(cmdArgs, " "),

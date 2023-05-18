@@ -21,7 +21,8 @@ public:
             std::optional<std::string> shellCommand,
             std::set<ProcessResultCheckMode> checkModeSet,
             int actionIndex,
-            std::vector<boost::process::child>* detachedProcessList = nullptr);
+            std::vector<boost::process::child>* detachedProcessList = nullptr,
+            bool skipReadingOutput = false);
     TestActionResult operator()() const;
 
 private:
@@ -31,6 +32,7 @@ private:
     std::set<ProcessResultCheckMode> checkModeSet_;
     int actionIndex_;
     std::vector<boost::process::child>* detachedProcessList_;
+    bool skipReadingOutput_;
 };
 
 } //namespace lunchtoast

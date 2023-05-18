@@ -1,0 +1,11 @@
+
+-Contents: test test/test.ref test/test.toast test.toast report.ref
+-Description:
+    GIVEN file test.ref
+    WHEN launching shell command that outputs string "Hello world" and ignoring output, check that output is empty
+    THEN test should pass
+---    
+-Launch: rm test/test.res
+-Assert exit code: *
+-Launch: ../../build/lunchtoast test/ -reportFile=report.res --withoutCleanup ${{shellParam}}
+-Assert files equal: report.res report.ref

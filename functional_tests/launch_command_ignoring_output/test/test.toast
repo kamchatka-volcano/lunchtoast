@@ -1,0 +1,7 @@
+-Launch ignoring output: echo "Hello world"
+-Assert output:
+---
+
+-Launch and ignore output: echo "Hello moon"
+-Assert output:
+---
