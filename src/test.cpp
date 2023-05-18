@@ -75,21 +75,42 @@ TestResult Test::process()
     if (actions_.empty())
         return TestResult::RuntimeError("Test has nothing to check", failedActionsMessages);
 
-    auto ok = true;
-    const auto onActionFailed = [&](auto&, const std::string& errorInfo)
-    {
-        ok = false;
-        failedActionsMessages.push_back(errorInfo);
-    };
+    auto testResult = true;
 
     auto runtimeError = std::optional<std::string>{};
     const auto onActionError = [&](auto&, const std::string& errorInfo)
     {
+        testResult = false;
         runtimeError = errorInfo;
     };
-    const auto onActionSuccessful = [](auto&) {};
+    const auto onActionSuccessful = [](auto&){};
+
+    const auto cleanup = gsl::finally(
+            [&]
+            {
+                if (testResult && cleanup_)
+                    cleanTestFiles();
+            });
+
+    const auto closeDetachedProcesses = gsl::finally(
+            [&]
+            {
+                for (auto& detachedProcess : detachedProcessList_)
+                    if (detachedProcess.running()) {
+                        auto errorCode = std::error_code{};
+                        detachedProcess.terminate(errorCode);
+                    }
+            });
 
     for (auto& action : actions_) {
+        auto actionResult = true;
+        const auto onActionFailed = [&](auto&, const std::string& errorInfo)
+        {
+            actionResult = false;
+            testResult = false;
+            failedActionsMessages.push_back(errorInfo);
+        };
+
         action.process(onActionSuccessful, onActionFailed, onActionError);
 
         if (runtimeError)
@@ -98,23 +119,11 @@ TestResult Test::process()
         auto stopOnFailure =
                 (action.type() == TestActionType::Assertion || action.type() == TestActionType::RequiredOperation);
 
-        if (!ok && stopOnFailure)
+        if (!actionResult && stopOnFailure)
             break;
     }
 
-    for (auto& detachedProcess : detachedProcessList_)
-        if (detachedProcess.running()) {
-            auto errorCode = std::error_code{};
-            detachedProcess.terminate(errorCode);
-        }
-
-    if (ok && cleanup_)
-        cleanTestFiles();
-
-    if (ok)
-        return TestResult::Success();
-    else
-        return TestResult::Failure(failedActionsMessages);
+    return testResult ? TestResult::Success() : TestResult::Failure(failedActionsMessages);
 }
 
 std::vector<Section> Test::readParam(const std::vector<Section>& sections)

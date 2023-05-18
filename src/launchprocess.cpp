@@ -11,9 +11,11 @@
 #include <sfun/string_utils.h>
 #include <sfun/utility.h>
 #include <sfun/wstringconv.h>
+#include <boost/asio.hpp>
 #include <boost/process.hpp>
 #include <filesystem>
 #include <fstream>
+#include <future>
 #include <utility>
 
 namespace lunchtoast {
@@ -131,36 +133,27 @@ LaunchProcessResult startProcess(
         const std::vector<std::string>& cmdArgs,
         const std::filesystem::path& workingDir)
 {
-    auto stdoutStream = proc::ipstream{};
-    auto stderrStream = proc::ipstream{};
+    auto ios = boost::asio::io_service{};
+    auto stdoutData = std::future<std::string>{};
+    auto stderrData = std::future<std::string>{};
     auto process = proc::child{
             cmd,
             proc::args(osArgs(cmdArgs)),
             proc::start_dir = sfun::path_string(workingDir),
-            proc::std_out > stdoutStream,
-            proc::std_err > stderrStream};
+            proc::std_out > stdoutData,
+            proc::std_err > stderrData,
+            ios};
 
-    auto result = LaunchProcessResult{};
-    auto skipReadingOutput = !cmdArgs.empty() && cmdArgs.back().ends_with("&");
-    while (!skipReadingOutput && process.running()) {
-        auto outLine = std::string{};
-        while (std::getline(stdoutStream, outLine) && !outLine.empty())
-            result.output += outLine + "\n";
-
-        auto errLine = std::string{};
-        while (std::getline(stderrStream, errLine) && !errLine.empty())
-            result.errorOutput += errLine + "\n";
-    }
+    ios.run();
     process.wait();
-    result.output = normalizeLineEndings(result.output);
-    result.errorOutput = normalizeLineEndings(result.errorOutput);
-    if (result.output.ends_with("\n"))
-        result.output.pop_back();
-    if (result.errorOutput.ends_with("\n"))
-        result.errorOutput.pop_back();
+    if (process.running())
+        process.terminate();
 
-    result.exitCode = process.exit_code();
-    return result;
+    return {
+        .exitCode = process.exit_code(),
+        .output = normalizeLineEndings(stdoutData.get()),
+        .errorOutput = normalizeLineEndings(stderrData.get())
+    };
 }
 
 proc::child startDetachedProcess(
@@ -168,7 +161,12 @@ proc::child startDetachedProcess(
         const std::vector<std::string>& cmdArgs,
         const std::filesystem::path& workingDir)
 {
-    return proc::child{cmd, proc::args(osArgs(cmdArgs)), proc::start_dir = sfun::path_string(workingDir)};
+    return proc::child{
+            cmd,
+            proc::args(osArgs(cmdArgs)),
+            proc::start_dir = sfun::path_string(workingDir),
+            proc::std_out > proc::null,
+            proc::std_err > proc::null};
 }
 
 struct ExpectedLaunchProcessResult {
