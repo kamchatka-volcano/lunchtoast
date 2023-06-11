@@ -22,35 +22,35 @@ TEST(UserActionFormatParser, SingleParam2)
 TEST(UserActionFormatParser, SingleParam3)
 {
     auto userActionFormat = makeUserActionFormat("%1 Hello world");
-    EXPECT_EQ(userActionFormat.formatRegex, R"((.+)\s+Hello world)");
+    EXPECT_EQ(userActionFormat.formatRegex, R"((.+?)\s+Hello world)");
     EXPECT_EQ(userActionFormat.paramsOrder, std::vector{1});
 }
 
 TEST(UserActionFormatParser, SingleParam4)
 {
     auto userActionFormat = makeUserActionFormat("Hello%1world");
-    EXPECT_EQ(userActionFormat.formatRegex, R"(Hello(.+)world)");
+    EXPECT_EQ(userActionFormat.formatRegex, R"(Hello(.+?)world)");
     EXPECT_EQ(userActionFormat.paramsOrder, std::vector{1});
 }
 
 TEST(UserActionFormatParser, MultipleParams)
 {
     auto userActionFormat = makeUserActionFormat("%3 %1 %2");
-    EXPECT_EQ(userActionFormat.formatRegex, R"((.+)\s+(.+)\s+(.+))");
+    EXPECT_EQ(userActionFormat.formatRegex, R"((.+?)\s+(.+?)\s+(.+))");
     EXPECT_EQ(userActionFormat.paramsOrder, (std::vector{3, 1, 2}));
 }
 
 TEST(UserActionFormatParser, MultipleParams2)
 {
     auto userActionFormat = makeUserActionFormat("%3 Hello %1 world %2");
-    EXPECT_EQ(userActionFormat.formatRegex, R"((.+)\s+Hello\s+(.+)\s+world\s+(.+))");
+    EXPECT_EQ(userActionFormat.formatRegex, R"((.+?)\s+Hello\s+(.+?)\s+world\s+(.+))");
     EXPECT_EQ(userActionFormat.paramsOrder, (std::vector{3, 1, 2}));
 }
 
 TEST(UserActionFormatParser, MultipleParams3)
 {
     auto userActionFormat = makeUserActionFormat("%3Hello%1 world %2");
-    EXPECT_EQ(userActionFormat.formatRegex, R"((.+)Hello(.+)\s+world\s+(.+))");
+    EXPECT_EQ(userActionFormat.formatRegex, R"((.+?)Hello(.+?)\s+world\s+(.+))");
     EXPECT_EQ(userActionFormat.paramsOrder, (std::vector{3, 1, 2}));
 }
 

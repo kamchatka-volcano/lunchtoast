@@ -32,7 +32,9 @@ std::optional<std::string> UserAction::makeCommand(
         const std::string& inputParam) const
 {
     auto match = std::smatch{};
-    if (!std::regex_match(action, match, format_))
+    if (!std::regex_search(action, match, format_))
+        return std::nullopt;
+    if (!match.prefix().str().empty() || !match.suffix().str().empty())
         return std::nullopt;
 
     auto command = commandFormat_;

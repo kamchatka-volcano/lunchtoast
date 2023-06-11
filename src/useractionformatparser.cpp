@@ -93,6 +93,7 @@ UserActionFormat makeUserActionFormat(const std::string& format)
 {
     auto tokens = parseUserActionFormat(format);
     auto result = UserActionFormat{};
+    auto lastToken = false;
     auto tokenVisitor = sfun::overloaded{
             [&](const WhitespaceToken&)
             {
@@ -107,15 +108,17 @@ UserActionFormat makeUserActionFormat(const std::string& format)
                                     "encountered multiple parameters %{}, format parameters indices must be unique",
                                     token.index)};
                 result.paramsOrder.push_back(token.index);
-                result.formatRegex += R"((.+))";
+                result.formatRegex += lastToken ? R"((.+))" : R"((.+?))";
             },
             [&](const StringToken& token)
             {
                 result.formatRegex += token.value;
             }};
 
-    for (const auto& token : tokens)
-        std::visit(tokenVisitor, token);
+    for (auto i = 0; i < std::ssize(tokens); ++i) {
+        lastToken = (i == std::ssize(tokens) - 1);
+        std::visit(tokenVisitor, tokens.at(i));
+    }
 
     validateUserActionFormat(format, result);
     return result;
