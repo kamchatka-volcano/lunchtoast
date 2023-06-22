@@ -13,6 +13,8 @@ namespace lunchtoast {
 
 class TestAction;
 
+LaunchProcessResult runCommand(const std::string& cmd);
+
 class LaunchProcess {
 public:
     LaunchProcess(

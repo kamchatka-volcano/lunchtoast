@@ -97,9 +97,15 @@ TestResult Test::process()
             [&]
             {
                 for (auto& detachedProcess : detachedProcessList_)
-                    if (detachedProcess.running()) {
+                    while (detachedProcess.running()) {
+#ifndef _WIN32
                         auto errorCode = std::error_code{};
                         detachedProcess.terminate(errorCode);
+#else
+                        const auto id = detachedProcess.id();
+                        detachedProcess.detach();
+                        runCommand(std::format("taskkill /f /t /pid {}", id));
+#endif
                     }
             });
 

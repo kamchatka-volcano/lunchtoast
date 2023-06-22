@@ -247,6 +247,16 @@ std::string generateLaunchFailureReport(
 
 } //namespace
 
+LaunchProcessResult runCommand(const std::string& command)
+{
+    auto cmdParts = splitCommand(command);
+    if (cmdParts.empty())
+        return {};
+
+    const auto cmd = proc::search_path(cmdParts.at(0));
+    return startProcess(cmd, cmdParts | views::drop(1) | ranges::to<std::vector>(), L".");
+}
+
 TestActionResult LaunchProcess::operator()() const
 {
     const auto [cmdName, cmdArgs] = shellCommand_.has_value() ? parseShellCommand(shellCommand_.value(), command_)
