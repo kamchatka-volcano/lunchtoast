@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.18)
-project(lunchtoast VERSION 0.3.0 DESCRIPTION "lunchtoast - a command-line tool for functional testing of console applications.")
+project(lunchtoast VERSION 0.4.0 DESCRIPTION "lunchtoast - a command-line tool for functional testing of console applications.")
 
 find_package(Boost 1.78 REQUIRED COMPONENTS system filesystem)
 include(GNUInstallDirs)
