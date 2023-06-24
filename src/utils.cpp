@@ -17,6 +17,7 @@
 namespace lunchtoast {
 namespace views = ranges::views;
 namespace fs = std::filesystem;
+using namespace std::string_view_literals;
 
 StringStream::StringStream(const std::string& str)
     : stream_{str}
@@ -236,6 +237,49 @@ std::unordered_map<std::string, std::string> readInputParamSections(const std::s
                    result | views::drop_last(1) | views::transform(removeLastNewline),
                    result | views::take_last(1)) |
             ranges::to<std::unordered_map>;
+}
+namespace {
+
+bool isSecFormat(std::string_view str)
+{
+    static const auto format = std::vector{"s"sv, "sec"sv, "seconds"sv};
+    return std::ranges::find(format, str) != format.end();
+}
+
+bool isMsecFormat(std::string_view str)
+{
+    static const auto format = std::vector{"ms"sv, "msec"sv, "milliseconds"sv};
+    return std::ranges::find(format, str) != format.end();
+}
+
+}
+
+std::optional<std::chrono::milliseconds> readTime(std::string_view str)
+{
+    auto parts = sfun::split(str);
+    auto timePeriod = std::string{parts.at(0)};
+
+    static const auto format = std::regex{"(\\d+)([a-z]*)"};
+    auto match = std::smatch{};
+    if (!std::regex_match(timePeriod, match, format))
+        return std::nullopt;
+    const auto timeValue = std::stoi(match[1].str());
+
+    if (match.size() > 2 && match[2].length() > 0){
+        const auto timeFormat = match[2].str();
+        if (isSecFormat(timeFormat))
+            return std::chrono::seconds{timeValue};
+        else if (isMsecFormat(timeFormat))
+            return std::chrono::milliseconds{timeValue};
+        else return std::nullopt;
+    }
+
+    auto timeScaleParts = parts | views::drop(1);
+    if (std::ranges::find_if(timeScaleParts, isMsecFormat) != timeScaleParts.end())
+        return std::chrono::milliseconds{timeValue};
+    else if (std::ranges::find_if(timeScaleParts, isSecFormat) != timeScaleParts.end())
+        return std::chrono::seconds{timeValue};
+    else return std::nullopt;
 }
 
 } //namespace lunchtoast

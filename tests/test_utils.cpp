@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 #include <functional>
 #include <sstream>
+#include <chrono>
 
 TEST(Utils, SplitCommand)
 {
@@ -166,4 +167,24 @@ TEST(Utils, ReadInputParams6)
     const auto sections = lunchtoast::readInputParamSections(R"()");
     const auto expectedSections = std::unordered_map<std::string, std::string>{};
     EXPECT_EQ(sections, expectedSections);
+}
+
+TEST(Utils, ReadTime)
+{
+    EXPECT_EQ(lunchtoast::readTime("100msec"), std::chrono::milliseconds{100});
+    EXPECT_EQ(lunchtoast::readTime("100 msec"), std::chrono::milliseconds{100});
+    EXPECT_EQ(lunchtoast::readTime("100ms"), std::chrono::milliseconds{100});
+    EXPECT_EQ(lunchtoast::readTime("100 ms"), std::chrono::milliseconds{100});
+    EXPECT_EQ(lunchtoast::readTime("100 milliseconds"), std::chrono::milliseconds{100});
+
+    EXPECT_EQ(lunchtoast::readTime("100sec"), std::chrono::seconds{100});
+    EXPECT_EQ(lunchtoast::readTime("100 sec"), std::chrono::seconds{100});
+    EXPECT_EQ(lunchtoast::readTime("100s"), std::chrono::seconds{100});
+    EXPECT_EQ(lunchtoast::readTime("100 s"), std::chrono::seconds{100});
+    EXPECT_EQ(lunchtoast::readTime("100 seconds"), std::chrono::seconds{100});
+
+    EXPECT_FALSE(lunchtoast::readTime("seconds"));
+    EXPECT_FALSE(lunchtoast::readTime("foo seconds"));
+    EXPECT_FALSE(lunchtoast::readTime("foo"));
+    EXPECT_FALSE(lunchtoast::readTime("-1 sec"));
 }

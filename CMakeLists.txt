@@ -64,6 +64,7 @@ set(SRC
     src/useractionformatparser.cpp
     src/utils.cpp
     src/writefile.cpp
+    src/wait.cpp
     )
 
 SealLake_Executable(

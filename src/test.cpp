@@ -198,7 +198,10 @@ std::vector<Section> Test::readAction(
     if (section.name.starts_with("Write")) {
         createWriteAction(section);
         return sections | views::drop(1) | ranges::to<std::vector>;
-        ;
+    }
+    if (section.name.starts_with("Wait")) {
+        actions_.emplace_back(makeWaitAction(section), TestActionType::RequiredOperation);
+        return sections | views::drop(1) | ranges::to<std::vector>;
     }
     if (section.name.starts_with("Assert")) {
         auto actionType = sfun::trim(sfun::after(section.name, "Assert"));

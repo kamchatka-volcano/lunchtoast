@@ -8,6 +8,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <vector>
+#include <chrono>
 
 namespace lunchtoast {
 
@@ -22,6 +23,8 @@ std::vector<std::string> splitCommand(const std::string& str);
 std::vector<std::string> splitSectionValue(const std::string& str);
 std::unordered_map<std::string, std::string> readInputParamSections(const std::string&);
 std::string normalizeLineEndings(std::string_view str);
+std::optional<std::chrono::milliseconds> readTime(std::string_view str);
+
 
 template<typename TContainer>
     requires requires(TContainer t) {

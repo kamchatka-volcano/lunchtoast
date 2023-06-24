@@ -287,6 +287,13 @@ The following sections are available to set up test actions:
   -Write input.txt: Hello world
   ```
 
+- **Wait**  
+  The `Wait` action is used to wait for a specified amount of time by putting the thread to sleep:
+  ```
+  -Wait: 500 ms
+  -Wait: 2 sec
+  ```
+
 ### Configuration
 
 An optional configuration file for `lunchtoast` uses the [`shoal`](https://shoal.eelnet.org) config format and can be

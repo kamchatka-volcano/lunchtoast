@@ -3,6 +3,7 @@
 #include "comparefiles.h"
 #include "launchprocess.h"
 #include "testactiontype.h"
+#include "wait.h"
 #include "writefile.h"
 #include <variant>
 
@@ -48,13 +49,7 @@ public:
     }
 
 private:
-    std::variant<
-            CompareFileContent,
-            CompareFiles,
-            LaunchProcess,
-            WriteFile>
-            action_;
-
+    std::variant<CompareFileContent, CompareFiles, LaunchProcess, WriteFile, Wait> action_;
     TestActionType actionType_;
 };
 
