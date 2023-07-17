@@ -445,9 +445,9 @@ the next subsection or the end of the file.
 | `saveContents [options]`     | save the current contents of the test directory                                     |
 
 ### Showcase
-
-- [`lunchtoast/functional_tests`](https://github.com/kamchatka-volcano/lunchtoast/tree/master/functional_tests)
+- [`asyncgi/functional_tests`](https://github.com/kamchatka-volcano/asyncgi/tree/master/functional_tests)
 - [`figcone/functional_tests`](https://github.com/kamchatka-volcano/figcone/tree/master/functional_tests)
+- [`lunchtoast/functional_tests`](https://github.com/kamchatka-volcano/lunchtoast/tree/master/functional_tests)
 
 ### Build instructions
 
