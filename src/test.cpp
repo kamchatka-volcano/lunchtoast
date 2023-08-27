@@ -204,12 +204,12 @@ std::vector<Section> Test::readAction(
         return sections | views::drop(1) | ranges::to<std::vector>;
     }
     if (section.name.starts_with("Assert")) {
-        auto actionType = sfun::trim(sfun::after(section.name, "Assert"));
+        auto actionType = sfun::trim(sfun::after(section.name, "Assert").value());
         createComparisonAction(TestActionType::Assertion, std::string{actionType}, section);
         return sections | views::drop(1) | ranges::to<std::vector>;
     }
     if (section.name.starts_with("Expect")) {
-        auto actionType = sfun::trim(sfun::after(section.name, "Expect"));
+        auto actionType = sfun::trim(sfun::after(section.name, "Expect").value());
         createComparisonAction(TestActionType::Expectation, std::string{actionType}, section);
         return sections | views::drop(1) | ranges::to<std::vector>;
     }
@@ -392,7 +392,9 @@ std::vector<Section> Test::createLaunchAction(const Section& section, const std:
 
 void Test::createWriteAction(const Section& section)
 {
-    const auto fileName = sfun::trim(sfun::after(section.name, "Write"));
+    sfun_precondition(section.name.starts_with("Write"));
+
+    const auto fileName = sfun::trim(sfun::after(section.name, "Write").value());
     const auto path = fs::absolute(directory_) / sfun::make_path(fileName);
     actions_.push_back({WriteFile{path, section.value}, TestActionType::RequiredOperation});
 }

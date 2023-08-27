@@ -117,7 +117,8 @@ void TestReporter::reportResult(
     print("Name: {}", test.name());
     if (result.type() != TestResultType::Success) {
         if (!test.description().empty()) {
-            auto descriptionHasMultipleLines = !sfun::after(test.description(), "\n").empty();
+            const auto nextLines = sfun::after(test.description(), "\n");
+            auto descriptionHasMultipleLines = nextLines.has_value() && !nextLines.value().empty();
             if (descriptionHasMultipleLines)
                 print("Description:\n{}", test.description());
             else
@@ -167,7 +168,8 @@ void TestReporter::reportDisabledTest(
     print("Name: {}", test.name());
 
     if (!test.description().empty()) {
-        auto descriptionHasMultipleLines = !sfun::after(test.description(), "\n").empty();
+        const auto nextLines = sfun::after(test.description(), "\n");
+        const auto descriptionHasMultipleLines = nextLines.has_value() && !nextLines.value().empty();
         if (descriptionHasMultipleLines)
             print("Description:\n{}", test.description());
         else

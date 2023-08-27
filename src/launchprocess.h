@@ -2,6 +2,7 @@
 #include "launchprocessresult.h"
 #include "processresultcheckmode.h"
 #include "testactionresult.h"
+#include <sfun/optional_ref.h>
 #include <boost/process/child.hpp>
 #include <gsl/pointers>
 #include <filesystem>
@@ -23,7 +24,7 @@ public:
             std::optional<std::string> shellCommand,
             std::set<ProcessResultCheckMode> checkModeSet,
             int actionIndex,
-            std::vector<boost::process::child>* detachedProcessList = nullptr,
+            sfun::optional_ref<std::vector<boost::process::child>> detachedProcessList = std::nullopt,
             bool skipReadingOutput = false);
     TestActionResult operator()() const;
 
@@ -33,7 +34,7 @@ private:
     std::optional<std::string> shellCommand_;
     std::set<ProcessResultCheckMode> checkModeSet_;
     int actionIndex_;
-    std::vector<boost::process::child>* detachedProcessList_;
+    sfun::member<sfun::optional_ref<std::vector<boost::process::child>>> detachedProcessList_;
     bool skipReadingOutput_;
 };
 

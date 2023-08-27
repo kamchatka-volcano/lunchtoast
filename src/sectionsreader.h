@@ -14,10 +14,12 @@ public:
     {
         return error_.has_value();
     }
+
     TestConfigError value()
     {
-        return *error_;
+        return error_.value();
     }
+
     void operator=(const TestConfigError& error)
     {
         error_ = error;

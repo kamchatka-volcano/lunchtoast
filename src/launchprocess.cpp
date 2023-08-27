@@ -29,7 +29,7 @@ LaunchProcess::LaunchProcess(
         std::optional<std::string> shellCommand,
         std::set<ProcessResultCheckMode> checkModeSet,
         int actionIndex,
-        std::vector<boost::process::child>* detachedProcessList,
+        sfun::optional_ref<std::vector<boost::process::child>> detachedProcessList,
         bool skipReadingOutput)
     : command_{std::move(command)}
     , workingDir_{std::move(workingDir)}
@@ -262,16 +262,17 @@ TestActionResult LaunchProcess::operator()() const
     const auto [cmdName, cmdArgs] = shellCommand_.has_value() ? parseShellCommand(shellCommand_.value(), command_)
                                                               : parseCommand(command_);
     const auto currentPath = boost::this_process::path();
-    const auto path = views::concat(currentPath, views::single(workingDir_)) | ranges::to<std::vector>;
+    const auto path = views::concat(currentPath, views::single(sfun::path_string(workingDir_))) |
+            ranges::to<std::vector>;
     const auto cmd = proc::search_path(std::string{cmdName}, path);
     if (cmd.empty())
         throw TestConfigError{fmt::format("Couldn't find the executable of a command '{}'", cmdName)};
 
-    if (detachedProcessList_) {
+    if (detachedProcessList_.get().has_value()) {
         auto process = startDetachedProcess(cmd, cmdArgs, workingDir_);
         if (!process.valid())
             throw TestConfigError{fmt::format("Couldn't start the process '{}'", command_)};
-        detachedProcessList_->emplace_back(std::move(process));
+        detachedProcessList_.get().value().emplace_back(std::move(process));
         return TestActionResult::Success();
     }
 

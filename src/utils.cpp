@@ -221,8 +221,8 @@ std::unordered_map<std::string, std::string> readInputParamSections(const std::s
     while (!inputStream.atEnd()) {
         const auto line = inputStream.readLine();
         const auto trimmedLine = sfun::trim(line);
-        if (trimmedLine.starts_with("#") && trimmedLine.ends_with(":"))
-            result.emplace_back(StringPair{std::string{sfun::between(trimmedLine, "#", ":")}, {}});
+        if (const auto sectionName = sfun::between(trimmedLine, "#", ":"))
+            result.emplace_back(StringPair{std::string{sectionName.value()}, {}});
         else if (!result.empty())
             result.back().second += line;
     }
