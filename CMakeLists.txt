@@ -1,23 +1,22 @@
 cmake_minimum_required(VERSION 3.18)
-project(lunchtoast VERSION 0.4.0 DESCRIPTION "lunchtoast - a command-line tool for functional testing of console applications.")
+project(lunchtoast VERSION 0.4.1 DESCRIPTION "lunchtoast - a command-line tool for functional testing of console applications.")
 
 find_package(Boost 1.78 REQUIRED COMPONENTS system filesystem)
-include(GNUInstallDirs)
 include(external/seal_lake)
 
-SealLake_Import(sfun 5.0.0
+SealLake_Import(sfun 5.1.0
         GIT_REPOSITORY https://github.com/kamchatka-volcano/sfun
-        GIT_TAG v5.0.0
+        GIT_TAG v5.1.0
 )
 
-SealLake_Import(cmdlime 2.4.0
+SealLake_Import(cmdlime 2.6.0
         GIT_REPOSITORY https://github.com/kamchatka-volcano/cmdlime
-        GIT_TAG v2.4.1
+        GIT_TAG v2.6.0
 )
 set(FIGCONE_USE_SHOAL ON)
-SealLake_Import(figcone 2.4.6
+SealLake_Import(figcone 3.1.0
         GIT_REPOSITORY https://github.com/kamchatka-volcano/figcone
-        GIT_TAG v2.4.6
+        GIT_TAG v3.1.0
 )
 SealLake_Import(fmt 9.1.0
         GIT_REPOSITORY https://github.com/fmtlib/fmt
@@ -65,7 +64,7 @@ set(SRC
     src/utils.cpp
     src/writefile.cpp
     src/wait.cpp
-    )
+)
 
 SealLake_Executable(
         SOURCES ${SRC}
@@ -86,5 +85,5 @@ SealLake_Executable(
 )
 target_compile_definitions(lunchtoast PRIVATE _UNICODE UNICODE)
 
-SealLake_OptionalBuildSteps(tests)
+SealLake_OptionalSubProjects(tests)
 

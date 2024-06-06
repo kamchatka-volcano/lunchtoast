@@ -19,30 +19,35 @@ jobs:
           - {
             name: "Ubuntu 20.04 clang",
             os: ubuntu-20.04,
-            cc: "clang",
-            cxx: "clang++",
             cmake_vars: "-DBoost_USE_STATIC_LIBS=ON -DBoost_USE_STATIC_RUNTIME=ON",
-            flags: "-Wall -Werror -Wextra -Wpedantic -Wcast-align -Wnon-virtual-dtor -Woverloaded-virtual -Wunused",
+            cmake-preset: clang-release,
             artifacts: "build/lunchtoast"
           }
           - {
             name: "Windows Latest MSVC",
             os: windows-latest,
-            cc: "cl",
-            cxx: "cl",
-            cmake_vars: "-DCMAKE_GENERATOR_PLATFORM=x64 -DVCPKG_TARGET_TRIPLET=x64-windows-static-md",
-            flags: "/EHsc /W4 /WX /wd4702",
+            cmake_vars: "-DVCPKG_TARGET_TRIPLET=x64-windows-static-md",
+            cmake-preset: msvc-release,
             artifacts: "build/Release/lunchtoast.exe"
           }
     steps:
-      - uses: actions/checkout@v3
+      - name: Install ninja (Windows)
+        if: matrix.config.os == 'windows-latest'
+        run: choco install ninja
+      - name: Install ninja (Linux)
+        if: matrix.config.os == 'ubuntu-20.04'
+        run: sudo apt install ninja-build
+      - uses: actions/checkout@v4
+
+      - uses: hendrikmuhs/ccache-action@v1.2
+      - uses: ilammy/msvc-dev-cmd@v1
 
       - uses: lukka/run-vcpkg@v10
         with:
           vcpkgGitCommitId: 31a159c1cae2bf905299085d9ef01bdfea0ca7b8
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON ${{ matrix.config.cmake_vars }} -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_CXX_FLAGS="${{ matrix.config.flags }}"
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON ${{ matrix.config.cmake_vars }} -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/vcpkg/scripts/buildsystems/vcpkg.cmake --preset="${{ matrix.config.cmake-preset }}"
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config Release

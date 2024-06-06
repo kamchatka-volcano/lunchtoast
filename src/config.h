@@ -1,5 +1,5 @@
 #pragma once
-#include <figcone/config.h>
+#include <figcone/figcone.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
