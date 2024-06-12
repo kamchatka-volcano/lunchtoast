@@ -1,6 +1,7 @@
 name: build & test (clang, gcc, MSVC)
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "master", "dev" ]
     paths-ignore:
