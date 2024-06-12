@@ -28,7 +28,7 @@ jobs:
             os: windows-latest,
             cmake_vars: "-DVCPKG_TARGET_TRIPLET=x64-windows-static-md",
             cmake-preset: msvc-release,
-            artifacts: "build/Release/lunchtoast.exe"
+            artifacts: "build/lunchtoast.exe"
           }
     steps:
       - name: Install ninja (Windows)
